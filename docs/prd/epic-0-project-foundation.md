@@ -40,6 +40,7 @@ so that I can immediately begin feature development with consistent tooling acro
    - Security audit configuration: `pnpm audit --audit-level=moderate`
 
 ### Definition of Done
+
 - [ ] Developer can run `pnpm install && pnpm dev` and see all apps running locally
 - [ ] Build system produces optimized bundles for all targets
 - [ ] Linting and type checking pass on empty project structure
@@ -84,6 +85,7 @@ so that sensitive data is properly managed and development workflow is optimized
    - Troubleshooting guide for common setup issues
 
 ### Definition of Done
+
 - [ ] New developer can follow README and have working environment in <30 minutes
 - [ ] All environment variables are validated on app startup
 - [ ] Local database can be reset and reseeded with single command
@@ -171,6 +173,7 @@ so that developers can integrate with production-ready infrastructure from day o
    - **Result**: All services integrated and tested
 
 ### Definition of Done
+
 - [ ] **USER COMPLETED**: All 4 external service accounts created with credentials saved
 - [ ] **DEVELOPER COMPLETED**: All services integrated with proper environment variables
 - [ ] Database migrations can be applied to remote Supabase instance
@@ -203,6 +206,7 @@ so that cryptographic operations are compiled and available for TypeScript consu
 
 3. **Nx Integration**
    - Create `libs/crypto-core/project.json` with custom executor:
+
    ```json
    {
      "targets": {
@@ -220,6 +224,7 @@ so that cryptographic operations are compiled and available for TypeScript consu
      }
    }
    ```
+
    - Configure dependency graph: `apps/web` and `apps/mobile` depend on `crypto-core`
    - Set up watch mode: `nx run crypto-core:build-wasm --watch`
    - Integrate WASM build into main builds via `dependsOn` configuration
@@ -237,6 +242,7 @@ so that cryptographic operations are compiled and available for TypeScript consu
    - Set up automated security audit of Rust dependencies
 
 ### Definition of Done
+
 - [ ] `pnpm nx build crypto-core` produces WASM module with TypeScript bindings in `libs/crypto-core/pkg/`
 - [ ] Web and mobile apps can import: `import { encrypt, decrypt } from '@aura/crypto-core'`
 - [ ] Rust tests pass: `nx run crypto-core:test` (using `cargo test`)
@@ -282,6 +288,7 @@ so that code quality is maintained and deployments are secure and consistent.
    - Rollback procedures documentation and automation
 
 ### Definition of Done
+
 - [ ] All CI/CD pipelines execute successfully on empty repository
 - [ ] Security gates prevent insecure code from being deployed
 - [ ] Staging environment automatically updates on pull requests
