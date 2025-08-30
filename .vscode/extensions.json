@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "ms-vscode.vscode-typescript-next",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "nrwl.angular-console",
+    "bradlc.vscode-tailwindcss",
+    "expo.vscode-expo-tools",
+    "rust-lang.rust-analyzer",
+    "ms-vscode.vscode-json"
+  ]
+}

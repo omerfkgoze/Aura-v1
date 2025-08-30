@@ -1,0 +1,33 @@
+{
+  "name": "shared-types",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/shared-types/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "main": "libs/shared-types/src/index.ts",
+        "outputPath": "dist/libs/shared-types",
+        "tsConfig": "libs/shared-types/tsconfig.json",
+        "packageJson": "libs/shared-types/package.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/shared-types/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "type-check": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "rootDir": "libs/shared-types",
+        "tsConfig": "libs/shared-types/tsconfig.json"
+      }
+    }
+  },
+  "tags": ["type:lib", "scope:shared"]
+}

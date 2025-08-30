@@ -1,0 +1,43 @@
+{
+  "name": "mobile",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/mobile/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/expo:build",
+      "options": {
+        "platform": "all"
+      },
+      "configurations": {
+        "production": {
+          "buildType": "archive"
+        },
+        "preview": {
+          "buildType": "development-build"
+        }
+      }
+    },
+    "dev": {
+      "executor": "@nx/expo:start",
+      "options": {
+        "port": 8081
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/mobile/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "type-check": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "rootDir": "apps/mobile",
+        "tsConfig": "apps/mobile/tsconfig.json"
+      }
+    }
+  },
+  "tags": ["type:app", "scope:mobile"]
+}

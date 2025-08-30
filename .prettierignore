@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.next/
+.expo/
+*.generated.ts
+package-lock.json
+pnpm-lock.yaml

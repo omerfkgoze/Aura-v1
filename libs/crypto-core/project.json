@@ -1,0 +1,38 @@
+{
+  "name": "crypto-core",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "libs/crypto-core/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "main": "libs/crypto-core/src/index.ts",
+        "outputPath": "dist/libs/crypto-core",
+        "tsConfig": "libs/crypto-core/tsconfig.json"
+      }
+    },
+    "build-wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd libs/crypto-core && wasm-pack build --target web --out-dir pkg"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/crypto-core/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "type-check": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "rootDir": "libs/crypto-core",
+        "tsConfig": "libs/crypto-core/tsconfig.json"
+      }
+    }
+  },
+  "tags": ["type:lib", "scope:crypto"]
+}
