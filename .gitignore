@@ -116,3 +116,5 @@ wheels/
 
 # Custom ignore directory
 .ignore/
+.vercel
+.env.vercel.local
