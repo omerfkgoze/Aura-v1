@@ -118,3 +118,7 @@ wheels/
 .ignore/
 .vercel
 .env.vercel.local
+
+# Nx cache directory
+.nx/cache
+.nx/workspace-data

@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "aura-app",
-  "buildCommand": "pnpm install --no-frozen-lockfile && npx nx build web",
+  "buildCommand": "pnpm install --no-frozen-lockfile && npx nx reset && npx nx build web",
   "outputDirectory": "dist/apps/web",
   "installCommand": "pnpm install --no-frozen-lockfile",
 
