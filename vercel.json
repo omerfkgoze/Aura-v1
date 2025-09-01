@@ -1,9 +1,9 @@
 {
   "version": 2,
   "name": "aura-app",
-  "buildCommand": "npx nx build web",
+  "buildCommand": "pnpm install && npx nx build web",
   "outputDirectory": "dist/apps/web",
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "pnpm install",
 
   "env": {
     "NODE_ENV": "production",

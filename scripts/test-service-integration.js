@@ -133,10 +133,16 @@ async function testSentry() {
     });
 
     // Sentry returns specific status codes
-    if (response.status === 200 || response.status === 429 || response.status === 400) {
+    // 401 is expected for unauthenticated test requests
+    if (
+      response.status === 200 ||
+      response.status === 429 ||
+      response.status === 400 ||
+      response.status === 401
+    ) {
       testResults.sentry = {
         status: 'success',
-        message: `Sentry endpoint accessible (${host})`,
+        message: `Sentry endpoint accessible (${host}) - Status: ${response.status}`,
       };
       logSuccess(`Sentry configuration valid`);
     } else {

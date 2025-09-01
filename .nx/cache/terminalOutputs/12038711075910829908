@@ -1,0 +1,46 @@
+✘ [ERROR] "@vitejs/plugin-react" resolved to an ESM file. ESM file cannot be loaded by `require`. See https://vite.dev/guide/troubleshooting.html#this-package-is-esm-only for more details. [plugin externalize-deps]
+
+    node_modules/esbuild/lib/main.js:1225:27:
+      1225 │         let result = await callback({
+           ╵                            ^
+
+    at file:///Users/omerfkgoze/Documents/GitHub/Aura/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:66911:23
+    at requestCallbacks.on-resolve (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:1225:28)
+    at handleRequest (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:647:17)
+    at handleIncomingPacket (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:672:7)
+    at Socket.readFromStdout (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:600:7)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)
+
+  This error came from the "onResolve" callback registered here:
+
+    node_modules/esbuild/lib/main.js:1150:20:
+      1150 │       let promise = setup({
+           ╵                     ^
+
+    at setup (file:///Users/omerfkgoze/Documents/GitHub/Aura/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:66873:18)
+    at handlePlugins (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:1150:21)
+    at buildOrContextImpl (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:873:5)
+    at Object.buildOrContext (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:699:5)
+    at /Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:2023:15
+    at new Promise (<anonymous>)
+    at Object.build (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:2022:25)
+    at build (/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/esbuild/lib/main.js:1873:51)
+    at bundleConfigFile (file:///Users/omerfkgoze/Documents/GitHub/Aura/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:66828:24)
+
+  The plugin "externalize-deps" was triggered by this import
+
+    apps/web/vite.config.ts:3:18:
+      3 │ import react from '@vitejs/plugin-react';
+        ╵                   ~~~~~~~~~~~~~~~~~~~~~~
+
+[31mfailed to load config from /Users/omerfkgoze/Documents/GitHub/Aura/apps/web/vite.config.ts[39m
+
+[0m[7m[1m[31m NX [39m[22m[27m[0m  [31mBuild failed with 1 error:[39m
+
+node_modules/esbuild/lib/main.js:1225:27: ERROR: [plugin: externalize-deps] "@vitejs/plugin-react" resolved to an ESM file. ESM file cannot be loaded by `require`. See https://vite.dev/guide/troubleshooting.html#this-package-is-esm-only for more details.
+Pass --verbose to see the stacktrace.
+
