@@ -9,12 +9,12 @@ vi.mock('next/server', () => ({
       headers: new Map(Object.entries(init?.headers || {})),
       nextUrl: new URL(url),
     };
-    
+
     // Add headers.get method
-    request.headers.get = function(key: string) {
+    request.headers.get = function (key: string) {
       return this.get(key) || null;
     };
-    
+
     return request;
   }),
   NextResponse: {
@@ -30,8 +30,8 @@ vi.mock('next/server', () => ({
 }));
 
 // Set test environment variables
-process.env.NODE_ENV = 'test';
-process.env.CORS_ORIGIN = 'http://localhost:3000,http://localhost:19006';
+process.env['NODE_ENV'] = 'test';
+process.env['CORS_ORIGIN'] = 'http://localhost:3000,http://localhost:19006';
 
 // Mock console methods to avoid noise in tests
 vi.spyOn(console, 'log').mockImplementation(() => {});

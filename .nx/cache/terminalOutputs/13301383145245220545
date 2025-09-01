@@ -1,0 +1,94 @@
+[4m[34mapps/web/src/middleware.ts:1:43[39m[24m - [31m[1merror[22m[39m [90mTS2307[39m: Cannot find module 'next/server' or its corresponding type declarations.
+
+[0m[31m[1m>[22m[39m[90m 1 | [39m[36mimport[39m { [33mNextRequest[39m[33m,[39m [33mNextResponse[39m } from [32m'next/server'[39m[33m;[39m[0m
+[0m [90m   | [39m                                          [31m[1m^[22m[39m[0m
+[0m [90m 2 | [39m[0m
+[0m [90m 3 | [39m[90m// Security middleware for development environment[39m[0m
+[0m [90m 4 | [39m[90m// Implements CORS, CSP, and other security headers[39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/crypto-validate.ts:1:49[39m[24m - [31m[1merror[22m[39m [90mTS2307[39m: Cannot find module 'next' or its corresponding type declarations.
+
+[0m[31m[1m>[22m[39m[90m 1 | [39m[36mimport[39m { [33mNextApiRequest[39m[33m,[39m [33mNextApiResponse[39m } from [32m'next'[39m[33m;[39m[0m
+[0m [90m   | [39m                                                [31m[1m^[22m[39m[0m
+[0m [90m 2 | [39m[36mimport[39m { devLogger[33m,[39m cryptoLogger } from [32m'@aura/logger'[39m[33m;[39m[0m
+[0m [90m 3 | [39m[36mimport[39m { securityConfig } from [32m'../../../config/env'[39m[33m;[39m[0m
+[0m [90m 4 | [39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/crypto-validate.ts:41:23[39m[24m - [31m[1merror[22m[39m [90mTS4111[39m: Property 'devicePepper' comes from an index signature, so it must be accessed with ['devicePepper'].
+
+[0m [90m 39 | [39m    [90m// Test 2: Device pepper validation[39m[0m
+[0m [90m 40 | [39m    [36mconst[39m devicePepperTest [33m=[39m await testDevicePepper()[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 41 | [39m    testResults[33m.[39mtests[33m.[39mdevicePepper [33m=[39m devicePepperTest[33m;[39m[0m
+[0m [90m    | [39m                      [31m[1m^[22m[39m[0m
+[0m [90m 42 | [39m    cryptoLogger[33m.[39moperation([32m'test_device_pepper'[39m[33m,[39m [32m'hmac-sha256'[39m[33m,[39m devicePepperTest[33m.[39mpassed)[33m;[39m[0m
+[0m [90m 43 | [39m    [0m
+[0m [90m 44 | [39m    [90m// Test 3: Encryption/Decryption operations[39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/crypto-validate.ts:42:28[39m[24m - [31m[1merror[22m[39m [90mTS2345[39m: Argument of type '"test_device_pepper"' is not assignable to parameter of type '"encrypt" | "decrypt" | "hash" | "verify"'.
+
+[0m [90m 40 | [39m    [36mconst[39m devicePepperTest [33m=[39m await testDevicePepper()[33m;[39m[0m
+[0m [90m 41 | [39m    testResults[33m.[39mtests[33m.[39mdevicePepper [33m=[39m devicePepperTest[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 42 | [39m    cryptoLogger[33m.[39moperation([32m'test_device_pepper'[39m[33m,[39m [32m'hmac-sha256'[39m[33m,[39m devicePepperTest[33m.[39mpassed)[33m;[39m[0m
+[0m [90m    | [39m                           [31m[1m^[22m[39m[0m
+[0m [90m 43 | [39m    [0m
+[0m [90m 44 | [39m    [90m// Test 3: Encryption/Decryption operations[39m[0m
+[0m [90m 45 | [39m    [36mconst[39m encryptionTest [33m=[39m await testEncryption()[33m;[39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/crypto-validate.ts:46:23[39m[24m - [31m[1merror[22m[39m [90mTS4111[39m: Property 'encryption' comes from an index signature, so it must be accessed with ['encryption'].
+
+[0m [90m 44 | [39m    [90m// Test 3: Encryption/Decryption operations[39m[0m
+[0m [90m 45 | [39m    [36mconst[39m encryptionTest [33m=[39m await testEncryption()[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 46 | [39m    testResults[33m.[39mtests[33m.[39mencryption [33m=[39m encryptionTest[33m;[39m[0m
+[0m [90m    | [39m                      [31m[1m^[22m[39m[0m
+[0m [90m 47 | [39m    cryptoLogger[33m.[39moperation([32m'test_encryption'[39m[33m,[39m [32m'aes-256-gcm'[39m[33m,[39m encryptionTest[33m.[39mpassed)[33m;[39m[0m
+[0m [90m 48 | [39m    [0m
+[0m [90m 49 | [39m    [90m// Test 4: Hash consistency and security[39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/crypto-validate.ts:47:28[39m[24m - [31m[1merror[22m[39m [90mTS2345[39m: Argument of type '"test_encryption"' is not assignable to parameter of type '"encrypt" | "decrypt" | "hash" | "verify"'.
+
+[0m [90m 45 | [39m    [36mconst[39m encryptionTest [33m=[39m await testEncryption()[33m;[39m[0m
+[0m [90m 46 | [39m    testResults[33m.[39mtests[33m.[39mencryption [33m=[39m encryptionTest[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 47 | [39m    cryptoLogger[33m.[39moperation([32m'test_encryption'[39m[33m,[39m [32m'aes-256-gcm'[39m[33m,[39m encryptionTest[33m.[39mpassed)[33m;[39m[0m
+[0m [90m    | [39m                           [31m[1m^[22m[39m[0m
+[0m [90m 48 | [39m    [0m
+[0m [90m 49 | [39m    [90m// Test 4: Hash consistency and security[39m[0m
+[0m [90m 50 | [39m    [36mconst[39m hashTest [33m=[39m await testHashOperations()[33m;[39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/crypto-validate.ts:51:23[39m[24m - [31m[1merror[22m[39m [90mTS4111[39m: Property 'hashing' comes from an index signature, so it must be accessed with ['hashing'].
+
+[0m [90m 49 | [39m    [90m// Test 4: Hash consistency and security[39m[0m
+[0m [90m 50 | [39m    [36mconst[39m hashTest [33m=[39m await testHashOperations()[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 51 | [39m    testResults[33m.[39mtests[33m.[39mhashing [33m=[39m hashTest[33m;[39m[0m
+[0m [90m    | [39m                      [31m[1m^[22m[39m[0m
+[0m [90m 52 | [39m    cryptoLogger[33m.[39moperation([32m'test_hashing'[39m[33m,[39m [32m'pbkdf2'[39m[33m,[39m hashTest[33m.[39mpassed)[33m;[39m[0m
+[0m [90m 53 | [39m    [0m
+[0m [90m 54 | [39m    [90m// Calculate summary[39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/crypto-validate.ts:52:28[39m[24m - [31m[1merror[22m[39m [90mTS2345[39m: Argument of type '"test_hashing"' is not assignable to parameter of type '"encrypt" | "decrypt" | "hash" | "verify"'.
+
+[0m [90m 50 | [39m    [36mconst[39m hashTest [33m=[39m await testHashOperations()[33m;[39m[0m
+[0m [90m 51 | [39m    testResults[33m.[39mtests[33m.[39mhashing [33m=[39m hashTest[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 52 | [39m    cryptoLogger[33m.[39moperation([32m'test_hashing'[39m[33m,[39m [32m'pbkdf2'[39m[33m,[39m hashTest[33m.[39mpassed)[33m;[39m[0m
+[0m [90m    | [39m                           [31m[1m^[22m[39m[0m
+[0m [90m 53 | [39m    [0m
+[0m [90m 54 | [39m    [90m// Calculate summary[39m[0m
+[0m [90m 55 | [39m    [36mconst[39m allTests [33m=[39m [33mObject[39m[33m.[39mvalues(testResults[33m.[39mtests)[33m;[39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/health.ts:1:49[39m[24m - [31m[1merror[22m[39m [90mTS2307[39m: Cannot find module 'next' or its corresponding type declarations.
+
+[0m[31m[1m>[22m[39m[90m 1 | [39m[36mimport[39m { [33mNextApiRequest[39m[33m,[39m [33mNextApiResponse[39m } from [32m'next'[39m[33m;[39m[0m
+[0m [90m   | [39m                                                [31m[1m^[22m[39m[0m
+[0m [90m 2 | [39m[36mimport[39m { devLogger[33m,[39m dbLogger } from [32m'@aura/logger'[39m[33m;[39m[0m
+[0m [90m 3 | [39m[36mimport[39m { backendEnv[33m,[39m supabaseConfig } from [32m'../../../config/env'[39m[33m;[39m[0m
+[0m [90m 4 | [39m[0m
+
+[4m[34mapps/web/src/pages/api/dev/health.ts:11:19[39m[24m - [31m[1merror[22m[39m [90mTS4111[39m: Property 'NODE_ENV' comes from an index signature, so it must be accessed with ['NODE_ENV'].
+
+[0m [90m  9 | [39m[36mexport[39m [36mdefault[39m async [36mfunction[39m handler(req[33m:[39m [33mNextApiRequest[39m[33m,[39m res[33m:[39m [33mNextApiResponse[39m) {[0m
+[0m [90m 10 | [39m  [90m// Only allow in development[39m[0m
+[0m[31m[1m>[22m[39m[90m 11 | [39m  [36mif[39m (process[33m.[39menv[33m.[39m[33mNODE_ENV[39m [33m!==[39m [32m'development'[39m) {[0m
+[0m [90m    | [39m                  [31m[1m^[22m[39m[0m
+[0m [90m 12 | [39m    [36mreturn[39m res[33m.[39mstatus([35m404[39m)[33m.[39mjson({ error[33m:[39m [32m'Not found'[39m })[33m;[39m[0m
+[0m [90m 13 | [39m  }[0m
+[0m [90m 14 | [39m  [0m
+

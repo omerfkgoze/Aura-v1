@@ -4,7 +4,10 @@ import { z } from 'zod';
 const baseEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'staging', 'production']).default('development'),
   APP_VERSION: z.string().default('1.0.0'),
-  SECURITY_AUDIT_ENABLED: z.string().transform(val => val === 'true').default('true'),
+  SECURITY_AUDIT_ENABLED: z
+    .string()
+    .transform(val => val === 'true')
+    .default('true'),
 });
 
 // Frontend-specific environment variables (Expo/React Native + Next.js)
@@ -13,12 +16,24 @@ export const frontendEnvSchema = baseEnvSchema.extend({
   EXPO_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
   EXPO_PUBLIC_API_URL: z.string().url('Invalid API URL'),
   EXPO_PUBLIC_DEVICE_PEPPER: z.string().min(32, 'Device pepper must be at least 32 characters'),
-  
+
   // UX Configuration
-  EXPO_PUBLIC_CULTURAL_DETECTION_ENABLED: z.string().transform(val => val === 'true').default('true'),
-  EXPO_PUBLIC_STEALTH_MODE_DEFAULT: z.string().transform(val => val === 'true').default('false'),
-  EXPO_PUBLIC_ACCESSIBILITY_PAA_ENABLED: z.string().transform(val => val === 'true').default('true'),
-  EXPO_PUBLIC_ANIMATION_REDUCED_MOTION: z.string().transform(val => val === 'true').default('false'),
+  EXPO_PUBLIC_CULTURAL_DETECTION_ENABLED: z
+    .string()
+    .transform(val => val === 'true')
+    .default('true'),
+  EXPO_PUBLIC_STEALTH_MODE_DEFAULT: z
+    .string()
+    .transform(val => val === 'true')
+    .default('false'),
+  EXPO_PUBLIC_ACCESSIBILITY_PAA_ENABLED: z
+    .string()
+    .transform(val => val === 'true')
+    .default('true'),
+  EXPO_PUBLIC_ANIMATION_REDUCED_MOTION: z
+    .string()
+    .transform(val => val === 'true')
+    .default('false'),
 });
 
 // Backend-specific environment variables (Next.js API + Server)
@@ -28,10 +43,10 @@ export const backendEnvSchema = baseEnvSchema.extend({
   DATABASE_URL: z.string().url('Invalid database URL'),
   DEVICE_HASH_PEPPER: z.string().min(32, 'Device hash pepper must be at least 32 characters'),
   NEXTAUTH_SECRET: z.string().min(32, 'NextAuth secret must be at least 32 characters'),
-  
+
   // Optional Redis URL for caching
   REDIS_URL: z.string().url('Invalid Redis URL').optional(),
-  
+
   // Security headers configuration
   CORS_ORIGIN: z.string().default('http://localhost:3000,http://localhost:19006'),
   CSP_REPORT_URI: z.string().url('Invalid CSP report URI').optional(),
@@ -87,7 +102,7 @@ export function generateSecureRandom(length: number = 64): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
   let result = '';
   const array = new Uint8Array(length);
-  
+
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     crypto.getRandomValues(array);
   } else if (typeof require !== 'undefined') {
@@ -101,11 +116,11 @@ export function generateSecureRandom(length: number = 64): string {
       array[i] = Math.floor(Math.random() * 256);
     }
   }
-  
+
   for (let i = 0; i < length; i++) {
     result += chars[array[i] % chars.length];
   }
-  
+
   return result;
 }
 
@@ -118,14 +133,10 @@ export function checkDevelopmentSecrets(env: Record<string, string | undefined>)
   const missing: string[] = [];
   const insecure: string[] = [];
   const warnings: string[] = [];
-  
+
   // Check required secrets
-  const requiredSecrets = [
-    'EXPO_PUBLIC_DEVICE_PEPPER',
-    'DEVICE_HASH_PEPPER',
-    'NEXTAUTH_SECRET',
-  ];
-  
+  const requiredSecrets = ['EXPO_PUBLIC_DEVICE_PEPPER', 'DEVICE_HASH_PEPPER', 'NEXTAUTH_SECRET'];
+
   requiredSecrets.forEach(secret => {
     const value = env[secret];
     if (!value) {
@@ -136,16 +147,16 @@ export function checkDevelopmentSecrets(env: Record<string, string | undefined>)
       insecure.push(`${secret} (using placeholder value)`);
     }
   });
-  
+
   // Check for development-specific warnings
-  if (env.NODE_ENV === 'development') {
-    if (env.EXPO_PUBLIC_SUPABASE_URL && !env.EXPO_PUBLIC_SUPABASE_URL.includes('localhost')) {
+  if (env['NODE_ENV'] === 'development') {
+    if (env['EXPO_PUBLIC_SUPABASE_URL'] && !env['EXPO_PUBLIC_SUPABASE_URL'].includes('localhost')) {
       warnings.push('Using remote Supabase in development - consider local setup');
     }
-    if (env.DATABASE_URL && !env.DATABASE_URL.includes('localhost')) {
+    if (env['DATABASE_URL'] && !env['DATABASE_URL'].includes('localhost')) {
       warnings.push('Using remote database in development - consider local setup');
     }
   }
-  
+
   return { missing, insecure, warnings };
 }

@@ -1,0 +1,12 @@
+[36mvite v5.4.19 [32mbuilding for production...[36m[39m
+[33m
+[1m(!)[22m outDir [37m[2m/Users/omerfkgoze/Documents/dist/apps/web[22m[33m is not inside project root and will not be emptied.
+Use --emptyOutDir to override.
+[39m
+[32m✓[39m 0 modules transformed.
+[31mx[39m Build failed in 5ms
+
+[0m[7m[1m[31m NX [39m[22m[27m[0m  [31m[31mCould not resolve entry module "index.html".[39m[31m[39m
+
+Pass --verbose to see the stacktrace.
+

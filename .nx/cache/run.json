@@ -1,8 +1,8 @@
 {
   "run": {
     "command": "nx build web",
-    "startTime": "2025-09-01T16:27:55.009Z",
-    "endTime": "2025-09-01T16:27:55.952Z",
+    "startTime": "2025-09-01T17:24:27.409Z",
+    "endTime": "2025-09-01T17:24:29.108Z",
     "inner": false
   },
   "tasks": [
@@ -10,9 +10,9 @@
       "taskId": "utils:build",
       "target": "build",
       "projectName": "utils",
-      "hash": "17061374613406983843",
-      "startTime": "2025-09-01T16:27:55.012Z",
-      "endTime": "2025-09-01T16:27:55.028Z",
+      "hash": "7654177895416683828",
+      "startTime": "2025-09-01T17:24:27.412Z",
+      "endTime": "2025-09-01T17:24:27.428Z",
       "params": "",
       "cacheStatus": "local-cache-hit",
       "status": 0
@@ -21,12 +21,12 @@
       "taskId": "web:build",
       "target": "build",
       "projectName": "web",
-      "hash": "2090513472980495467",
-      "startTime": "2025-09-01T16:27:55.029Z",
-      "endTime": "2025-09-01T16:27:55.951Z",
+      "hash": "17436983715020312012",
+      "startTime": "2025-09-01T17:24:27.429Z",
+      "endTime": "2025-09-01T17:24:29.108Z",
       "params": "",
       "cacheStatus": "cache-miss",
-      "status": 1
+      "status": 0
     }
   ]
 }

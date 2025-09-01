@@ -7,24 +7,24 @@ export const backendEnv = validateBackendEnv(process.env);
 export const frontendEnv = validateFrontendEnv(process.env);
 
 // Development environment checking
-if (process.env.NODE_ENV === 'development') {
+if (process.env['NODE_ENV'] === 'development') {
   const secretCheck = checkDevelopmentSecrets(process.env);
-  
+
   if (secretCheck.missing.length > 0) {
     console.error('❌ Missing required environment variables:', secretCheck.missing.join(', '));
     console.error('📝 Copy .env.example to .env.local and fill in the values');
     process.exit(1);
   }
-  
+
   if (secretCheck.insecure.length > 0) {
     console.warn('⚠️  Insecure environment variables detected:', secretCheck.insecure.join(', '));
     console.warn('🔐 Generate secure secrets using: pnpm nx run utils:generate-secrets');
   }
-  
+
   if (secretCheck.warnings.length > 0) {
     console.info('ℹ️  Development warnings:', secretCheck.warnings.join(', '));
   }
-  
+
   console.log('✅ Environment variables validated successfully');
 }
 
