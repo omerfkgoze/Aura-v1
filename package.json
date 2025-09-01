@@ -12,16 +12,18 @@
     "format:check": "prettier --check .",
     "audit": "pnpm audit --audit-level=moderate",
     "audit:fix": "pnpm audit --fix",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test:services": "node scripts/test-service-integration.js"
   },
   "private": true,
   "devDependencies": {
     "@nx/eslint": "^18.0.0",
+    "@nx/eslint-plugin": "^21.4.1",
     "@nx/js": "^18.0.0",
     "@nx/vite": "^21.4.1",
     "@nx/workspace": "^18.0.0",
     "@types/node": "18.16.9",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^3.2.4",

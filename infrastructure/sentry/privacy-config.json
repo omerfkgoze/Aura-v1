@@ -1,0 +1,152 @@
+{
+  "name": "Aura Privacy-Safe Sentry Configuration",
+  "description": "Zero-knowledge error tracking configuration for reproductive health app",
+  "version": "1.0.0",
+  "criticalPolicyNote": "This configuration ensures ZERO health data or PII is ever sent to Sentry",
+
+  "dataScrubbing": {
+    "enabled": true,
+    "scrubDefaultFields": true,
+    "scrubIpAddresses": true,
+    "scrubBodies": true,
+    "customScrubbers": [
+      {
+        "rule": "cycle.*",
+        "description": "Remove any cycle-related data"
+      },
+      {
+        "rule": "period.*",
+        "description": "Remove any period-related data"
+      },
+      {
+        "rule": "health.*",
+        "description": "Remove any health-related data"
+      },
+      {
+        "rule": "symptom.*",
+        "description": "Remove any symptom data"
+      },
+      {
+        "rule": "temperature.*",
+        "description": "Remove temperature readings"
+      },
+      {
+        "rule": ".*birth.*",
+        "description": "Remove birth-related information"
+      },
+      {
+        "rule": ".*pregnant.*",
+        "description": "Remove pregnancy-related data"
+      },
+      {
+        "rule": ".*fertility.*",
+        "description": "Remove fertility data"
+      },
+      {
+        "rule": ".*crypto.*key.*",
+        "description": "Remove any crypto keys from logs"
+      },
+      {
+        "rule": ".*password.*",
+        "description": "Remove passwords"
+      },
+      {
+        "rule": ".*token.*",
+        "description": "Remove authentication tokens"
+      },
+      {
+        "rule": ".*email.*",
+        "description": "Remove email addresses"
+      },
+      {
+        "rule": ".*phone.*",
+        "description": "Remove phone numbers"
+      }
+    ]
+  },
+
+  "allowedErrorTypes": [
+    "NetworkError",
+    "TypeError",
+    "ReferenceError",
+    "SyntaxError",
+    "TimeoutError",
+    "ConfigurationError",
+    "ValidationError",
+    "CryptoError",
+    "DatabaseConnectionError",
+    "AuthenticationError"
+  ],
+
+  "blockedErrorTypes": [
+    "HealthDataError",
+    "CycleDataError",
+    "PersonalDataError",
+    "UserContentError",
+    "PrivateKeyError"
+  ],
+
+  "contextFiltering": {
+    "allowedContexts": [
+      "browser.name",
+      "browser.version",
+      "os.name",
+      "os.version",
+      "app.version",
+      "app.build",
+      "device.model",
+      "locale",
+      "timezone",
+      "screen.resolution"
+    ],
+    "blockedContexts": [
+      "user.id",
+      "user.email",
+      "user.name",
+      "user.data",
+      "session.data",
+      "request.body",
+      "response.body",
+      "cookies",
+      "localStorage",
+      "sessionStorage",
+      "indexedDB"
+    ]
+  },
+
+  "performanceMonitoring": {
+    "enabled": true,
+    "onlyTechnicalMetrics": true,
+    "tracingOrigins": ["localhost", "aura-app.vercel.app", "*.supabase.co"],
+    "excludeTransactions": ["crypto/*", "health/*", "cycle/*", "personal/*"]
+  },
+
+  "releaseTracking": {
+    "enabled": true,
+    "onlyVersionAndBuild": true,
+    "excludeSourceMaps": true
+  },
+
+  "sessionReplay": {
+    "enabled": false,
+    "reason": "Privacy protection - reproductive health data must never be recorded"
+  },
+
+  "userFeedback": {
+    "enabled": false,
+    "reason": "Privacy protection - no user identification allowed"
+  },
+
+  "integrations": {
+    "breadcrumbs": {
+      "enabled": true,
+      "maxBreadcrumbs": 50,
+      "categories": ["navigation", "http", "error", "lifecycle"],
+      "excludeCategories": ["user", "input", "form", "storage"]
+    },
+    "globalHandlers": {
+      "onerror": true,
+      "onunhandledrejection": true
+    }
+  }
+}
