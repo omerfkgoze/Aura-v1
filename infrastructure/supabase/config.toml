@@ -1,0 +1,85 @@
+# Supabase CLI Configuration for Aura App
+# This file configures the Supabase CLI to work with your production project
+
+[api]
+# Production project settings - CRITICAL for zero-knowledge architecture
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+# Database configuration with RLS enforcement
+enabled = true  
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+# CRITICAL: Row Level Security must be enabled by default
+# This ensures zero-knowledge principle is enforced at database level
+[db.pooler]
+enabled = true
+port = 54329
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+port = 54324
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost:54321"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+port = 54327
+file_size_limit = "50MiB"
+# CRITICAL: All file uploads must be encrypted client-side before storage
+# Storage is only for encrypted blobs - never plaintext health data
+
+[auth]
+enabled = true
+port = 54328
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://your-domain.com"]
+jwt_expiry = 3600
+# CRITICAL: WebAuthn/Passkeys must be enabled for hardware-backed security
+enable_signup = true
+enable_confirmations = true
+enable_recoveries = true
+
+# CRITICAL SECURITY SETTINGS
+[auth.external]
+# Only enable OAuth providers that support strong security
+# All OAuth flows must maintain zero-knowledge principle
+apple_enabled = false
+azure_enabled = false
+bitbucket_enabled = false
+discord_enabled = false
+facebook_enabled = false
+github_enabled = false
+gitlab_enabled = false
+google_enabled = false
+keycloak_enabled = false
+linkedin_enabled = false
+notion_enabled = false
+twitch_enabled = false
+twitter_enabled = false
+slack_enabled = false
+spotify_enabled = false
+workos_enabled = false
+zoom_enabled = false
+
+# Production project reference
+[project_id]
+# Your production project ID: mkhybhbchspkdsivmekm
+production = "mkhybhbchspkdsivmekm"
