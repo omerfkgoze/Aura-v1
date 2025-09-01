@@ -6,6 +6,7 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
+      "dependsOn": ["build-wasm"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "main": "libs/crypto-core/src/index.ts",
@@ -15,8 +16,26 @@
     },
     "build-wasm": {
       "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/pkg"],
       "options": {
-        "command": "cd libs/crypto-core && wasm-pack build --target web --out-dir pkg"
+        "command": "wasm-pack build --target bundler",
+        "cwd": "libs/crypto-core"
+      }
+    },
+    "build-wasm-web": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/pkg-web"],
+      "options": {
+        "command": "wasm-pack build --target web --out-dir pkg-web",
+        "cwd": "libs/crypto-core"
+      }
+    },
+    "build-wasm-nodejs": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/pkg-node"],
+      "options": {
+        "command": "wasm-pack build --target nodejs --out-dir pkg-node",
+        "cwd": "libs/crypto-core"
       }
     },
     "lint": {
@@ -31,6 +50,42 @@
       "options": {
         "rootDir": "libs/crypto-core",
         "tsConfig": "libs/crypto-core/tsconfig.json"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/libs/crypto-core"],
+      "options": {
+        "config": "vitest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "test-rust": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cargo test",
+        "cwd": "libs/crypto-core"
+      }
+    },
+    "watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "wasm-pack build --target bundler --dev --watch",
+        "cwd": "libs/crypto-core"
+      }
+    },
+    "security-audit": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cargo audit",
+        "cwd": "libs/crypto-core"
+      }
+    },
+    "bench": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cargo bench",
+        "cwd": "libs/crypto-core"
       }
     }
   },

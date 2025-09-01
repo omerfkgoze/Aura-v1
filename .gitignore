@@ -122,3 +122,18 @@ wheels/
 # Nx cache directory
 .nx/cache
 .nx/workspace-data
+
+# Rust/WASM specific
+target/
+**/*.rs.bk
+Cargo.lock
+
+# WASM generated files
+pkg/
+pkg-web/
+pkg-node/
+*.wasm
+
+# Rust profiling
+perf.data
+perf.data.old
