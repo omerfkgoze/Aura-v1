@@ -42,6 +42,8 @@
     "libs/*"
   ],
   "dependencies": {
+    "@typescript-eslint/project-service": "^8.41.0",
+    "@typescript-eslint/tsconfig-utils": "^8.41.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   }

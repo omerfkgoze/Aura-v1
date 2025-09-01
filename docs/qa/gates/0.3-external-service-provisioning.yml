@@ -1,0 +1,28 @@
+schema: 1
+story: '0.3'
+gate: CONCERNS
+status_reason: 'Incomplete tasks and missing security configurations pose deployment risks.'
+reviewer: 'Quinn'
+updated: '2025-09-01T15:30:00Z'
+top_issues:
+  - id: 'SEC-001'
+    severity: high
+    finding: 'Supabase validation script incomplete - no verification of RLS and WebAuthn settings'
+    suggested_action: 'Complete validation script to verify security configurations before production'
+  - id: 'DOC-002'
+    severity: medium
+    finding: 'Custom domain setup process and SSL configuration documentation missing'
+    suggested_action: 'Document custom domain setup process for production deployment'
+  - id: 'SEC-002'
+    severity: high
+    finding: 'Sentry privacy-safe monitoring implementation incomplete'
+    suggested_action: 'Complete Sentry configuration with data scrubbing rules before production'
+  - id: 'DOC-003'
+    severity: medium
+    finding: 'Mobile app store preparation documentation incomplete'
+    suggested_action: 'Complete app store setup guides for both iOS and Android platforms'
+  - id: 'TEST-001'
+    severity: medium
+    finding: 'Supabase CLI configuration and database migration workflow incomplete'
+    suggested_action: 'Complete database migration workflow setup and testing'
+waiver: { active: false }

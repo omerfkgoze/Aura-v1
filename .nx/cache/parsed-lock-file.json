@@ -1872,6 +1872,15 @@
         "hash": "sha512-tbsV1jPne5CkFQCgPBcDOt30ItF7aJoZL997JSF7MhGQqOeT3svWRYxiqlfA5RUdlHN6Fi+EI9bxqbdyAUZjYQ=="
       }
     },
+    "npm:@typescript-eslint/project-service@8.41.0": {
+      "type": "npm",
+      "name": "npm:@typescript-eslint/project-service@8.41.0",
+      "data": {
+        "version": "@typescript-eslint/project-service@8.41.0",
+        "packageName": "@typescript-eslint/project-service@8.41.0",
+        "hash": "sha512-b8V9SdGBQzQdjJ/IO3eDifGpDBJfvrNTp2QD9P2BeqWTGrRibgfgIlBSw6z3b6R7dPzg752tOs4u/7yCLxksSQ=="
+      }
+    },
     "npm:@typescript-eslint/scope-manager@6.21.0": {
       "type": "npm",
       "name": "npm:@typescript-eslint/scope-manager@6.21.0",
@@ -1888,6 +1897,15 @@
         "version": "@typescript-eslint/scope-manager@7.18.0",
         "packageName": "@typescript-eslint/scope-manager@7.18.0",
         "hash": "sha512-jjhdIE/FPF2B7Z1uzc6i3oWKbGcHb87Qw7AWj6jmEqNOfDFbJWtjt/XfwCpvNkpGWlcJaog5vTR+VV8+w9JflA=="
+      }
+    },
+    "npm:@typescript-eslint/tsconfig-utils@8.41.0": {
+      "type": "npm",
+      "name": "npm:@typescript-eslint/tsconfig-utils@8.41.0",
+      "data": {
+        "version": "@typescript-eslint/tsconfig-utils@8.41.0",
+        "packageName": "@typescript-eslint/tsconfig-utils@8.41.0",
+        "hash": "sha512-TDhxYFPUYRFxFhuU5hTIJk+auzM/wKvWgoNYOPcOf6i4ReYlOoYN8q1dV5kOTjNQNJgzWN3TUUQMtlLOcUgdUw=="
       }
     },
     "npm:@typescript-eslint/type-utils@6.21.0": {
@@ -1924,6 +1942,15 @@
         "version": "@typescript-eslint/types@7.18.0",
         "packageName": "@typescript-eslint/types@7.18.0",
         "hash": "sha512-iZqi+Ds1y4EDYUtlOOC+aUmxnE9xS/yCigkjA7XpTKV6nCBd3Hp/PRGGmdwnfkV2ThMyYldP1wRpm/id99spTQ=="
+      }
+    },
+    "npm:@typescript-eslint/types@8.41.0": {
+      "type": "npm",
+      "name": "npm:@typescript-eslint/types@8.41.0",
+      "data": {
+        "version": "@typescript-eslint/types@8.41.0",
+        "packageName": "@typescript-eslint/types@8.41.0",
+        "hash": "sha512-9EwxsWdVqh42afLbHP90n2VdHaWU/oWgbH2P0CfcNfdKL7CuKpwMQGjwev56vWu9cSKU7FWSu6r9zck6CVfnag=="
       }
     },
     "npm:@typescript-eslint/typescript-estree@6.21.0": {
