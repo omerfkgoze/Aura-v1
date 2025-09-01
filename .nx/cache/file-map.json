@@ -35,604 +35,48 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": "docs/architecture/high-level-architecture.md",
-        "hash": "2564184415112127834"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/architect.md",
-        "hash": "7419864901674002884"
-      },
-      {
-        "file": ".bmad-core/agent-teams/team-fullstack.yaml",
-        "hash": "12586635774136024361"
-      },
-      {
-        "file": "docs/prd/epic-1-foundation-privacy-infrastructure.md",
-        "hash": "8322590030998658298"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/apply-qa-fixes.md",
-        "hash": "12581602428095765295"
-      },
-      {
-        "file": "db/init/001_development_setup.sql",
-        "hash": "14984201351673589161"
-      },
-      {
-        "file": ".bmad-core/data/elicitation-methods.md",
-        "hash": "4285596109079784654"
-      },
-      {
-        "file": ".bmad-core/tasks/trace-requirements.md",
-        "hash": "8158170954591949762"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/pm.md",
-        "hash": "15873979960245295260"
-      },
-      {
-        "file": ".bmad-core/checklists/po-master-checklist.md",
-        "hash": "14680430908143577303"
-      },
-      {
-        "file": "docs/deployment/app-store-preparation.md",
-        "hash": "10159124443228983695"
-      },
-      {
-        "file": ".bmad-core/templates/brainstorming-output-tmpl.yaml",
-        "hash": "3082144360027690181"
-      },
-      {
-        "file": ".bmad-core/checklists/pm-checklist.md",
-        "hash": "3625100732599361377"
-      },
-      {
-        "file": "docs/architecture/index.md",
-        "hash": "7055005696811827256"
-      },
-      {
-        "file": ".bmad-core/tasks/create-doc.md",
-        "hash": "5689248432380683252"
-      },
-      {
-        "file": ".bmad-core/templates/brownfield-prd-tmpl.yaml",
-        "hash": "5452676616549561151"
-      },
-      {
-        "file": ".bmad-core/tasks/risk-profile.md",
-        "hash": "3500406260092176284"
-      },
-      {
-        "file": ".npmrc",
-        "hash": "6213644999009914061"
-      },
-      {
-        "file": ".bmad-core/tasks/index-docs.md",
-        "hash": "16537600606131849869"
-      },
-      {
-        "file": "infrastructure/sentry/sentry.client.config.ts",
-        "hash": "4315149844484114703"
-      },
-      {
-        "file": "pnpm-workspace.yaml",
-        "hash": "4682124154651265967"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/analyst.md",
-        "hash": "11670627662488736847"
-      },
-      {
-        "file": ".bmad-core/tasks/test-design.md",
-        "hash": "14422193000721481102"
-      },
-      {
-        "file": "docs/architecture/production-ready-privacy-hardening-validation.md",
-        "hash": "1212137774149618963"
-      },
-      {
-        "file": ".bmad-core/templates/brownfield-architecture-tmpl.yaml",
-        "hash": "516735417138537696"
-      },
-      {
-        "file": "docs/architecture/conclusion.md",
-        "hash": "10106462832944587951"
-      },
-      {
-        "file": "docs/prd/checklist-results-report.md",
-        "hash": "13089501556270575534"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/validate-next-story.md",
-        "hash": "44092942797727473"
-      },
-      {
-        "file": ".gitignore",
-        "hash": "896572457204093957"
-      },
-      {
-        "file": "docs/architecture/coding-standards.md",
-        "hash": "7530413494168182664"
-      },
-      {
-        "file": "docs/adrs/003-local-https-webauthn.md",
-        "hash": "737826470703318939"
-      },
-      {
-        "file": ".bmad-core/enhanced-ide-development-workflow.md",
-        "hash": "2266648761935650094"
-      },
-      {
-        "file": ".bmad-core/tasks/advanced-elicitation.md",
-        "hash": "17223931487938168306"
-      },
-      {
-        "file": ".bmad-core/templates/project-brief-tmpl.yaml",
-        "hash": "12070523584429133281"
-      },
-      {
-        "file": ".bmad-core/tasks/nfr-assess.md",
-        "hash": "17925232806973161277"
-      },
-      {
-        "file": ".bmad-core/agents/po.md",
-        "hash": "6711287406034871789"
-      },
-      {
-        "file": ".bmad-core/templates/prd-tmpl.yaml",
-        "hash": "14101624642129260531"
-      },
-      {
-        "file": "docs/prd/next-steps.md",
-        "hash": "14044886602390780537"
-      },
-      {
-        "file": ".bmad-core/agent-teams/team-all.yaml",
-        "hash": "337299525406343026"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/nfr-assess.md",
-        "hash": "2430198339583692007"
-      },
-      {
-        "file": ".bmad-core/templates/front-end-spec-tmpl.yaml",
-        "hash": "8976040021939915782"
-      },
-      {
-        "file": ".bmad-core/tasks/brownfield-create-story.md",
-        "hash": "13141835723255598431"
-      },
-      {
-        "file": "scripts/__tests__/generate-secrets.test.js",
-        "hash": "17273140984751143961"
-      },
-      {
-        "file": "TROUBLESHOOTING.md",
-        "hash": "17661475069253569402"
-      },
-      {
-        "file": "infrastructure/sentry/privacy-config.json",
-        "hash": "18122780831615535052"
-      },
-      {
-        "file": ".bmad-core/workflows/greenfield-service.yaml",
-        "hash": "1454115953183213186"
-      },
-      {
-        "file": "docs/architecture/ux-architecture-user-experience-design.md",
-        "hash": "715746144742160228"
-      },
-      {
-        "file": "docs/prd/epic-0-project-foundation.md",
-        "hash": "6093362572410097147"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/correct-course.md",
-        "hash": "9647291800100559531"
-      },
-      {
-        "file": ".bmad-core/tasks/kb-mode-interaction.md",
-        "hash": "8752676768631267836"
-      },
-      {
-        "file": ".lintstagedrc.json",
-        "hash": "8837330835930879596"
-      },
-      {
-        "file": ".eslintrc.json",
-        "hash": "16694695889628342462"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/create-brownfield-story.md",
-        "hash": "3374085739392781427"
-      },
-      {
-        "file": ".bmad-core/data/technical-preferences.md",
-        "hash": "11761996169301568986"
-      },
-      {
-        "file": ".bmad-core/utils/workflow-management.md",
-        "hash": "7879321664521989248"
-      },
-      {
-        "file": "nx.json",
-        "hash": "11761656797900205460"
-      },
-      {
-        "file": ".bmad-core/tasks/review-story.md",
-        "hash": "2145204328233286276"
-      },
-      {
-        "file": "docs/architecture/tech-stack.md",
-        "hash": "2089588370201100218"
-      },
-      {
-        "file": ".bmad-core/agents/ux-expert.md",
-        "hash": "6040311131189047573"
-      },
-      {
-        "file": ".bmad-core/templates/competitor-analysis-tmpl.yaml",
-        "hash": "14619162470109769399"
-      },
-      {
-        "file": ".bmad-core/tasks/generate-ai-frontend-prompt.md",
-        "hash": "2634466137015865455"
-      },
-      {
-        "file": "scripts/test-service-integration.js",
-        "hash": "203223973036117690"
-      },
-      {
-        "file": ".bmad-core/agent-teams/team-no-ui.yaml",
-        "hash": "7187079644118709187"
-      },
-      {
-        "file": ".bmad-core/tasks/validate-next-story.md",
-        "hash": "3301258644096385718"
-      },
-      {
-        "file": "docs/architecture/backend-architecture.md",
-        "hash": "6278880243176005401"
-      },
-      {
-        "file": ".bmad-core/checklists/architect-checklist.md",
-        "hash": "6410438132036462266"
-      },
-      {
-        "file": ".husky/pre-commit",
-        "hash": "13077397016463547046"
-      },
-      {
-        "file": ".bmad-core/workflows/brownfield-service.yaml",
-        "hash": "17386785336041434981"
-      },
-      {
-        "file": ".bmad-core/user-guide.md",
-        "hash": "3755715020760101842"
-      },
-      {
-        "file": ".prettierignore",
-        "hash": "16467628193675140411"
-      },
-      {
-        "file": ".bmad-core/tasks/facilitate-brainstorming-session.md",
-        "hash": "7027788617086759443"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/shard-doc.md",
-        "hash": "156160490136917367"
-      },
-      {
-        "file": ".bmad-core/core-config.yaml",
-        "hash": "5727587627783328078"
-      },
-      {
-        "file": ".bmad-core/templates/architecture-tmpl.yaml",
-        "hash": "12323689974685229210"
-      },
-      {
-        "file": "supabase/seed.sql",
-        "hash": "7027971012515094345"
-      },
-      {
-        "file": ".bmad-core/tasks/correct-course.md",
-        "hash": "6033057698172366538"
-      },
-      {
-        "file": "docs/architecture/frontend-architecture.md",
-        "hash": "3437179845827057508"
-      },
-      {
-        "file": ".bmad-core/agents/sm.md",
-        "hash": "15202124121750005004"
-      },
-      {
-        "file": ".bmad-core/tasks/document-project.md",
-        "hash": "17524878674147022168"
-      },
-      {
-        "file": "docs/stories/0.3.external-service-provisioning.md",
-        "hash": "11635461105912818277"
-      },
-      {
-        "file": "docs/prd/technical-assumptions.md",
-        "hash": "9183413357935009140"
-      },
-      {
-        "file": ".bmad-core/workflows/greenfield-ui.yaml",
-        "hash": "16140927489938302776"
-      },
-      {
-        "file": "docs/prd/index.md",
-        "hash": "1491895381063754878"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/create-doc.md",
-        "hash": "42809923049209824"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/test-design.md",
-        "hash": "14643230889609196633"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/dev.md",
-        "hash": "8840542038615232186"
-      },
-      {
         "file": "scripts/__tests__/script-helpers.js",
         "hash": "6443591978780742626"
-      },
-      {
-        "file": "docs/architecture/security-and-performance.md",
-        "hash": "16064472203704166858"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/index-docs.md",
-        "hash": "12868766621066344526"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/trace-requirements.md",
-        "hash": "2247234207817803120"
-      },
-      {
-        "file": "tsconfig.base.json",
-        "hash": "14027648063351402433"
-      },
-      {
-        "file": ".bmad-core/agents/qa.md",
-        "hash": "1997648974958996496"
-      },
-      {
-        "file": "infrastructure/supabase/config.toml",
-        "hash": "14791732497087342995"
-      },
-      {
-        "file": ".bmad-core/agents/dev.md",
-        "hash": "567543673288519749"
       },
       {
         "file": "docs/prd/epic-4-selective-healthcare-sharing.md",
         "hash": "3867037255854429401"
       },
       {
-        "file": "docs/architecture/api-specification.md",
-        "hash": "1832908958983193728"
+        "file": "docs/architecture/high-level-architecture.md",
+        "hash": "2564184415112127834"
       },
       {
-        "file": "docs/architecture/components.md",
-        "hash": "4258057824447857880"
-      },
-      {
-        "file": ".bmad-core/templates/story-tmpl.yaml",
-        "hash": "12495374815725626245"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/create-next-story.md",
-        "hash": "17553399679149227138"
-      },
-      {
-        "file": ".bmad-core/agents/bmad-orchestrator.md",
-        "hash": "2554700552997457402"
-      },
-      {
-        "file": "vercel.json",
-        "hash": "7257200091891449849"
-      },
-      {
-        "file": ".vscode/extensions.json",
-        "hash": "1193029154356972028"
-      },
-      {
-        "file": ".bmad-core/tasks/create-next-story.md",
-        "hash": "18150265903905121680"
-      },
-      {
-        "file": ".bmad-core/checklists/story-draft-checklist.md",
-        "hash": "16165770342319157731"
-      },
-      {
-        "file": ".bmad-core/data/test-levels-framework.md",
-        "hash": "14933665299270137132"
-      },
-      {
-        "file": ".bmad-core/data/test-priorities-matrix.md",
-        "hash": "6721955645753564765"
-      },
-      {
-        "file": ".bmad-core/templates/front-end-architecture-tmpl.yaml",
-        "hash": "809340533291486468"
-      },
-      {
-        "file": "docs/stories/0.2.development-environment-configuration.md",
-        "hash": "3561892320715321841"
+        "file": "nx.json",
+        "hash": "11761656797900205460"
       },
       {
         "file": "docs/prd/epic-2-core-cycle-tracking-predictions.md",
         "hash": "12341226731336481883"
       },
       {
-        "file": "package.json",
-        "hash": "16541956387896002186"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/ux-expert.md",
-        "hash": "4008661918155957282"
-      },
-      {
-        "file": ".bmad-core/tasks/apply-qa-fixes.md",
-        "hash": "15625086892347835958"
-      },
-      {
-        "file": ".nx/cache/d/server-process.json",
-        "hash": "3620489513210459320"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/generate-ai-frontend-prompt.md",
-        "hash": "7527945043512830492"
-      },
-      {
-        "file": ".bmad-core/workflows/brownfield-fullstack.yaml",
-        "hash": "18324238111144647404"
-      },
-      {
-        "file": ".eslintignore",
-        "hash": "4933240813645554416"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/review-story.md",
-        "hash": "5673067854225379428"
-      },
-      {
-        "file": "docs/adrs/README.md",
-        "hash": "6951267186332868995"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/execute-checklist.md",
-        "hash": "4716630971864379265"
-      },
-      {
-        "file": ".bmad-core/workflows/brownfield-ui.yaml",
-        "hash": "9320533519393807023"
-      },
-      {
-        "file": "docker-compose.yml",
-        "hash": "8025726072313594589"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/kb-mode-interaction.md",
-        "hash": "2564772285690890"
-      },
-      {
-        "file": ".env.example",
-        "hash": "6711416301878689268"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/risk-profile.md",
-        "hash": "9817448544139144471"
-      },
-      {
-        "file": ".bmad-core/templates/market-research-tmpl.yaml",
-        "hash": "1200061766089906651"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/brownfield-create-epic.md",
-        "hash": "2957100879601224630"
-      },
-      {
-        "file": "docs/architecture/data-models.md",
-        "hash": "16116927292761342809"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/qa.md",
-        "hash": "1432288955789418229"
-      },
-      {
-        "file": "docs/prd/requirements.md",
-        "hash": "2406077865519778490"
-      },
-      {
-        "file": ".bmad-core/agents/architect.md",
-        "hash": "11334416960813961723"
-      },
-      {
-        "file": ".bmad-core/data/brainstorming-techniques.md",
-        "hash": "11613849674078599267"
-      },
-      {
-        "file": ".vscode/settings.json",
-        "hash": "3086856535495746463"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/sm.md",
-        "hash": "12820781035041569629"
-      },
-      {
-        "file": "docs/architecture/source-tree.md",
-        "hash": "3679395156649553109"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/facilitate-brainstorming-session.md",
-        "hash": "7888943537930917099"
+        "file": ".claude/commands/BMad/tasks/document-project.md",
+        "hash": "5364508912146181702"
       },
       {
         "file": ".bmad-core/workflows/greenfield-fullstack.yaml",
         "hash": "11604552961685591134"
       },
       {
-        "file": ".bmad-core/install-manifest.yaml",
-        "hash": "1186354749687015193"
+        "file": ".bmad-core/tasks/generate-ai-frontend-prompt.md",
+        "hash": "2634466137015865455"
       },
       {
-        "file": ".prettierrc",
-        "hash": "319442104772609628"
+        "file": "infrastructure/supabase/config.toml",
+        "hash": "14791732497087342995"
       },
       {
-        "file": "docs/architecture/introduction.md",
-        "hash": "14064180004448230569"
+        "file": ".bmad-core/tasks/trace-requirements.md",
+        "hash": "8158170954591949762"
       },
       {
-        "file": ".bmad-core/agents/pm.md",
-        "hash": "15877566805277138535"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/brownfield-create-story.md",
-        "hash": "13725111864183007185"
-      },
-      {
-        "file": "supabase/config.toml",
-        "hash": "15089808278908695011"
-      },
-      {
-        "file": "docs/adrs/002-privacy-safe-logging.md",
-        "hash": "7782273335363118894"
-      },
-      {
-        "file": ".bmad-core/checklists/story-dod-checklist.md",
-        "hash": "10281023474099614987"
-      },
-      {
-        "file": ".bmad-core/tasks/create-deep-research-prompt.md",
-        "hash": "14730564240785956076"
-      },
-      {
-        "file": "docs/prd/epic-3-stealth-mode-adaptive-ui.md",
-        "hash": "9985300425651491034"
-      },
-      {
-        "file": ".bmad-core/utils/bmad-doc-template.md",
-        "hash": "14186714928875887587"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/create-deep-research-prompt.md",
-        "hash": "17213556261948270782"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/document-project.md",
-        "hash": "5364508912146181702"
-      },
-      {
-        "file": "docs/prd/epic-list.md",
-        "hash": "1766217827913825246"
+        "file": ".vscode/settings.json",
+        "hash": "3086856535495746463"
       },
       {
         "file": ".bmad-core/templates/fullstack-architecture-tmpl.yaml",
@@ -643,124 +87,680 @@
         "hash": "2109930586776497494"
       },
       {
-        "file": "docs/stories/0.1.monorepo-project-scaffolding.md",
-        "hash": "18352105052387847125"
+        "file": ".claude/commands/BMad/tasks/risk-profile.md",
+        "hash": "9817448544139144471"
       },
       {
-        "file": ".bmad-core/templates/qa-gate-tmpl.yaml",
-        "hash": "17946443956236349753"
-      },
-      {
-        "file": "package-lock.json",
-        "hash": "4999870242846768987"
-      },
-      {
-        "file": ".bmad-core/data/bmad-kb.md",
-        "hash": "4034212301821525640"
-      },
-      {
-        "file": "docs/prd/user-interface-design-goals.md",
-        "hash": "13660394431249458484"
-      },
-      {
-        "file": ".bmad-core/agents/analyst.md",
-        "hash": "13067091749905618769"
-      },
-      {
-        "file": "pnpm-lock.yaml",
-        "hash": "7616262922699573603"
-      },
-      {
-        "file": "docs/architecture/development-workflow.md",
-        "hash": "1227686491491933490"
-      },
-      {
-        "file": ".claude/commands/BMad/tasks/advanced-elicitation.md",
-        "hash": "14876929230842518164"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/bmad-orchestrator.md",
-        "hash": "6409751737037117346"
-      },
-      {
-        "file": ".bmad-core/tasks/create-brownfield-story.md",
-        "hash": "11759250300492194288"
-      },
-      {
-        "file": ".claude/commands/BMad/agents/bmad-master.md",
-        "hash": "10523221793241837765"
-      },
-      {
-        "file": ".bmad-core/tasks/qa-gate.md",
-        "hash": "8824162947048565697"
-      },
-      {
-        "file": "scripts/setup-https.sh",
-        "hash": "6579275988938756184"
-      },
-      {
-        "file": ".bmad-core/agent-teams/team-ide-minimal.yaml",
-        "hash": "6599056621133681767"
-      },
-      {
-        "file": ".bmad-core/tasks/brownfield-create-epic.md",
-        "hash": "8996366329311395420"
+        "file": ".bmad-core/core-config.yaml",
+        "hash": "5727587627783328078"
       },
       {
         "file": "scripts/generate-secrets.js",
         "hash": "14013570750786050466"
       },
       {
-        "file": "scripts/dev-setup.sh",
-        "hash": "6068328857778400018"
+        "file": ".claude/commands/BMad/tasks/create-deep-research-prompt.md",
+        "hash": "17213556261948270782"
       },
       {
-        "file": ".bmad-core/checklists/change-checklist.md",
-        "hash": "16884709078362612966"
+        "file": ".bmad-core/checklists/architect-checklist.md",
+        "hash": "6410438132036462266"
       },
       {
-        "file": ".bmad-core/working-in-the-brownfield.md",
-        "hash": "5004822830586313054"
+        "file": "docker-compose.yml",
+        "hash": "8025726072313594589"
       },
       {
-        "file": ".bmad-core/tasks/shard-doc.md",
-        "hash": "7177305207687252728"
+        "file": "docs/architecture/components.md",
+        "hash": "4258057824447857880"
       },
       {
-        "file": ".claude/commands/BMad/tasks/qa-gate.md",
-        "hash": "6026240396267230393"
+        "file": "docs/architecture/index.md",
+        "hash": "7055005696811827256"
       },
       {
-        "file": ".claude/commands/BMad/agents/po.md",
-        "hash": "438619358088099839"
+        "file": ".bmad-core/tasks/create-brownfield-story.md",
+        "hash": "11759250300492194288"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/create-brownfield-story.md",
+        "hash": "3374085739392781427"
       },
       {
         "file": "docs/adrs/001-development-environment-setup.md",
         "hash": "9478830842509066059"
       },
       {
-        "file": "docs/qa/gates/0.2-development-environment-configuration.yml",
-        "hash": "11473046907051818207"
+        "file": ".bmad-core/workflows/brownfield-ui.yaml",
+        "hash": "9320533519393807023"
       },
       {
-        "file": "docs/architecture/deployment-architecture.md",
-        "hash": "17344024307184592919"
+        "file": ".npmrc",
+        "hash": "6213644999009914061"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/review-story.md",
+        "hash": "5673067854225379428"
+      },
+      {
+        "file": ".bmad-core/tasks/brownfield-create-story.md",
+        "hash": "13141835723255598431"
+      },
+      {
+        "file": ".bmad-core/tasks/shard-doc.md",
+        "hash": "7177305207687252728"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/pm.md",
+        "hash": "15873979960245295260"
+      },
+      {
+        "file": "docs/architecture/coding-standards.md",
+        "hash": "7530413494168182664"
+      },
+      {
+        "file": ".bmad-core/templates/brownfield-prd-tmpl.yaml",
+        "hash": "5452676616549561151"
+      },
+      {
+        "file": "docs/architecture/tech-stack.md",
+        "hash": "2089588370201100218"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/correct-course.md",
+        "hash": "9647291800100559531"
+      },
+      {
+        "file": ".bmad-core/tasks/facilitate-brainstorming-session.md",
+        "hash": "7027788617086759443"
+      },
+      {
+        "file": ".bmad-core/enhanced-ide-development-workflow.md",
+        "hash": "2266648761935650094"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/create-next-story.md",
+        "hash": "17553399679149227138"
+      },
+      {
+        "file": ".bmad-core/data/brainstorming-techniques.md",
+        "hash": "11613849674078599267"
+      },
+      {
+        "file": "docs/prd/epic-3-stealth-mode-adaptive-ui.md",
+        "hash": "9985300425651491034"
+      },
+      {
+        "file": ".bmad-core/agent-teams/team-fullstack.yaml",
+        "hash": "12586635774136024361"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/apply-qa-fixes.md",
+        "hash": "12581602428095765295"
+      },
+      {
+        "file": ".bmad-core/checklists/po-master-checklist.md",
+        "hash": "14680430908143577303"
+      },
+      {
+        "file": ".bmad-core/tasks/qa-gate.md",
+        "hash": "8824162947048565697"
+      },
+      {
+        "file": "docs/architecture/production-ready-privacy-hardening-validation.md",
+        "hash": "1212137774149618963"
+      },
+      {
+        "file": "docs/prd/epic-0-project-foundation.md",
+        "hash": "6093362572410097147"
       },
       {
         "file": ".bmad-core/agents/bmad-master.md",
         "hash": "1071060671394261627"
       },
       {
-        "file": ".bmad-core/tasks/execute-checklist.md",
-        "hash": "8340507629226533137"
+        "file": ".bmad-core/workflows/greenfield-service.yaml",
+        "hash": "1454115953183213186"
+      },
+      {
+        "file": ".bmad-core/templates/competitor-analysis-tmpl.yaml",
+        "hash": "14619162470109769399"
+      },
+      {
+        "file": ".bmad-core/agents/pm.md",
+        "hash": "15877566805277138535"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/qa.md",
+        "hash": "1432288955789418229"
+      },
+      {
+        "file": "docs/architecture/source-tree.md",
+        "hash": "3679395156649553109"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/ux-expert.md",
+        "hash": "4008661918155957282"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/advanced-elicitation.md",
+        "hash": "14876929230842518164"
+      },
+      {
+        "file": ".bmad-core/templates/brownfield-architecture-tmpl.yaml",
+        "hash": "516735417138537696"
+      },
+      {
+        "file": ".bmad-core/checklists/story-draft-checklist.md",
+        "hash": "16165770342319157731"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/qa-gate.md",
+        "hash": "6026240396267230393"
       },
       {
         "file": "DEVELOPMENT.md",
         "hash": "3418620389471107906"
       },
       {
+        "file": "docs/deployment/app-store-preparation.md",
+        "hash": "10159124443228983695"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/po.md",
+        "hash": "438619358088099839"
+      },
+      {
+        "file": ".bmad-core/templates/project-brief-tmpl.yaml",
+        "hash": "12070523584429133281"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/dev.md",
+        "hash": "8840542038615232186"
+      },
+      {
+        "file": "package.json",
+        "hash": "2083531673479669996"
+      },
+      {
+        "file": ".env.example",
+        "hash": "6711416301878689268"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/brownfield-create-story.md",
+        "hash": "13725111864183007185"
+      },
+      {
+        "file": ".bmad-core/agent-teams/team-all.yaml",
+        "hash": "337299525406343026"
+      },
+      {
+        "file": "docs/architecture/development-workflow.md",
+        "hash": "1227686491491933490"
+      },
+      {
+        "file": ".bmad-core/tasks/validate-next-story.md",
+        "hash": "3301258644096385718"
+      },
+      {
+        "file": ".vscode/extensions.json",
+        "hash": "1193029154356972028"
+      },
+      {
+        "file": ".bmad-core/checklists/story-dod-checklist.md",
+        "hash": "10281023474099614987"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/bmad-master.md",
+        "hash": "10523221793241837765"
+      },
+      {
+        "file": "docs/architecture/ux-architecture-user-experience-design.md",
+        "hash": "715746144742160228"
+      },
+      {
+        "file": "docs/adrs/002-privacy-safe-logging.md",
+        "hash": "7782273335363118894"
+      },
+      {
+        "file": "docs/prd/checklist-results-report.md",
+        "hash": "13089501556270575534"
+      },
+      {
+        "file": ".bmad-core/workflows/greenfield-ui.yaml",
+        "hash": "16140927489938302776"
+      },
+      {
+        "file": "docs/prd/index.md",
+        "hash": "1491895381063754878"
+      },
+      {
+        "file": ".bmad-core/agents/dev.md",
+        "hash": "567543673288519749"
+      },
+      {
+        "file": ".bmad-core/templates/qa-gate-tmpl.yaml",
+        "hash": "17946443956236349753"
+      },
+      {
+        "file": ".bmad-core/utils/workflow-management.md",
+        "hash": "7879321664521989248"
+      },
+      {
+        "file": "docs/prd/epic-list.md",
+        "hash": "1766217827913825246"
+      },
+      {
+        "file": "vercel.json",
+        "hash": "7257200091891449849"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/analyst.md",
+        "hash": "11670627662488736847"
+      },
+      {
+        "file": ".bmad-core/tasks/test-design.md",
+        "hash": "14422193000721481102"
+      },
+      {
+        "file": ".bmad-core/agents/sm.md",
+        "hash": "15202124121750005004"
+      },
+      {
+        "file": ".nx/cache/d/server-process.json",
+        "hash": "3620489513210459320"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/generate-ai-frontend-prompt.md",
+        "hash": "7527945043512830492"
+      },
+      {
+        "file": "docs/adrs/README.md",
+        "hash": "6951267186332868995"
+      },
+      {
+        "file": "docs/architecture/introduction.md",
+        "hash": "14064180004448230569"
+      },
+      {
+        "file": "docs/architecture/api-specification.md",
+        "hash": "1832908958983193728"
+      },
+      {
+        "file": "infrastructure/sentry/sentry.client.config.ts",
+        "hash": "4315149844484114703"
+      },
+      {
+        "file": "docs/qa/gates/0.2-development-environment-configuration.yml",
+        "hash": "11473046907051818207"
+      },
+      {
+        "file": ".bmad-core/user-guide.md",
+        "hash": "3755715020760101842"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "896572457204093957"
+      },
+      {
+        "file": ".bmad-core/agents/bmad-orchestrator.md",
+        "hash": "2554700552997457402"
+      },
+      {
+        "file": "docs/stories/0.2.development-environment-configuration.md",
+        "hash": "3561892320715321841"
+      },
+      {
+        "file": "docs/architecture/frontend-architecture.md",
+        "hash": "3437179845827057508"
+      },
+      {
+        "file": ".bmad-core/agents/po.md",
+        "hash": "6711287406034871789"
+      },
+      {
+        "file": ".bmad-core/templates/front-end-architecture-tmpl.yaml",
+        "hash": "809340533291486468"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/trace-requirements.md",
+        "hash": "2247234207817803120"
+      },
+      {
+        "file": ".bmad-core/tasks/kb-mode-interaction.md",
+        "hash": "8752676768631267836"
+      },
+      {
+        "file": ".bmad-core/templates/story-tmpl.yaml",
+        "hash": "12495374815725626245"
+      },
+      {
+        "file": ".bmad-core/utils/bmad-doc-template.md",
+        "hash": "14186714928875887587"
+      },
+      {
+        "file": "docs/prd/next-steps.md",
+        "hash": "14044886602390780537"
+      },
+      {
+        "file": ".bmad-core/templates/architecture-tmpl.yaml",
+        "hash": "12323689974685229210"
+      },
+      {
+        "file": "docs/architecture/data-models.md",
+        "hash": "16116927292761342809"
+      },
+      {
+        "file": ".bmad-core/tasks/execute-checklist.md",
+        "hash": "8340507629226533137"
+      },
+      {
+        "file": ".lintstagedrc.json",
+        "hash": "8837330835930879596"
+      },
+      {
+        "file": ".bmad-core/workflows/brownfield-service.yaml",
+        "hash": "17386785336041434981"
+      },
+      {
+        "file": ".prettierignore",
+        "hash": "16467628193675140411"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/shard-doc.md",
+        "hash": "156160490136917367"
+      },
+      {
+        "file": "pnpm-lock.yaml",
+        "hash": "7616262922699573603"
+      },
+      {
+        "file": "supabase/seed.sql",
+        "hash": "7027971012515094345"
+      },
+      {
+        "file": ".bmad-core/tasks/create-next-story.md",
+        "hash": "18150265903905121680"
+      },
+      {
+        "file": ".bmad-core/templates/market-research-tmpl.yaml",
+        "hash": "1200061766089906651"
+      },
+      {
+        "file": "docs/stories/0.1.monorepo-project-scaffolding.md",
+        "hash": "18352105052387847125"
+      },
+      {
+        "file": ".bmad-core/tasks/apply-qa-fixes.md",
+        "hash": "15625086892347835958"
+      },
+      {
+        "file": ".bmad-core/agent-teams/team-ide-minimal.yaml",
+        "hash": "6599056621133681767"
+      },
+      {
         "file": "docs/qa/gates/0.1-monorepo-project-scaffolding.yml",
         "hash": "9798056592105511491"
+      },
+      {
+        "file": ".bmad-core/tasks/brownfield-create-epic.md",
+        "hash": "8996366329311395420"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/test-design.md",
+        "hash": "14643230889609196633"
+      },
+      {
+        "file": "infrastructure/sentry/privacy-config.json",
+        "hash": "18122780831615535052"
+      },
+      {
+        "file": ".bmad-core/templates/front-end-spec-tmpl.yaml",
+        "hash": "8976040021939915782"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/facilitate-brainstorming-session.md",
+        "hash": "7888943537930917099"
+      },
+      {
+        "file": ".bmad-core/tasks/index-docs.md",
+        "hash": "16537600606131849869"
+      },
+      {
+        "file": "scripts/__tests__/generate-secrets.test.js",
+        "hash": "17273140984751143961"
+      },
+      {
+        "file": ".bmad-core/tasks/correct-course.md",
+        "hash": "6033057698172366538"
+      },
+      {
+        "file": ".bmad-core/agents/ux-expert.md",
+        "hash": "6040311131189047573"
+      },
+      {
+        "file": ".eslintignore",
+        "hash": "4933240813645554416"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/execute-checklist.md",
+        "hash": "4716630971864379265"
+      },
+      {
+        "file": "package-lock.json",
+        "hash": "4999870242846768987"
+      },
+      {
+        "file": "docs/prd/epic-1-foundation-privacy-infrastructure.md",
+        "hash": "8322590030998658298"
+      },
+      {
+        "file": ".bmad-core/templates/prd-tmpl.yaml",
+        "hash": "14101624642129260531"
+      },
+      {
+        "file": ".eslintrc.json",
+        "hash": "16694695889628342462"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/create-doc.md",
+        "hash": "42809923049209824"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/architect.md",
+        "hash": "7419864901674002884"
+      },
+      {
+        "file": ".bmad-core/tasks/nfr-assess.md",
+        "hash": "17925232806973161277"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/index-docs.md",
+        "hash": "12868766621066344526"
+      },
+      {
+        "file": "docs/architecture/backend-architecture.md",
+        "hash": "6278880243176005401"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/bmad-orchestrator.md",
+        "hash": "6409751737037117346"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/validate-next-story.md",
+        "hash": "44092942797727473"
+      },
+      {
+        "file": ".bmad-core/tasks/review-story.md",
+        "hash": "2145204328233286276"
+      },
+      {
+        "file": ".bmad-core/agents/architect.md",
+        "hash": "11334416960813961723"
+      },
+      {
+        "file": "docs/prd/user-interface-design-goals.md",
+        "hash": "13660394431249458484"
+      },
+      {
+        "file": ".bmad-core/tasks/risk-profile.md",
+        "hash": "3500406260092176284"
+      },
+      {
+        "file": "docs/stories/0.3.external-service-provisioning.md",
+        "hash": "11635461105912818277"
+      },
+      {
+        "file": "docs/adrs/003-local-https-webauthn.md",
+        "hash": "737826470703318939"
+      },
+      {
+        "file": ".bmad-core/data/bmad-kb.md",
+        "hash": "4034212301821525640"
+      },
+      {
+        "file": ".bmad-core/agents/analyst.md",
+        "hash": "13067091749905618769"
+      },
+      {
+        "file": ".bmad-core/checklists/pm-checklist.md",
+        "hash": "3625100732599361377"
+      },
+      {
+        "file": "scripts/test-service-integration.js",
+        "hash": "203223973036117690"
+      },
+      {
+        "file": ".bmad-core/data/technical-preferences.md",
+        "hash": "11761996169301568986"
+      },
+      {
+        "file": ".bmad-core/tasks/advanced-elicitation.md",
+        "hash": "17223931487938168306"
+      },
+      {
+        "file": "TROUBLESHOOTING.md",
+        "hash": "17661475069253569402"
+      },
+      {
+        "file": "supabase/config.toml",
+        "hash": "15089808278908695011"
+      },
+      {
+        "file": ".bmad-core/tasks/create-doc.md",
+        "hash": "5689248432380683252"
+      },
+      {
+        "file": "pnpm-workspace.yaml",
+        "hash": "4682124154651265967"
+      },
+      {
+        "file": "docs/architecture/conclusion.md",
+        "hash": "10106462832944587951"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/nfr-assess.md",
+        "hash": "2430198339583692007"
+      },
+      {
+        "file": "docs/architecture/security-and-performance.md",
+        "hash": "16064472203704166858"
+      },
+      {
+        "file": "docs/prd/technical-assumptions.md",
+        "hash": "9183413357935009140"
+      },
+      {
+        "file": "tsconfig.base.json",
+        "hash": "14027648063351402433"
+      },
+      {
+        "file": ".bmad-core/templates/brainstorming-output-tmpl.yaml",
+        "hash": "3082144360027690181"
+      },
+      {
+        "file": ".bmad-core/data/elicitation-methods.md",
+        "hash": "4285596109079784654"
+      },
+      {
+        "file": "db/init/001_development_setup.sql",
+        "hash": "14984201351673589161"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/brownfield-create-epic.md",
+        "hash": "2957100879601224630"
+      },
+      {
+        "file": ".bmad-core/data/test-levels-framework.md",
+        "hash": "14933665299270137132"
+      },
+      {
+        "file": ".bmad-core/data/test-priorities-matrix.md",
+        "hash": "6721955645753564765"
+      },
+      {
+        "file": "docs/prd/requirements.md",
+        "hash": "2406077865519778490"
+      },
+      {
+        "file": ".claude/commands/BMad/agents/sm.md",
+        "hash": "12820781035041569629"
+      },
+      {
+        "file": ".prettierrc",
+        "hash": "319442104772609628"
+      },
+      {
+        "file": ".bmad-core/tasks/create-deep-research-prompt.md",
+        "hash": "14730564240785956076"
+      },
+      {
+        "file": ".bmad-core/working-in-the-brownfield.md",
+        "hash": "5004822830586313054"
+      },
+      {
+        "file": ".bmad-core/agents/qa.md",
+        "hash": "1997648974958996496"
+      },
+      {
+        "file": ".bmad-core/tasks/document-project.md",
+        "hash": "17524878674147022168"
+      },
+      {
+        "file": ".bmad-core/checklists/change-checklist.md",
+        "hash": "16884709078362612966"
+      },
+      {
+        "file": ".bmad-core/workflows/brownfield-fullstack.yaml",
+        "hash": "18324238111144647404"
+      },
+      {
+        "file": ".husky/pre-commit",
+        "hash": "13077397016463547046"
+      },
+      {
+        "file": "docs/architecture/deployment-architecture.md",
+        "hash": "17344024307184592919"
+      },
+      {
+        "file": ".bmad-core/install-manifest.yaml",
+        "hash": "1186354749687015193"
+      },
+      {
+        "file": "scripts/dev-setup.sh",
+        "hash": "6068328857778400018"
+      },
+      {
+        "file": ".bmad-core/agent-teams/team-no-ui.yaml",
+        "hash": "7187079644118709187"
+      },
+      {
+        "file": ".claude/commands/BMad/tasks/kb-mode-interaction.md",
+        "hash": "2564772285690890"
+      },
+      {
+        "file": "scripts/setup-https.sh",
+        "hash": "6579275988938756184"
       }
     ],
     "projectFileMap": {

@@ -12,7 +12,6 @@
     "format:check": "prettier --check .",
     "audit": "pnpm audit --audit-level=moderate",
     "audit:fix": "pnpm audit --fix",
-    "prepare": "husky install",
     "test:services": "node scripts/test-service-integration.js"
   },
   "private": true,
