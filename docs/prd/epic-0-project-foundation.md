@@ -293,3 +293,235 @@ so that code quality is maintained and deployments are secure and consistent.
 - [ ] Security gates prevent insecure code from being deployed
 - [ ] Staging environment automatically updates on pull requests
 - [ ] Production deployment includes monitoring and rollback capabilities
+
+## Story 0.6: Supply-chain Security & SLSA Compliance
+
+As a security-conscious development team,
+I want to implement SLSA Level 2 compliance with SBOM generation and build attestation,
+so that our supply-chain is protected from compromise and we have verifiable build provenance.
+
+### Acceptance Criteria
+
+1. **SLSA Level 2 Compliance**
+   - Build provenance attestation automatically generated for all releases
+   - Sigstore integration for build artifact signing and verification
+   - Reproducible builds configured with deterministic output
+   - Build environment isolation and attestation
+
+2. **Software Bill of Materials (SBOM)**
+   - SBOM automatically generated for all dependencies (npm + Cargo)
+   - SPDX or CycloneDX format compatibility for tooling integration
+   - License compliance checking and vulnerability mapping
+   - SBOM signing with Sigstore for integrity verification
+
+3. **Enhanced Package Security**
+   - Package pinning strategy with exact versions for crypto dependencies
+   - Automated security updates with approval workflow for non-breaking changes
+   - Dependency vulnerability scanning integrated into CI/CD pipeline
+   - Supply-chain attack detection (typosquatting, dependency confusion)
+
+4. **Build Security Hardening**
+   - Build environment sandboxing and isolation
+   - Secret scanning prevention in build artifacts
+   - Build artifact integrity verification before deployment
+   - Audit trail for all build and deployment activities
+
+### Definition of Done
+
+- [ ] SLSA provenance generated and verifiable for all production builds
+- [ ] SBOM generated and includes all transitive dependencies
+- [ ] Dependency vulnerability scanning fails build on critical issues
+- [ ] Build artifacts signed with Sigstore and verification automated
+
+## Story 0.7: Comprehensive Threat Model Creation
+
+As a privacy-focused product team,
+I want to create a detailed threat model covering all attack vectors against menstrual health data,
+so that security controls are systematically designed to mitigate identified risks.
+
+### Acceptance Criteria
+
+1. **STRIDE Analysis**
+   - Spoofing threats: Identity verification and authentication bypass scenarios
+   - Tampering threats: Data integrity attacks on encrypted payloads
+   - Repudiation threats: Non-repudiation of sensitive health data actions
+   - Information Disclosure: PII leakage through logs, errors, or side channels
+   - Denial of Service: Availability attacks on critical health tracking functions
+   - Elevation of Privilege: Unauthorized access escalation scenarios
+
+2. **Privacy-Specific Threat Assessment**
+   - Reproductive health data sensitivity classification and handling
+   - Inference attacks from usage patterns and metadata
+   - Cross-correlation risks with external health data sources
+   - Regulatory compliance threats (HIPAA, GDPR, state-level privacy laws)
+
+3. **Attack Tree Analysis**
+   - Device compromise scenarios (malware, physical access, rooting/jailbreaking)
+   - Network interception attacks (MITM, certificate pinning bypass, DNS hijacking)
+   - Server breach scenarios (database compromise, privilege escalation, insider threats)
+   - Social engineering attacks (account recovery, support impersonation)
+
+4. **Regulatory and Legal Threat Analysis**
+   - Government access scenarios (subpoenas, national security letters, jurisdiction shopping)
+   - Legal compulsion threats (court orders, law enforcement requests)
+   - Cross-border data transfer risks and jurisdiction-specific regulations
+   - Third-party disclosure risks (insurance, employers, family court proceedings)
+
+5. **UI/UX Security Threats**
+   - Shoulder surfing and visual privacy in public spaces
+   - Family member access and domestic surveillance scenarios
+   - Screen recording and accessibility service abuse
+   - Social media integration and unintended sharing risks
+
+### Definition of Done
+
+- [ ] Threat model document created with STRIDE analysis for all components
+- [ ] Attack trees documented for top 5 high-risk scenarios
+- [ ] Privacy impact assessment completed for reproductive health data
+- [ ] Risk acceptance decisions documented with rationale and approval
+- [ ] Threat model review schedule established (quarterly updates)
+
+## Story 0.8: Database Security Hardening
+
+As a zero-knowledge architecture implementer,
+I want Supabase RLS policies configured with "deny-by-default" principle,
+so that data access is impossible without explicit user authorization.
+
+### Acceptance Criteria
+
+1. **Row Level Security (RLS) Implementation**
+   - All database tables configured with RLS enabled by default
+   - Deny-by-default policies: no data access without explicit user authorization
+   - User isolation policies preventing cross-user data access under any circumstance
+   - Service role policies restricted to only non-PII operations (health checks, migrations)
+
+2. **Database Connection Security**
+   - SSL/TLS encryption enforced for all database connections
+   - Certificate pinning implemented for mobile and web clients
+   - Connection pooling configured with security-first settings
+   - Database firewall rules restricting access to authorized IP ranges
+
+3. **Audit and Monitoring**
+   - Audit logging enabled for all database access attempts and policy violations
+   - Real-time alerting on RLS policy violations or unusual access patterns
+   - Database query monitoring for potential SQL injection or privilege escalation
+   - Regular access review and permission auditing automation
+
+4. **Encryption and Key Management**
+   - Database encryption at rest verified with customer-managed keys
+   - Column-level encryption for highly sensitive fields (if applicable)
+   - Key rotation policies and procedures documented
+   - Backup encryption and secure key escrow procedures
+
+5. **RLS Policy Testing**
+   - Comprehensive test suite with negative test cases (attempted unauthorized access)
+   - Automated testing of RLS policies in CI/CD pipeline
+   - Penetration testing scenarios for database access controls
+   - Policy regression testing to prevent accidental privilege escalation
+
+### Definition of Done
+
+- [ ] All database tables have RLS enabled with deny-by-default policies
+- [ ] RLS policy test suite passes with 100% unauthorized access prevention
+- [ ] Database audit logging captures all access attempts and violations
+- [ ] SSL/TLS and certificate pinning verified for all database connections
+
+## Story 0.9: Web Security Headers and CSP Implementation
+
+As a web application security engineer,
+I want comprehensive Content Security Policy, Subresource Integrity, and Trusted Types implemented,
+so that client-side attacks and code injection are prevented.
+
+### Acceptance Criteria
+
+1. **Content Security Policy (CSP)**
+   - Strict CSP implemented blocking all unauthorized script execution
+   - Nonce-based script allowlisting for dynamic content
+   - CSP reporting endpoint configured with violation monitoring and alerting
+   - CSP policies tested across all supported browsers and devices
+
+2. **Subresource Integrity (SRI)**
+   - SRI hashes generated and verified for all external resources and dependencies
+   - Automated SRI hash generation integrated into build pipeline
+   - SRI fallback mechanisms for CDN failures or hash mismatches
+   - SRI violation monitoring and alerting for potential tampering
+
+3. **Trusted Types and DOM Security**
+   - Trusted Types API implemented preventing DOM-based XSS attacks
+   - Sanitization policies configured for all dynamic HTML content
+   - Dangerous sink protection (innerHTML, document.write, eval)
+   - CSP integration with Trusted Types for comprehensive XSS protection
+
+4. **HTTP Security Headers**
+   - HSTS (HTTP Strict Transport Security) with long max-age and includeSubDomains
+   - X-Frame-Options: DENY to prevent clickjacking attacks
+   - X-Content-Type-Options: nosniff to prevent MIME type confusion
+   - Referrer-Policy: strict-origin-when-cross-origin for privacy protection
+   - Feature-Policy/Permissions-Policy for capability restriction
+
+5. **Certificate and Transport Security**
+   - Certificate pinning configured for all external API communications
+   - HPKP (HTTP Public Key Pinning) implementation with backup pins
+   - TLS configuration hardening (TLS 1.3+, secure cipher suites)
+   - Certificate transparency monitoring and alerting
+
+### Definition of Done
+
+- [ ] CSP policies block all unauthorized scripts with zero false positives
+- [ ] SRI verification prevents execution of tampered external resources
+- [ ] Trusted Types prevent all DOM-based XSS attack vectors
+- [ ] Security headers achieve A+ rating on security header scanners
+- [ ] Certificate pinning verified for all external communications
+
+## Story 0.10: Security Gates Framework Implementation
+
+As a development team lead,
+I want automated security gates that validate crypto envelope structure and prevent PII leakage,
+so that every epic meets consistent security standards before deployment.
+
+### Acceptance Criteria
+
+1. **Crypto Envelope Validation**
+   - Automated tests checking v/alg/kdf/salt/nonce/kid structure compliance
+   - Crypto envelope schema validation against defined standards
+   - Key derivation function parameter validation (iterations, memory, parallelism)
+   - Encryption algorithm and mode validation (AES-256-GCM, ChaCha20-Poly1305)
+
+2. **Network Traffic Analysis**
+   - Automated pcap analysis ensuring only encrypted payloads in network traffic
+   - TLS inspection for proper certificate validation and cipher suite usage
+   - Metadata leakage detection (request timing, size patterns, headers)
+   - Deep packet inspection for PII exposure in network communications
+
+3. **Testing Framework Integration**
+   - Property-based testing framework for crypto operations and data handling
+   - Fuzz testing integrated with CI/CD for input validation and error handling
+   - Chaos engineering tests for security failure scenarios
+   - Load testing with security constraints (rate limiting, resource exhaustion)
+
+4. **PII and Data Leakage Prevention**
+   - Log analysis automation detecting any PII exposure in application logs
+   - Error message sanitization preventing information disclosure
+   - Debug information filtering in production builds
+   - Memory dump analysis for sensitive data persistence
+
+5. **RLS and Access Control Testing**
+   - RLS policy testing automation with comprehensive unauthorized access attempts
+   - Cross-user data access prevention testing (user A accessing user B's data)
+   - Privilege escalation testing for service accounts and admin functions
+   - Session management and token validation security testing
+
+6. **SSR and Client-Side Security**
+   - SSR-PII prevention tests ensuring no sensitive data in server-side rendering
+   - Client-side storage encryption validation (IndexedDB, localStorage)
+   - XSS and injection attack prevention testing
+   - Client-side crypto implementation validation
+
+### Definition of Done
+
+- [ ] Security gates integrated into CI/CD with zero false positives
+- [ ] Crypto envelope validation prevents deployment of malformed encryption
+- [ ] Network traffic analysis confirms zero PII leakage
+- [ ] PII detection prevents any sensitive data exposure in logs or errors
+- [ ] RLS testing achieves 100% unauthorized access prevention
+- [ ] SSR security prevents sensitive data exposure in HTML source
