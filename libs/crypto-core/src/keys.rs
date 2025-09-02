@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 use zeroize::Zeroize;
+use rand::RngCore;
 
 // Key management for cryptographic operations
 #[wasm_bindgen]
@@ -23,21 +24,23 @@ impl CryptoKey {
         self.key_type.clone()
     }
 
-    // Generate a new random key
+    // Generate a new random key using secure randomness
     #[wasm_bindgen]
     pub fn generate(&mut self) -> Result<(), JsValue> {
-        // This is a placeholder - actual key generation will use libsodium
+        let mut rng = rand::thread_rng();
         match self.key_type.as_str() {
             "encryption" => {
-                // Generate 32-byte key for encryption
-                self.key_data = vec![0u8; 32];
-                // TODO: Replace with actual secure random generation
+                // Generate 32-byte key for encryption using secure random
+                let mut key_bytes = vec![0u8; 32];
+                rng.fill_bytes(&mut key_bytes);
+                self.key_data = key_bytes;
                 Ok(())
             }
             "signing" => {
-                // Generate 64-byte key for signing
-                self.key_data = vec![0u8; 64];
-                // TODO: Replace with actual secure random generation
+                // Generate 64-byte key for signing using secure random
+                let mut key_bytes = vec![0u8; 64];
+                rng.fill_bytes(&mut key_bytes);
+                self.key_data = key_bytes;
                 Ok(())
             }
             _ => Err(JsValue::from_str("Unsupported key type")),

@@ -1,0 +1,95 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run security audit daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  rust-security-audit:
+    name: Rust Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run cargo audit for crypto-core
+        run: |
+          cd libs/crypto-core
+          cargo audit
+
+      - name: Check for known vulnerabilities
+        run: |
+          cd libs/crypto-core
+          cargo audit --deny warnings
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit
+
+      - name: Check for high severity vulnerabilities
+        run: npm audit --audit-level high
+
+  wasm-security-validation:
+    name: WASM Security Validation
+    runs-on: ubuntu-latest
+    needs: rust-security-audit
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain with wasm32 target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build crypto-core WASM
+        run: |
+          cd libs/crypto-core
+          wasm-pack build --target bundler
+
+      - name: Verify WASM optimization
+        run: |
+          cd libs/crypto-core/pkg
+          # Check that WASM file exists and is optimized
+          ls -la crypto_core_bg.wasm
+          # Basic size check - optimized WASM should be reasonable size
+          SIZE=$(stat -f%z crypto_core_bg.wasm 2>/dev/null || stat -c%s crypto_core_bg.wasm)
+          echo "WASM size: $SIZE bytes"
+          if [ "$SIZE" -gt 1048576 ]; then # 1MB limit
+            echo "Warning: WASM file is larger than 1MB ($SIZE bytes)"
+            exit 1
+          fi
+
+      - name: Run security-focused tests
+        run: |
+          cd libs/crypto-core
+          npm test -- __tests__/security.test.ts
