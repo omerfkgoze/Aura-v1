@@ -31,6 +31,7 @@ pub fn init() {
 
 // Test function to verify WASM bindings work
 #[wasm_bindgen]
+#[must_use]
 pub fn test_crypto_core() -> String {
     "Crypto core is working!".to_string()
 }

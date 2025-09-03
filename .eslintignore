@@ -7,4 +7,3 @@ dist/
 pkg/
 *.wasm
 *_bg.js
-libs/logger/

@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const origin = request.headers.get('origin');
 
   // Get allowed origins from environment variable
-  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:19006';
+  const corsOrigin = process.env['CORS_ORIGIN'] || 'http://localhost:3000,http://localhost:19006';
   const allowedOrigins = corsOrigin.split(',').map(o => o.trim());
 
   // CORS configuration
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     // Check if origin is allowed
     const isAllowed =
       allowedOrigins.includes(origin) ||
-      (process.env.NODE_ENV === 'development' && origin.startsWith('http://localhost:'));
+      (process.env['NODE_ENV'] === 'development' && origin.startsWith('http://localhost:'));
 
     if (isAllowed) {
       response.headers.set('Access-Control-Allow-Origin', origin);
@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
   response.headers.set('X-XSS-Protection', '1; mode=block');
 
   // Production-only headers
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     response.headers.set(
       'Strict-Transport-Security',
       'max-age=31536000; includeSubDomains; preload'
@@ -48,11 +48,11 @@ export async function middleware(request: NextRequest) {
   // Content Security Policy
   const cspDirectives = [
     "default-src 'self'",
-    process.env.NODE_ENV === 'development'
+    process.env['NODE_ENV'] === 'development'
       ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
       : "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    process.env.NODE_ENV === 'development'
+    process.env['NODE_ENV'] === 'development'
       ? "connect-src 'self' http://localhost:* https://*.supabase.co wss://*.supabase.co"
       : "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
     "img-src 'self' data: https:",
@@ -61,7 +61,7 @@ export async function middleware(request: NextRequest) {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    ...(process.env.NODE_ENV === 'production' ? ['upgrade-insecure-requests'] : []),
+    ...(process.env['NODE_ENV'] === 'production' ? ['upgrade-insecure-requests'] : []),
   ];
 
   const cspHeader = cspDirectives.join('; ');
@@ -73,7 +73,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect HTTP to HTTPS in production
-  if (process.env.NODE_ENV === 'production' && request.nextUrl.protocol === 'http:') {
+  if (process.env['NODE_ENV'] === 'production' && request.nextUrl.protocol === 'http:') {
     const httpsUrl = request.nextUrl.clone();
     httpsUrl.protocol = 'https:';
     return NextResponse.redirect(httpsUrl.toString(), 301);

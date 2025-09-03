@@ -11,6 +11,7 @@ pub struct AADValidator {
 #[wasm_bindgen]
 impl AADValidator {
     #[wasm_bindgen(constructor)]
+    #[must_use]
     pub fn new(context: String) -> AADValidator {
         AADValidator {
             context,
@@ -31,6 +32,7 @@ impl AADValidator {
 
     // Generate AAD for cryptographic operations
     #[wasm_bindgen]
+    #[must_use]
     pub fn generate_aad(&self) -> Vec<u8> {
         let mut aad = Vec::new();
         
@@ -54,12 +56,14 @@ impl AADValidator {
 
     // Validate AAD matches expected format
     #[wasm_bindgen]
-    pub fn validate_aad(&self, provided_aad: Vec<u8>) -> bool {
+    #[must_use]
+    pub fn validate_aad(&self, provided_aad: &[u8]) -> bool {
         let expected_aad = self.generate_aad();
         provided_aad == expected_aad
     }
 
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn context(&self) -> String {
         self.context.clone()
     }
@@ -67,6 +71,7 @@ impl AADValidator {
 
 // Create AAD for cycle data encryption
 #[wasm_bindgen]
+#[must_use]
 pub fn create_cycle_data_aad(user_id: String, timestamp: u64) -> Vec<u8> {
     let mut validator = AADValidator::new("cycle_data".to_string());
     validator.set_user_id(user_id);
@@ -76,7 +81,8 @@ pub fn create_cycle_data_aad(user_id: String, timestamp: u64) -> Vec<u8> {
 
 // Create AAD for healthcare sharing
 #[wasm_bindgen]
-pub fn create_healthcare_share_aad(user_id: String, share_token: String) -> Vec<u8> {
+#[must_use]
+pub fn create_healthcare_share_aad(user_id: String, share_token: &str) -> Vec<u8> {
     let mut validator = AADValidator::new("healthcare_share".to_string());
     validator.set_user_id(user_id);
     // Use share token as additional context

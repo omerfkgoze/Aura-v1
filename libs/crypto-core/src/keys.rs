@@ -12,6 +12,7 @@ pub struct CryptoKey {
 #[wasm_bindgen]
 impl CryptoKey {
     #[wasm_bindgen(constructor)]
+    #[must_use]
     pub fn new(key_type: String) -> CryptoKey {
         CryptoKey {
             key_data: Vec::new(),
@@ -20,6 +21,7 @@ impl CryptoKey {
     }
 
     #[wasm_bindgen(getter)]
+    #[must_use]
     pub fn key_type(&self) -> String {
         self.key_type.clone()
     }
@@ -49,12 +51,14 @@ impl CryptoKey {
 
     // Get key length
     #[wasm_bindgen]
+    #[must_use]
     pub fn length(&self) -> usize {
         self.key_data.len()
     }
 
     // Check if key is initialized
     #[wasm_bindgen]
+    #[must_use]
     pub fn is_initialized(&self) -> bool {
         !self.key_data.is_empty()
     }
