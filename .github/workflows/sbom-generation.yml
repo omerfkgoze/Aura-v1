@@ -1,0 +1,574 @@
+name: SBOM Generation & Signing
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_call:
+    inputs:
+      upload_artifacts:
+        description: 'Upload SBOM artifacts'
+        required: false
+        default: true
+        type: boolean
+
+permissions: read-all
+
+jobs:
+  # Multi-ecosystem SBOM generation
+  generate-sbom:
+    name: Generate Multi-Ecosystem SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # For Sigstore signing
+      contents: read
+      attestations: write # For SBOM attestation
+    outputs:
+      sbom-hash: ${{ steps.sbom-hash.outputs.hash }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: cargo
+
+      - name: Install SBOM generation tools
+        run: |
+          echo "Installing SBOM generation tools..."
+
+          # Install CycloneDX tools for npm/pnpm
+          pnpm add -g @cyclonedx/bom@latest
+
+          # Install cargo-cyclonedx for Rust dependencies
+          cargo install cargo-cyclonedx
+
+          # Install syft for additional SBOM generation (backup)
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+          # Verify installations
+          cyclonedx-bom --version
+          cargo cyclonedx --version
+          syft version
+
+          echo "✅ SBOM tools installed successfully"
+
+      - name: Install dependencies (for accurate SBOM)
+        run: |
+          echo "Installing dependencies for SBOM generation..."
+          pnpm install --frozen-lockfile
+
+          # Ensure Cargo dependencies are up to date
+          if [ -f "libs/crypto-core/Cargo.lock" ]; then
+            cd libs/crypto-core
+            cargo check --locked
+            cd -
+          fi
+
+          echo "✅ Dependencies installed for SBOM generation"
+
+      - name: Generate npm/pnpm SBOM
+        run: |
+          echo "Generating SBOM for npm/pnpm dependencies..."
+          mkdir -p sbom-output
+
+          # Generate CycloneDX SBOM for the entire workspace
+          cyclonedx-bom \
+            --output-format json \
+            --output-file sbom-output/npm-sbom.json \
+            --include-dev \
+            --include-license-text \
+            .
+
+          # Generate SPDX format for compatibility
+          cyclonedx-bom \
+            --output-format spdx-json \
+            --output-file sbom-output/npm-sbom.spdx.json \
+            --include-dev \
+            --include-license-text \
+            .
+
+          echo "✅ npm/pnpm SBOM generated"
+
+      - name: Generate Rust/Cargo SBOM
+        run: |
+          echo "Generating SBOM for Rust/Cargo dependencies..."
+
+          if [ -d "libs/crypto-core" ] && [ -f "libs/crypto-core/Cargo.toml" ]; then
+            cd libs/crypto-core
+            
+            # Generate CycloneDX SBOM for Rust dependencies
+            cargo cyclonedx \
+              --format json \
+              --output-file ../../sbom-output/cargo-sbom.json \
+              --describe binaries \
+              --all
+            
+            # Generate SPDX format
+            cargo cyclonedx \
+              --format spdx-json \
+              --output-file ../../sbom-output/cargo-sbom.spdx.json \
+              --describe binaries \
+              --all
+              
+            cd -
+            echo "✅ Rust/Cargo SBOM generated"
+          else
+            echo "ℹ️ No Rust/Cargo project found, skipping Cargo SBOM"
+            # Create empty SBOM files to maintain consistency
+            echo '{"bomFormat":"CycloneDX","specVersion":"1.4","components":[]}' > sbom-output/cargo-sbom.json
+            echo '{"spdxVersion":"SPDX-2.3","components":[]}' > sbom-output/cargo-sbom.spdx.json
+          fi
+
+      - name: Generate comprehensive project SBOM with syft
+        run: |
+          echo "Generating comprehensive project SBOM with syft..."
+
+          # Generate comprehensive SBOM using syft (includes system packages, containers, etc.)
+          syft . \
+            --output cyclonedx-json=sbom-output/project-comprehensive-sbom.json \
+            --output spdx-json=sbom-output/project-comprehensive-sbom.spdx.json
+
+          echo "✅ Comprehensive project SBOM generated"
+
+      - name: Aggregate multi-ecosystem SBOM
+        run: |
+          echo "Aggregating multi-ecosystem SBOMs..."
+          node tools/security/sbom-aggregate.js \
+            --npm sbom-output/npm-sbom.json \
+            --cargo sbom-output/cargo-sbom.json \
+            --comprehensive sbom-output/project-comprehensive-sbom.json \
+            --output sbom-output/aura-complete-sbom.json \
+            --format cyclonedx \
+            --spdx-output sbom-output/aura-complete-sbom.spdx.json
+
+          echo "✅ Multi-ecosystem SBOM aggregation completed"
+
+      - name: Validate SBOM integrity
+        run: |
+          echo "Validating SBOM integrity and completeness..."
+
+          # Validate CycloneDX SBOM format
+          node -e "
+            const fs = require('fs');
+            const sbom = JSON.parse(fs.readFileSync('sbom-output/aura-complete-sbom.json', 'utf8'));
+            
+            // Basic validation
+            if (!sbom.bomFormat || sbom.bomFormat !== 'CycloneDX') {
+              throw new Error('Invalid CycloneDX SBOM format');
+            }
+            
+            if (!sbom.components || !Array.isArray(sbom.components)) {
+              throw new Error('SBOM must contain components array');
+            }
+            
+            console.log(\`SBOM contains \${sbom.components.length} components\`);
+            
+            // Check for critical dependencies
+            const hasNodeDeps = sbom.components.some(c => c.purl && c.purl.includes('npm'));
+            const hasRustDeps = sbom.components.some(c => c.purl && c.purl.includes('cargo'));
+            
+            console.log(\`Contains npm/node dependencies: \${hasNodeDeps}\`);
+            console.log(\`Contains Rust/cargo dependencies: \${hasRustDeps}\`);
+            
+            if (!hasNodeDeps) {
+              console.warn('⚠️ No npm dependencies found in SBOM');
+            }
+          "
+
+          echo "✅ SBOM validation completed"
+
+      - name: Scan for secrets in SBOM (SEC-002 mitigation)
+        run: |
+          echo "Scanning SBOM for exposed secrets..."
+
+          # Install truffleHog for secret scanning
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+
+          # Scan SBOM files for secrets
+          for sbom_file in sbom-output/*.json sbom-output/*.spdx.json; do
+            if [ -f "$sbom_file" ]; then
+              echo "Scanning $sbom_file for secrets..."
+              trufflehog filesystem "$sbom_file" --no-update || {
+                echo "❌ Secrets found in SBOM: $sbom_file"
+                echo "This is a critical security issue - SBOM generation blocked!"
+                exit 1
+              }
+            fi
+          done
+
+          echo "✅ No secrets found in SBOM files"
+
+      - name: Generate SBOM metadata
+        run: |
+          echo "Generating SBOM metadata..."
+
+          # Create metadata file
+          cat > sbom-output/sbom-metadata.json << EOF
+          {
+            "generation_time": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "git_commit": "${{ github.sha }}",
+            "git_ref": "${{ github.ref }}",
+            "workflow_run_id": "${{ github.run_id }}",
+            "generator": {
+              "name": "Aura SBOM Generator",
+              "version": "1.0.0",
+              "tools": {
+                "cyclonedx_bom": "$(cyclonedx-bom --version)",
+                "cargo_cyclonedx": "$(cargo cyclonedx --version)",
+                "syft": "$(syft version --output json | jq -r '.version')"
+              }
+            },
+            "ecosystems": {
+              "npm": "$(node --version)",
+              "cargo": "$(cargo --version)",
+              "pnpm": "$(pnpm --version)"
+            },
+            "files": {
+              "npm_sbom": "npm-sbom.json",
+              "cargo_sbom": "cargo-sbom.json", 
+              "comprehensive_sbom": "project-comprehensive-sbom.json",
+              "aggregated_sbom": "aura-complete-sbom.json",
+              "spdx_sbom": "aura-complete-sbom.spdx.json"
+            }
+          }
+          EOF
+
+          echo "✅ SBOM metadata generated"
+
+      - name: Calculate SBOM hashes
+        id: sbom-hash
+        run: |
+          echo "Calculating SBOM file hashes..."
+          cd sbom-output
+
+          # Generate hashes for all SBOM files
+          find . -type f \( -name "*.json" -o -name "*.spdx.json" \) -exec sha256sum {} \; | sort > sbom-hashes.txt
+
+          # Create base64 encoded hash for workflow outputs
+          HASH_B64=$(cat sbom-hashes.txt | base64 -w 0)
+          echo "hash=${HASH_B64}" >> $GITHUB_OUTPUT
+
+          echo "✅ SBOM hashes calculated"
+          cat sbom-hashes.txt
+
+      - name: Sign SBOM with Sigstore
+        run: |
+          echo "Signing SBOM files with Sigstore..."
+
+          # Install cosign
+          curl -O -L "https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64"
+          sudo mv cosign-linux-amd64 /usr/local/bin/cosign
+          sudo chmod +x /usr/local/bin/cosign
+
+          cd sbom-output
+
+          # Sign main aggregated SBOM
+          echo "Signing aura-complete-sbom.json..."
+          cosign sign-blob \
+            --yes \
+            --output-signature aura-complete-sbom.json.sig \
+            --output-certificate aura-complete-sbom.json.crt \
+            aura-complete-sbom.json
+
+          # Sign SPDX SBOM
+          echo "Signing aura-complete-sbom.spdx.json..."
+          cosign sign-blob \
+            --yes \
+            --output-signature aura-complete-sbom.spdx.json.sig \
+            --output-certificate aura-complete-sbom.spdx.json.crt \
+            aura-complete-sbom.spdx.json
+
+          # Sign hash file
+          echo "Signing sbom-hashes.txt..."
+          cosign sign-blob \
+            --yes \
+            --output-signature sbom-hashes.txt.sig \
+            --output-certificate sbom-hashes.txt.crt \
+            sbom-hashes.txt
+
+          echo "✅ SBOM files signed with Sigstore"
+
+      - name: Verify SBOM signatures
+        run: |
+          echo "Verifying SBOM signatures..."
+          cd sbom-output
+
+          # Verify main SBOM signature
+          cosign verify-blob \
+            --certificate aura-complete-sbom.json.crt \
+            --signature aura-complete-sbom.json.sig \
+            --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/sbom-generation.yml@refs/heads/main" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            aura-complete-sbom.json
+
+          # Verify SPDX SBOM signature
+          cosign verify-blob \
+            --certificate aura-complete-sbom.spdx.json.crt \
+            --signature aura-complete-sbom.spdx.json.sig \
+            --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/sbom-generation.yml@refs/heads/main" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            aura-complete-sbom.spdx.json
+
+          echo "✅ SBOM signature verification completed"
+
+      - name: Generate SBOM attestation
+        uses: actions/attest-sbom@v1
+        with:
+          subject-path: 'sbom-output/aura-complete-sbom.json'
+          sbom-path: 'sbom-output/aura-complete-sbom.json'
+
+      - name: Upload SBOM artifacts
+        if: ${{ inputs.upload_artifacts }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-artifacts-${{ github.sha }}
+          path: |
+            sbom-output/
+          retention-days: 90
+
+      - name: Display SBOM summary
+        run: |
+          echo "📋 SBOM Generation Summary"
+          echo "========================="
+
+          if [ -f "sbom-output/aura-complete-sbom.json" ]; then
+            COMPONENT_COUNT=$(jq '.components | length' sbom-output/aura-complete-sbom.json)
+            echo "Total components: $COMPONENT_COUNT"
+            
+            # Count by ecosystem
+            NPM_COUNT=$(jq '[.components[] | select(.purl and (.purl | contains("npm")))] | length' sbom-output/aura-complete-sbom.json)
+            CARGO_COUNT=$(jq '[.components[] | select(.purl and (.purl | contains("cargo")))] | length' sbom-output/aura-complete-sbom.json)
+            
+            echo "npm/Node.js components: $NPM_COUNT"
+            echo "Cargo/Rust components: $CARGO_COUNT"
+            
+            # License information
+            LICENSE_COUNT=$(jq '[.components[] | select(.licenses)] | length' sbom-output/aura-complete-sbom.json)
+            echo "Components with license info: $LICENSE_COUNT"
+          fi
+
+          echo ""
+          echo "Generated SBOM files:"
+          ls -la sbom-output/
+
+          echo ""
+          echo "✅ SBOM generation completed successfully"
+
+  # Vulnerability scanning of SBOM
+  sbom-vulnerability-scan:
+    name: SBOM Vulnerability Scanning
+    needs: [generate-sbom]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download SBOM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom-artifacts-${{ github.sha }}
+          path: sbom-output/
+
+      - name: Install vulnerability scanners
+        run: |
+          echo "Installing vulnerability scanners..."
+
+          # Install grype for vulnerability scanning
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+
+          # Install osv-scanner
+          curl -L -o osv-scanner "https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64"
+          chmod +x osv-scanner
+          sudo mv osv-scanner /usr/local/bin/
+
+          # Verify installations
+          grype version
+          osv-scanner --version
+
+          echo "✅ Vulnerability scanners installed"
+
+      - name: Scan SBOM for vulnerabilities with Grype
+        continue-on-error: true
+        run: |
+          echo "Scanning SBOM for vulnerabilities with Grype..."
+
+          # Scan the main SBOM file
+          grype sbom:sbom-output/aura-complete-sbom.json \
+            --output json \
+            --file grype-vulnerability-report.json
+
+          # Generate human-readable report
+          grype sbom:sbom-output/aura-complete-sbom.json \
+            --output table \
+            --file grype-vulnerability-report.txt
+
+          echo "✅ Grype vulnerability scan completed"
+
+      - name: Scan SBOM for vulnerabilities with OSV-Scanner
+        continue-on-error: true
+        run: |
+          echo "Scanning SBOM for vulnerabilities with OSV-Scanner..."
+
+          # Scan with OSV-Scanner
+          osv-scanner \
+            --sbom sbom-output/aura-complete-sbom.json \
+            --output json \
+            --format json \
+            > osv-vulnerability-report.json || echo "OSV scan completed with findings"
+
+          echo "✅ OSV vulnerability scan completed"
+
+      - name: Generate vulnerability summary
+        run: |
+          echo "Generating vulnerability summary..."
+
+          # Create vulnerability summary
+          cat > vulnerability-summary.md << 'EOF'
+          # SBOM Vulnerability Scan Report
+
+          **Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Git Commit:** ${{ github.sha }}
+          **Workflow:** ${{ github.workflow }}
+
+          ## Scan Tools Used
+
+          - **Grype:** $(grype version)
+          - **OSV-Scanner:** $(osv-scanner --version)
+
+          ## Summary
+
+          EOF
+
+          # Add Grype summary if available
+          if [ -f "grype-vulnerability-report.json" ]; then
+            echo "### Grype Scan Results" >> vulnerability-summary.md
+            echo "" >> vulnerability-summary.md
+            
+            CRITICAL_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' grype-vulnerability-report.json 2>/dev/null || echo "0")
+            HIGH_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' grype-vulnerability-report.json 2>/dev/null || echo "0")
+            MEDIUM_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length' grype-vulnerability-report.json 2>/dev/null || echo "0")
+            LOW_COUNT=$(jq '[.matches[] | select(.vulnerability.severity == "Low")] | length' grype-vulnerability-report.json 2>/dev/null || echo "0")
+            
+            echo "- **Critical:** $CRITICAL_COUNT" >> vulnerability-summary.md
+            echo "- **High:** $HIGH_COUNT" >> vulnerability-summary.md
+            echo "- **Medium:** $MEDIUM_COUNT" >> vulnerability-summary.md
+            echo "- **Low:** $LOW_COUNT" >> vulnerability-summary.md
+            echo "" >> vulnerability-summary.md
+          fi
+
+          # Add OSV summary if available
+          if [ -f "osv-vulnerability-report.json" ]; then
+            echo "### OSV-Scanner Results" >> vulnerability-summary.md
+            echo "" >> vulnerability-summary.md
+            
+            OSV_VULNS=$(jq '.results[].packages[].vulnerabilities | length' osv-vulnerability-report.json 2>/dev/null | paste -sd+ | bc 2>/dev/null || echo "0")
+            echo "- **Total Vulnerabilities:** $OSV_VULNS" >> vulnerability-summary.md
+            echo "" >> vulnerability-summary.md
+          fi
+
+          echo "## Recommendations" >> vulnerability-summary.md
+          echo "" >> vulnerability-summary.md
+          echo "1. Review all Critical and High severity vulnerabilities" >> vulnerability-summary.md
+          echo "2. Update affected dependencies where possible" >> vulnerability-summary.md
+          echo "3. Consider alternative dependencies for unmaintained packages" >> vulnerability-summary.md
+          echo "4. Implement runtime mitigations for remaining vulnerabilities" >> vulnerability-summary.md
+
+          echo "✅ Vulnerability summary generated"
+
+      - name: Upload vulnerability reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerability-reports-${{ github.sha }}
+          path: |
+            grype-vulnerability-report.json
+            grype-vulnerability-report.txt
+            osv-vulnerability-report.json
+            vulnerability-summary.md
+          retention-days: 90
+
+  # SBOM summary and integration
+  sbom-summary:
+    name: SBOM Generation Summary
+    needs: [generate-sbom, sbom-vulnerability-scan]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Download SBOM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom-artifacts-${{ github.sha }}
+          path: sbom-output/
+
+      - name: Download vulnerability reports
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: vulnerability-reports-${{ github.sha }}
+          path: vuln-reports/
+
+      - name: Generate SBOM summary report
+        run: |
+          echo "# SBOM Generation & Security Summary" > sbom-summary-report.md
+          echo "Generated: $(date)" >> sbom-summary-report.md
+          echo "" >> sbom-summary-report.md
+
+          echo "## SBOM Generation Status" >> sbom-summary-report.md
+          echo "- SBOM Generation: ${{ needs.generate-sbom.result }}" >> sbom-summary-report.md
+          echo "- Vulnerability Scanning: ${{ needs.sbom-vulnerability-scan.result }}" >> sbom-summary-report.md
+          echo "" >> sbom-summary-report.md
+
+          if [ -f "sbom-output/aura-complete-sbom.json" ]; then
+            COMPONENT_COUNT=$(jq '.components | length' sbom-output/aura-complete-sbom.json)
+            echo "## SBOM Statistics" >> sbom-summary-report.md
+            echo "- Total Components: $COMPONENT_COUNT" >> sbom-summary-report.md
+            
+            NPM_COUNT=$(jq '[.components[] | select(.purl and (.purl | contains("npm")))] | length' sbom-output/aura-complete-sbom.json)
+            CARGO_COUNT=$(jq '[.components[] | select(.purl and (.purl | contains("cargo")))] | length' sbom-output/aura-complete-sbom.json)
+            
+            echo "- npm/Node.js: $NPM_COUNT" >> sbom-summary-report.md
+            echo "- Cargo/Rust: $CARGO_COUNT" >> sbom-summary-report.md
+            echo "" >> sbom-summary-report.md
+          fi
+
+          echo "## Artifacts Generated" >> sbom-summary-report.md
+          echo "- CycloneDX SBOM: aura-complete-sbom.json" >> sbom-summary-report.md
+          echo "- SPDX SBOM: aura-complete-sbom.spdx.json" >> sbom-summary-report.md
+          echo "- Sigstore Signatures: *.sig, *.crt files" >> sbom-summary-report.md
+          echo "- SBOM Attestation: Generated via GitHub Actions" >> sbom-summary-report.md
+          echo "" >> sbom-summary-report.md
+
+          # Overall status
+          if [[ "${{ needs.generate-sbom.result }}" == "success" ]]; then
+            echo "## ✅ SBOM Generation: SUCCESS" >> sbom-summary-report.md
+            echo "All SBOM requirements have been met successfully." >> sbom-summary-report.md
+          else
+            echo "## ❌ SBOM Generation: FAILED" >> sbom-summary-report.md
+            echo "SBOM generation failed. Review the job details above." >> sbom-summary-report.md
+          fi
+
+      - name: Upload SBOM summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-summary-${{ github.sha }}
+          path: sbom-summary-report.md
+          retention-days: 90

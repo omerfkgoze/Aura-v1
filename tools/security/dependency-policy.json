@@ -1,0 +1,290 @@
+{
+  "version": "1.0",
+  "name": "Aura Dependency Security Policy",
+  "description": "Security policies for package dependencies to prevent supply-chain attacks",
+  "lastUpdated": "2025-09-03",
+  "policies": {
+    "cryptographic": {
+      "description": "Security-critical cryptographic dependencies requiring manual approval",
+      "requiresSecurityReview": true,
+      "maxRiskLevel": "low",
+      "allowedLicenses": ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause"],
+      "packages": {
+        "npm": {
+          "allowed": [
+            {
+              "name": "@noble/hashes",
+              "reason": "Audited pure JS crypto implementation",
+              "maxVersion": "1.x.x"
+            },
+            {
+              "name": "@noble/curves",
+              "reason": "Audited elliptic curve implementation",
+              "maxVersion": "1.x.x"
+            },
+            {
+              "name": "tweetnacl",
+              "reason": "Minimal, audited crypto library",
+              "maxVersion": "1.x.x"
+            }
+          ],
+          "blocked": [
+            {
+              "name": "crypto-js",
+              "reason": "Known security issues, use @noble/* instead",
+              "severity": "high"
+            },
+            {
+              "name": "node-rsa",
+              "reason": "Unmaintained, potential security issues",
+              "severity": "high"
+            },
+            {
+              "name": "crypto",
+              "reason": "Node.js built-in, don't install separately",
+              "severity": "medium"
+            }
+          ]
+        },
+        "cargo": {
+          "allowed": [
+            {
+              "name": "getrandom",
+              "reason": "System random number generator",
+              "exactVersion": "0.2.16"
+            },
+            {
+              "name": "zeroize",
+              "reason": "Secure memory zeroing",
+              "exactVersion": "1.8.1"
+            },
+            {
+              "name": "sha2",
+              "reason": "SHA-2 hash functions",
+              "exactVersion": "0.10.9"
+            },
+            {
+              "name": "hmac",
+              "reason": "HMAC implementation",
+              "exactVersion": "0.12.1"
+            },
+            {
+              "name": "aes-gcm",
+              "reason": "AES-GCM authenticated encryption",
+              "exactVersion": "0.10.3"
+            },
+            {
+              "name": "argon2",
+              "reason": "Password hashing",
+              "exactVersion": "0.5.3"
+            },
+            {
+              "name": "rand",
+              "reason": "Random number generation",
+              "exactVersion": "0.8.5"
+            }
+          ],
+          "blocked": [
+            {
+              "name": "openssl",
+              "reason": "Use pure Rust implementations instead",
+              "severity": "high"
+            },
+            {
+              "name": "ring",
+              "reason": "WASM compatibility issues",
+              "severity": "medium"
+            }
+          ]
+        }
+      }
+    },
+    "authentication": {
+      "description": "Authentication and authorization related packages",
+      "requiresSecurityReview": true,
+      "maxRiskLevel": "medium",
+      "packages": {
+        "npm": {
+          "allowed": [
+            {
+              "name": "jsonwebtoken",
+              "reason": "JWT implementation",
+              "maxVersion": "9.x.x"
+            },
+            {
+              "name": "passport",
+              "reason": "Authentication framework",
+              "maxVersion": "0.7.x"
+            }
+          ],
+          "blocked": [
+            {
+              "name": "jwt-simple",
+              "reason": "Unmaintained, use jsonwebtoken instead",
+              "severity": "high"
+            }
+          ]
+        }
+      }
+    },
+    "networking": {
+      "description": "Network and HTTP related dependencies",
+      "requiresSecurityReview": false,
+      "maxRiskLevel": "medium",
+      "packages": {
+        "npm": {
+          "blocked": [
+            {
+              "name": "request",
+              "reason": "Deprecated, use fetch or axios instead",
+              "severity": "high"
+            },
+            {
+              "name": "node-fetch",
+              "reason": "Use built-in fetch instead",
+              "severity": "low"
+            }
+          ]
+        }
+      }
+    },
+    "testing": {
+      "description": "Testing and development dependencies",
+      "requiresSecurityReview": false,
+      "maxRiskLevel": "high",
+      "scope": ["devDependencies"]
+    },
+    "supply-chain-protection": {
+      "description": "Supply-chain attack prevention rules",
+      "rules": {
+        "scope-protection": {
+          "description": "Prevent dependency confusion with internal scopes",
+          "protectedScopes": ["@aura", "@aura-app"],
+          "enforcement": "strict"
+        },
+        "typosquatting": {
+          "description": "Detect potential typosquatting attempts",
+          "protectedNames": [
+            "aura",
+            "aura-app",
+            "aura-core",
+            "aura-crypto",
+            "aura-mobile",
+            "aura-web"
+          ],
+          "similarityThreshold": 0.8,
+          "enforcement": "warn"
+        },
+        "registry-validation": {
+          "description": "Ensure packages come from trusted registries",
+          "allowedRegistries": {
+            "npm": ["https://registry.npmjs.org"],
+            "cargo": ["https://crates.io"]
+          },
+          "enforcement": "strict"
+        },
+        "maintainer-validation": {
+          "description": "Validate package maintainers for critical dependencies",
+          "criticalPackages": [
+            "getrandom",
+            "zeroize",
+            "sha2",
+            "hmac",
+            "aes-gcm",
+            "argon2",
+            "wasm-bindgen"
+          ],
+          "requirements": {
+            "minMaintainers": 2,
+            "verifiedMaintainers": true,
+            "recentActivity": "6months"
+          }
+        },
+        "dependency-depth": {
+          "description": "Limit dependency tree depth to prevent bloat",
+          "maxDepth": 10,
+          "maxDependenciesPerPackage": 50,
+          "enforcement": "warn"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "description": "Approved exceptions to security policies",
+    "approvals": [
+      {
+        "package": "react",
+        "reason": "Core framework dependency",
+        "approvedBy": "architecture-team",
+        "approvedDate": "2025-09-03",
+        "expiryDate": "2026-09-03"
+      },
+      {
+        "package": "next",
+        "reason": "Web framework",
+        "approvedBy": "architecture-team",
+        "approvedDate": "2025-09-03",
+        "expiryDate": "2026-09-03"
+      }
+    ]
+  },
+  "monitoring": {
+    "description": "Continuous monitoring configuration",
+    "scanFrequency": {
+      "vulnerability": "daily",
+      "license": "weekly",
+      "policy": "on-change"
+    },
+    "alerts": {
+      "newCryptoPackage": {
+        "enabled": true,
+        "channels": ["security-team", "slack"],
+        "severity": "high"
+      },
+      "policyViolation": {
+        "enabled": true,
+        "channels": ["security-team", "pr-comments"],
+        "severity": "medium"
+      },
+      "suspiciousPackage": {
+        "enabled": true,
+        "channels": ["security-team", "email"],
+        "severity": "critical"
+      }
+    }
+  },
+  "enforcement": {
+    "description": "Policy enforcement configuration",
+    "modes": {
+      "development": "warn",
+      "staging": "enforce-non-critical",
+      "production": "enforce-strict"
+    },
+    "actions": {
+      "block-install": {
+        "enabled": true,
+        "scope": ["cryptographic", "authentication"]
+      },
+      "require-approval": {
+        "enabled": true,
+        "reviewers": ["security-team", "architecture-team"],
+        "timeout": "72hours"
+      },
+      "auto-update": {
+        "enabled": true,
+        "scope": ["testing"],
+        "securityOnly": true
+      }
+    }
+  },
+  "compliance": {
+    "description": "Compliance and audit requirements",
+    "standards": ["SLSA-2", "NIST-SSDF", "OWASP-SCVS"],
+    "auditFrequency": "monthly",
+    "reportingRequirements": {
+      "securityReview": "all-crypto-dependencies",
+      "vulnerabilityAssessment": "quarterly",
+      "policyCompliance": "continuous"
+    }
+  }
+}

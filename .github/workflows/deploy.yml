@@ -181,8 +181,51 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
+      - name: Install cosign for SLSA verification
+        uses: sigstore/cosign-installer@v3.4.0
+
       - name: Install dependencies
         run: pnpm install
+
+      - name: Download SLSA build artifacts (if available)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: slsa-build-artifacts-${{ github.ref_name }}
+          path: slsa-artifacts/
+
+      - name: Verify SLSA build provenance (if available)
+        continue-on-error: true
+        run: |
+          echo "Checking for SLSA artifacts..."
+          if [ -d "slsa-artifacts" ] && [ -f "slsa-artifacts/build-artifacts/version.json" ]; then
+            echo "SLSA artifacts found - verifying..."
+            
+            # Find the main build artifact
+            MAIN_ARTIFACT=$(find slsa-artifacts/build-artifacts -name "*.wasm" | head -1)
+            if [ -z "$MAIN_ARTIFACT" ]; then
+              MAIN_ARTIFACT=$(find slsa-artifacts/build-artifacts -name "*.js" | head -1)
+            fi
+            
+            if [ -n "$MAIN_ARTIFACT" ]; then
+              # Find provenance and signature files
+              PROVENANCE_FILE=$(find slsa-artifacts -name "*.intoto.jsonl" | head -1)
+              SIGNATURE_FILE="${MAIN_ARTIFACT}.sig"
+              
+              if [ -f "$PROVENANCE_FILE" ] && [ -f "$SIGNATURE_FILE" ]; then
+                echo "Running SLSA verification..."
+                node tools/security/slsa-verify.js "$MAIN_ARTIFACT" "$PROVENANCE_FILE" "$SIGNATURE_FILE" || {
+                  echo "⚠️ SLSA verification failed for staging - proceeding with caution"
+                }
+              else
+                echo "⚠️ SLSA provenance or signature files not found"
+              fi
+            else
+              echo "⚠️ No suitable artifacts found for SLSA verification"
+            fi
+          else
+            echo "ℹ️ No SLSA artifacts available for staging deployment"
+          fi
 
       - name: Build for staging
         run: |
@@ -272,12 +315,69 @@ jobs:
       - name: Install wasm-pack
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
+      - name: Install cosign for SLSA verification
+        uses: sigstore/cosign-installer@v3.4.0
+
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build for production
+      - name: Download SLSA build artifacts (REQUIRED for production)
+        uses: actions/download-artifact@v4
+        with:
+          name: slsa-build-artifacts-${{ github.ref_name }}
+          path: slsa-artifacts/
+
+      - name: Verify SLSA build provenance (MANDATORY for production)
         run: |
-          echo "Building applications for production deployment..."
+          echo "🔒 Performing mandatory SLSA verification for production..."
+
+          # Ensure SLSA artifacts exist
+          if [ ! -d "slsa-artifacts" ]; then
+            echo "❌ SLSA artifacts not found - production deployment blocked!"
+            exit 1
+          fi
+
+          # Find the main build artifact
+          MAIN_ARTIFACT=$(find slsa-artifacts/build-artifacts -name "*.wasm" | head -1)
+          if [ -z "$MAIN_ARTIFACT" ]; then
+            MAIN_ARTIFACT=$(find slsa-artifacts/build-artifacts -name "*.js" | head -1)
+          fi
+
+          if [ -z "$MAIN_ARTIFACT" ]; then
+            echo "❌ No suitable artifacts found for SLSA verification!"
+            exit 1
+          fi
+
+          # Find provenance and signature files
+          PROVENANCE_FILE=$(find slsa-artifacts -name "*.intoto.jsonl" | head -1)
+          SIGNATURE_FILE="${MAIN_ARTIFACT}.sig"
+
+          if [ ! -f "$PROVENANCE_FILE" ]; then
+            echo "❌ SLSA provenance file not found - production deployment blocked!"
+            exit 1
+          fi
+
+          if [ ! -f "$SIGNATURE_FILE" ]; then
+            echo "❌ Sigstore signature file not found - production deployment blocked!"
+            exit 1
+          fi
+
+          # Run SLSA verification (strict mode for production)
+          echo "Running SLSA verification in strict mode..."
+          SLSA_STRICT_MODE=true SLSA_OUTPUT_FORMAT=json node tools/security/slsa-verify.js "$MAIN_ARTIFACT" "$PROVENANCE_FILE" "$SIGNATURE_FILE" > slsa-report.json || {
+            echo "❌ SLSA verification failed - production deployment blocked!"
+            echo "SLSA verification report:"
+            cat slsa-report.json
+            exit 1
+          }
+
+          echo "✅ SLSA Level 2 verification passed - production deployment authorized"
+          echo "SLSA verification report:"
+          cat slsa-report.json
+
+      - name: Build for production (using verified artifacts)
+        run: |
+          echo "Building applications for production deployment using verified artifacts..."
 
           # Set production environment variables
           export NODE_ENV=production
@@ -285,13 +385,19 @@ jobs:
           export NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_PRODUCTION_ANON_KEY }}
           export NEXT_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_PRODUCTION_DSN }}
 
+          # Use verified WASM artifacts if available
+          if [ -f "slsa-artifacts/build-artifacts/crypto_core_bg.wasm" ]; then
+            echo "Using verified WASM artifacts from SLSA build..."
+            cp -r slsa-artifacts/build-artifacts/* libs/crypto-core/pkg/ || echo "No crypto artifacts to copy"
+          fi
+
           # Build all packages
           pnpm build || {
             echo "❌ Production build failed!"
             exit 1
           }
 
-          echo "✅ Production build completed successfully"
+          echo "✅ Production build completed successfully with SLSA-verified artifacts"
 
       - name: Deploy to Vercel (production)
         uses: amondnet/vercel-action@v25
@@ -503,3 +609,10 @@ jobs:
         with:
           name: deployment-report
           path: deployment-report.md
+
+      - name: Upload SLSA verification report (if exists)
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: slsa-verification-report
+          path: slsa-report.json

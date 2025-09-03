@@ -1,0 +1,412 @@
+name: SLSA Level 2 Build Provenance
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  # Build job with SLSA Level 2 requirements
+  build:
+    name: SLSA Build with Provenance
+    runs-on: ubuntu-latest
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+      version: ${{ steps.version.outputs.version }}
+    permissions:
+      id-token: write # For Sigstore signing
+      contents: read
+      attestations: write # For build provenance
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history for provenance
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust for WASM builds
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Configure reproducible builds
+        run: |
+          # Set deterministic timestamp for reproducible builds
+          export SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          echo "SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}" >> $GITHUB_ENV
+          echo "Configured SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
+
+      - name: Install dependencies (locked)
+        run: |
+          # Use frozen lockfile for reproducible builds
+          pnpm install --frozen-lockfile
+
+      - name: Verify dependency integrity
+        run: |
+          echo "Verifying package-lock.json integrity..."
+          # Verify npm lockfile integrity
+          if [ -f "package-lock.json" ]; then
+            npm ci --dry-run
+          fi
+
+          # Verify pnpm lockfile integrity  
+          if [ -f "pnpm-lock.yaml" ]; then
+            pnpm install --frozen-lockfile --dry-run
+          fi
+
+          # Verify Cargo lockfile integrity
+          if [ -f "libs/crypto-core/Cargo.lock" ]; then
+            cd libs/crypto-core
+            cargo check --locked
+            cd -
+          fi
+          echo "✅ Dependency integrity verified"
+
+      - name: Build all packages (reproducible)
+        run: |
+          echo "Building packages with deterministic output..."
+          # Set reproducible build environment
+          export DETERMINISTIC_BUILD=1
+          export NODE_ENV=production
+
+          # Build with frozen dependencies
+          pnpm build
+
+          echo "✅ Reproducible build completed"
+
+      - name: Verify WASM build integrity
+        run: |
+          echo "Verifying WASM build integrity..."
+          cd libs/crypto-core
+
+          # Verify wasm-pack output exists and is valid
+          if [ ! -f "pkg/crypto_core_bg.wasm" ]; then
+            echo "❌ WASM binary not found!"
+            exit 1
+          fi
+
+          # Check WASM file is valid
+          wasm-validate pkg/crypto_core_bg.wasm
+
+          # Verify TypeScript bindings
+          if [ ! -f "pkg/crypto_core.d.ts" ]; then
+            echo "❌ TypeScript bindings not found!"
+            exit 1
+          fi
+
+          echo "✅ WASM build integrity verified"
+
+      - name: Create build artifacts
+        run: |
+          echo "Creating build artifacts for SLSA provenance..."
+          mkdir -p build-artifacts
+
+          # Copy build outputs
+          cp -r dist/* build-artifacts/ 2>/dev/null || echo "No dist directory"
+          cp -r libs/crypto-core/pkg/* build-artifacts/ 2>/dev/null || echo "No WASM pkg"
+
+          # Create version info
+          echo "{
+            \"version\": \"${{ github.ref_name }}\",
+            \"commit\": \"${{ github.sha }}\",
+            \"build_time\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+            \"source_date_epoch\": \"${SOURCE_DATE_EPOCH}\"
+          }" > build-artifacts/version.json
+
+          # List artifacts for verification
+          echo "Build artifacts created:"
+          find build-artifacts -type f | sort
+
+      - name: Generate artifact hashes
+        id: hash
+        run: |
+          echo "Generating SHA256 hashes for artifacts..."
+          cd build-artifacts
+
+          # Generate hashes for all files
+          find . -type f -exec sha256sum {} \; | sort > ../hashes.txt
+
+          # Create base64 encoded hash list for SLSA
+          HASHES=$(cat ../hashes.txt | base64 -w 0)
+          echo "hashes=${HASHES}" >> $GITHUB_OUTPUT
+
+          echo "✅ Artifact hashes generated"
+          cat ../hashes.txt
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${{ github.ref_name }}
+          if [[ $VERSION == refs/tags/* ]]; then
+            VERSION=${VERSION#refs/tags/}
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Extracted version: ${VERSION}"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: slsa-build-artifacts-${{ steps.version.outputs.version }}
+          path: |
+            build-artifacts/
+            hashes.txt
+          retention-days: 30
+
+      - name: Generate build attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: 'build-artifacts/**/*'
+
+  # SLSA Level 2 provenance generation
+  slsa-provenance:
+    needs: [build]
+    permissions:
+      id-token: write # For signing
+      contents: read
+      actions: read # For reading workflow run
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+    with:
+      base64-subjects: ${{ needs.build.outputs.hashes }}
+      attestation-name: 'aura-build-${{ needs.build.outputs.version }}'
+      # Compile a predicate that includes compile flags, source info, etc.
+      compile-generator: true
+
+  # Sigstore signing with cosign
+  sigstore-sign:
+    name: Sign with Sigstore
+    needs: [build, slsa-provenance]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # For keyless signing
+      contents: read
+
+    steps:
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.4.0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: slsa-build-artifacts-${{ needs.build.outputs.version }}
+
+      - name: Download SLSA provenance
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.slsa-provenance.outputs.attestation-name }}
+
+      - name: Sign artifacts with Sigstore
+        run: |
+          echo "Signing artifacts with Sigstore (keyless)..."
+
+          # Sign main build artifacts
+          for file in build-artifacts/*; do
+            if [ -f "$file" ]; then
+              echo "Signing: $file"
+              cosign sign-blob \
+                --yes \
+                --output-signature="${file}.sig" \
+                --output-certificate="${file}.crt" \
+                "$file"
+            fi
+          done
+
+          # Sign SLSA provenance
+          if [ -f "*.intoto.jsonl" ]; then
+            echo "Signing SLSA provenance..."
+            cosign sign-blob \
+              --yes \
+              --output-signature="provenance.sig" \
+              --output-certificate="provenance.crt" \
+              *.intoto.jsonl
+          fi
+
+          echo "✅ Sigstore signing completed"
+
+      - name: Verify signatures
+        run: |
+          echo "Verifying Sigstore signatures..."
+
+          # Verify artifact signatures
+          for file in build-artifacts/*; do
+            if [ -f "$file" ] && [ -f "${file}.sig" ] && [ -f "${file}.crt" ]; then
+              echo "Verifying: $file"
+              cosign verify-blob \
+                --certificate="${file}.crt" \
+                --signature="${file}.sig" \
+                --certificate-identity="https://github.com/${{ github.repository }}/.github/workflows/slsa-build.yml@refs/heads/main" \
+                --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+                "$file"
+            fi
+          done
+
+          echo "✅ Signature verification completed"
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-artifacts-${{ needs.build.outputs.version }}
+          path: |
+            build-artifacts/
+            *.sig
+            *.crt
+            *.intoto.jsonl
+            provenance.sig
+            provenance.crt
+          retention-days: 90
+
+  # Reproducible build verification
+  verify-reproducible:
+    name: Verify Reproducible Build
+    needs: [build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Download original build
+        uses: actions/download-artifact@v4
+        with:
+          name: slsa-build-artifacts-${{ needs.build.outputs.version }}
+          path: original-build/
+
+      - name: Reproduce build
+        run: |
+          echo "Reproducing build for verification..."
+
+          # Use same SOURCE_DATE_EPOCH as original build
+          export SOURCE_DATE_EPOCH=$(jq -r '.source_date_epoch' original-build/build-artifacts/version.json)
+          export DETERMINISTIC_BUILD=1
+          export NODE_ENV=production
+
+          echo "Using SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
+
+          # Install exact same dependencies
+          pnpm install --frozen-lockfile
+
+          # Reproduce build
+          pnpm build
+
+          # Create comparison artifacts
+          mkdir -p reproduced-build
+          cp -r dist/* reproduced-build/ 2>/dev/null || echo "No dist directory"
+          cp -r libs/crypto-core/pkg/* reproduced-build/ 2>/dev/null || echo "No WASM pkg"
+
+      - name: Compare builds
+        run: |
+          echo "Comparing original and reproduced builds..."
+
+          # Compare file lists
+          (cd original-build/build-artifacts && find . -type f | sort) > original-files.txt
+          (cd reproduced-build && find . -type f | sort) > reproduced-files.txt
+
+          if ! diff -u original-files.txt reproduced-files.txt; then
+            echo "❌ File lists don't match!"
+            exit 1
+          fi
+
+          # Compare file contents (excluding version.json which has timestamps)
+          DIFF_COUNT=0
+          while IFS= read -r file; do
+            if [[ "$file" != "./version.json" ]]; then
+              if ! diff "original-build/build-artifacts/$file" "reproduced-build/$file" >/dev/null 2>&1; then
+                echo "❌ File differs: $file"
+                DIFF_COUNT=$((DIFF_COUNT + 1))
+              fi
+            fi
+          done < original-files.txt
+
+          if [ $DIFF_COUNT -gt 0 ]; then
+            echo "❌ Reproducible build verification failed: $DIFF_COUNT files differ"
+            exit 1
+          fi
+
+          echo "✅ Reproducible build verification passed"
+
+  # SLSA Level 2 Summary
+  slsa-summary:
+    name: SLSA Level 2 Summary
+    needs: [build, slsa-provenance, sigstore-sign, verify-reproducible]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Generate SLSA summary
+        run: |
+          echo "# SLSA Level 2 Build Summary" > slsa-summary.md
+          echo "Generated: $(date)" >> slsa-summary.md
+          echo "" >> slsa-summary.md
+
+          echo "## SLSA Requirements Status" >> slsa-summary.md
+          echo "- ✅ Build Provenance: ${{ needs.slsa-provenance.result }}" >> slsa-summary.md
+          echo "- ✅ Isolated Build: GitHub Actions (hermetic environment)" >> slsa-summary.md
+          echo "- ✅ Reproducible Build: ${{ needs.verify-reproducible.result }}" >> slsa-summary.md
+          echo "- ✅ Sigstore Signing: ${{ needs.sigstore-sign.result }}" >> slsa-summary.md
+          echo "" >> slsa-summary.md
+
+          echo "## Artifacts" >> slsa-summary.md
+          echo "- Build Artifacts: slsa-build-artifacts-${{ needs.build.outputs.version }}" >> slsa-summary.md
+          echo "- Signed Artifacts: signed-artifacts-${{ needs.build.outputs.version }}" >> slsa-summary.md
+          echo "- SLSA Provenance: ${{ needs.slsa-provenance.outputs.attestation-name }}" >> slsa-summary.md
+          echo "" >> slsa-summary.md
+
+          # Overall SLSA Level 2 status
+          if [[ "${{ needs.build.result }}" == "success" ]] && \
+             [[ "${{ needs.slsa-provenance.result }}" == "success" ]] && \
+             [[ "${{ needs.sigstore-sign.result }}" == "success" ]] && \
+             [[ "${{ needs.verify-reproducible.result }}" == "success" ]]; then
+            echo "## ✅ SLSA Level 2 Compliance: ACHIEVED" >> slsa-summary.md
+            echo "All SLSA Level 2 requirements have been met successfully." >> slsa-summary.md
+          else
+            echo "## ❌ SLSA Level 2 Compliance: FAILED" >> slsa-summary.md
+            echo "One or more SLSA Level 2 requirements failed. Review job details above." >> slsa-summary.md
+          fi
+
+      - name: Upload SLSA summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: slsa-summary-${{ needs.build.outputs.version }}
+          path: slsa-summary.md
+          retention-days: 90

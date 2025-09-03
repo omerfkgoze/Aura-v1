@@ -1,0 +1,479 @@
+name: Supply-chain Attack Detection & Prevention
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run nightly security scans
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  # Dependency confusion and typosquatting detection
+  dependency-confusion-scan:
+    name: Dependency Confusion Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install Socket Security CLI
+        run: |
+          echo "Installing Socket Security CLI for supply-chain attack detection..."
+          npm install -g @socketsecurity/cli
+
+      - name: Scan for dependency confusion attacks
+        continue-on-error: true
+        run: |
+          echo "Scanning for dependency confusion attacks..."
+
+          # Scan package.json files for suspicious packages
+          find . -name "package.json" -not -path "*/node_modules/*" | while read -r pkg_file; do
+            echo "Scanning: $pkg_file"
+            
+            # Check for packages with suspicious patterns
+            if grep -E '"[^"]*-aura[^"]*":|"aura-[^"]*":' "$pkg_file"; then
+              echo "⚠️ WARNING: Potential typosquatting attempt found in $pkg_file"
+              echo "Found package names similar to 'aura' - this could be a supply-chain attack"
+              grep -E '"[^"]*-aura[^"]*":|"aura-[^"]*":' "$pkg_file"
+            fi
+            
+            # Check for suspicious scoped packages that might conflict with our internal ones
+            if grep -E '"@aura-app/[^"]*":' "$pkg_file"; then
+              echo "⚠️ WARNING: External package using @aura-app scope found in $pkg_file"
+              echo "This could indicate dependency confusion attack"
+              grep -E '"@aura-app/[^"]*":' "$pkg_file"
+            fi
+          done
+
+      - name: Socket Security scan
+        continue-on-error: true
+        run: |
+          echo "Running Socket Security scan..."
+          # Note: Requires Socket Security API key for full functionality
+          socket info . || echo "Socket Security scan completed with warnings"
+
+      - name: Check package registries
+        run: |
+          echo "Checking package registry configurations..."
+
+          # Check npmrc files for registry configurations
+          find . -name ".npmrc" | while read -r npmrc_file; do
+            echo "Checking: $npmrc_file"
+            
+            # Warn about non-standard registries
+            if grep -E "registry\s*=\s*(?!https://registry\.npmjs\.org)" "$npmrc_file"; then
+              echo "⚠️ WARNING: Non-standard npm registry found in $npmrc_file"
+              grep -E "registry\s*=" "$npmrc_file"
+            fi
+          done
+
+          # Check for Cargo registry configurations
+          if [ -f ".cargo/config.toml" ]; then
+            echo "Checking Cargo registry configuration..."
+            if grep -E "\[registries\]|\[source\]" .cargo/config.toml; then
+              echo "⚠️ WARNING: Custom Cargo registry configuration found"
+              cat .cargo/config.toml
+            fi
+          fi
+
+  # Malicious package detection
+  malicious-package-scan:
+    name: Malicious Package Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install audit tools
+        run: |
+          echo "Installing package audit tools..."
+
+          # Install cargo-audit for Rust dependencies
+          cargo install cargo-audit --locked
+
+          # Install additional security tools
+          npm install -g better-npm-audit
+          npm install -g audit-ci
+
+      - name: Audit npm dependencies
+        continue-on-error: true
+        run: |
+          echo "Auditing npm dependencies for known vulnerabilities..."
+
+          # Use audit-ci for better control
+          pnpm audit --audit-level high || {
+            echo "❌ High or critical vulnerabilities found in npm dependencies"
+            exit 1
+          }
+
+      - name: Audit Cargo dependencies
+        continue-on-error: true
+        run: |
+          echo "Auditing Cargo dependencies for known vulnerabilities..."
+
+          if [ -f "libs/crypto-core/Cargo.toml" ]; then
+            cd libs/crypto-core
+            cargo audit || {
+              echo "❌ Vulnerabilities found in Cargo dependencies"
+              exit 1
+            }
+            cd -
+          fi
+
+      - name: License compliance check
+        run: |
+          echo "Checking license compliance..."
+
+          # Check for GPL and other copyleft licenses in production dependencies
+          pnpm install --frozen-lockfile
+
+          # Use license-checker to identify problematic licenses
+          npx license-checker \
+            --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0;Unlicense' \
+            --excludePrivatePackages \
+            --production || {
+              echo "❌ Incompatible licenses found in production dependencies"
+              echo "Allowed licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, CC0-1.0, Unlicense"
+              npx license-checker --summary
+              exit 1
+            }
+
+  # Advanced supply-chain analysis
+  supply-chain-analysis:
+    name: Advanced Supply-chain Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies for analysis
+        run: |
+          pnpm install --frozen-lockfile
+
+      - name: Analyze dependency tree depth
+        run: |
+          echo "Analyzing dependency tree for suspicious depth..."
+
+          # Check for packages with excessive dependencies (potential supply-chain bloat)
+          pnpm ls --depth=10 --json > dependency-tree.json
+
+          # Find packages with more than 50 dependencies (suspicious)
+          node -e "
+            const deps = JSON.parse(require('fs').readFileSync('dependency-tree.json', 'utf8'));
+            
+            function analyzeDeps(node, path = []) {
+              if (node.dependencies) {
+                const depCount = Object.keys(node.dependencies).length;
+                if (depCount > 50) {
+                  console.log(\`⚠️ WARNING: Package '\${path.join('->')}\' has \${depCount} dependencies\`);
+                  console.log('This could indicate dependency bloat or supply-chain risk');
+                }
+                
+                for (const [name, dep] of Object.entries(node.dependencies)) {
+                  analyzeDeps(dep, [...path, name]);
+                }
+              }
+            }
+            
+            analyzeDeps(deps);
+          "
+
+      - name: Check for suspicious package patterns
+        run: |
+          echo "Checking for suspicious package patterns..."
+
+          # Check for packages with suspicious names or patterns
+          pnpm ls --json | node -e "
+            const stdin = process.stdin;
+            let data = '';
+            stdin.on('data', chunk => data += chunk);
+            stdin.on('end', () => {
+              const deps = JSON.parse(data);
+              
+              function checkSuspiciousNames(node, path = []) {
+                if (node.dependencies) {
+                  for (const [name, dep] of Object.entries(node.dependencies)) {
+                    // Check for suspicious patterns
+                    const suspiciousPatterns = [
+                      /^node_modules$/,
+                      /^[a-z]{1,2}$/, // Very short names
+                      /\d{10,}/, // Long numbers (potential spam)
+                      /[^\x00-\x7F]/, // Non-ASCII characters
+                      /^(test|demo|sample|tmp|temp)$/, // Generic test packages
+                    ];
+                    
+                    for (const pattern of suspiciousPatterns) {
+                      if (pattern.test(name)) {
+                        console.log(\`⚠️ SUSPICIOUS: Package '\${name}\' matches suspicious pattern\`);
+                        console.log(\`  Pattern: \${pattern.toString()}\`);
+                        console.log(\`  Path: \${[...path, name].join(' -> ')}\`);
+                      }
+                    }
+                    
+                    checkSuspiciousNames(dep, [...path, name]);
+                  }
+                }
+              }
+              
+              checkSuspiciousNames(deps);
+            });
+          "
+
+      - name: Integrity verification
+        run: |
+          echo "Verifying package integrity..."
+
+          # Verify npm lockfile integrity
+          pnpm install --frozen-lockfile --offline || {
+            echo "❌ pnpm lockfile integrity verification failed"
+            echo "This could indicate tampering with dependencies"
+            exit 1
+          }
+
+          # Verify Cargo lockfile integrity
+          if [ -f "libs/crypto-core/Cargo.lock" ]; then
+            cd libs/crypto-core
+            cargo check --locked --offline || {
+              echo "❌ Cargo lockfile integrity verification failed"
+              echo "This could indicate tampering with Rust dependencies"
+              exit 1
+            }
+            cd -
+          fi
+
+      - name: Generate supply-chain report
+        run: |
+          echo "Generating supply-chain security report..."
+
+          cat > supply-chain-report.md << 'EOF'
+          # Supply-chain Security Scan Report
+
+          **Generated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Git Commit:** ${{ github.sha }}
+          **Workflow:** ${{ github.workflow }}
+
+          ## Scan Summary
+
+          - **Dependency Confusion Check:** Completed
+          - **Typosquatting Detection:** Completed
+          - **Malicious Package Scan:** Completed
+          - **License Compliance:** Verified
+          - **Integrity Verification:** Completed
+
+          ## Registry Configuration
+
+          - **npm Registry:** $(npm config get registry)
+          - **Cargo Registry:** Default (crates.io)
+
+          ## Recommendations
+
+          1. Continue monitoring for new dependencies
+          2. Regularly update security scanning tools
+          3. Review any packages flagged as suspicious
+          4. Maintain exact version pinning for crypto dependencies
+
+          ## Next Steps
+
+          - Review any warnings in the scan output
+          - Update dependency policies if needed
+          - Schedule next security scan
+
+          EOF
+
+      - name: Upload supply-chain report
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-report-${{ github.sha }}
+          path: supply-chain-report.md
+          retention-days: 30
+
+  # Dependency policy enforcement
+  policy-enforcement:
+    name: Dependency Policy Enforcement
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check for new dependencies
+        run: |
+          echo "Checking for new dependencies in this PR..."
+
+          # Get changed files
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+
+          # Check if package.json or Cargo.toml files were modified
+          if echo "$CHANGED_FILES" | grep -E "(package\.json|Cargo\.toml|pnpm-lock\.yaml|Cargo\.lock)"; then
+            echo "📦 Dependency files were modified in this PR"
+            
+            # List changed dependency files
+            echo "$CHANGED_FILES" | grep -E "(package\.json|Cargo\.toml|pnpm-lock\.yaml|Cargo\.lock)" | while read -r file; do
+              echo "  - $file"
+            done
+            
+            # Check for new crypto-related dependencies
+            if git diff origin/main...HEAD -- package.json Cargo.toml | grep -E "^\+.*\"(crypto|auth|hash|encrypt|decrypt|sign|verify|random|sodium|argon|bcrypt)"; then
+              echo "🚨 CRITICAL: New crypto-related dependencies detected!"
+              echo "These require security team approval before merging."
+              
+              git diff origin/main...HEAD -- package.json Cargo.toml | grep -E "^\+.*\"(crypto|auth|hash|encrypt|decrypt|sign|verify|random|sodium|argon|bcrypt)"
+              
+              # Create comment for PR
+              cat > pr-comment.md << 'COMMENT'
+              ## 🔒 Security Review Required
+              
+              This PR introduces new crypto-related dependencies that require security team review:
+              
+              $(git diff origin/main...HEAD -- package.json Cargo.toml | grep -E "^\+.*\"(crypto|auth|hash|encrypt|decrypt|sign|verify|random|sodium|argon|bcrypt)")
+              
+              **Required Actions:**
+              1. Security team review and approval
+              2. Crypto dependency audit
+              3. Supply-chain security validation
+              
+              **Labels Added:** `security-review-required`, `crypto-dependencies`
+              COMMENT
+              
+              exit 1
+            fi
+          else
+            echo "✅ No dependency files were modified in this PR"
+          fi
+
+  # Summary and notification
+  supply-chain-summary:
+    name: Supply-chain Security Summary
+    needs: [dependency-confusion-scan, malicious-package-scan, supply-chain-analysis]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate security summary with monitoring
+        run: |
+          echo "# Supply-chain Security Summary" > summary.md
+          echo "Generated: $(date)" >> summary.md
+          echo "Git Commit: ${{ github.sha }}" >> summary.md
+          echo "Workflow Run: ${{ github.run_id }}" >> summary.md
+          echo "" >> summary.md
+
+          echo "## Scan Results" >> summary.md
+          echo "- Dependency Confusion Scan: ${{ needs.dependency-confusion-scan.result }}" >> summary.md
+          echo "- Malicious Package Scan: ${{ needs.malicious-package-scan.result }}" >> summary.md
+          echo "- Supply-chain Analysis: ${{ needs.supply-chain-analysis.result }}" >> summary.md
+          echo "" >> summary.md
+
+          # Overall status
+          if [[ "${{ needs.dependency-confusion-scan.result }}" == "success" ]] && \
+             [[ "${{ needs.malicious-package-scan.result }}" == "success" ]] && \
+             [[ "${{ needs.supply-chain-analysis.result }}" == "success" ]]; then
+            echo "## ✅ Overall Status: SECURE" >> summary.md
+            echo "All supply-chain security checks passed successfully." >> summary.md
+            OVERALL_STATUS="SECURE"
+            OVERALL_SUCCESS="true"
+          else
+            echo "## ⚠️ Overall Status: REQUIRES ATTENTION" >> summary.md
+            echo "One or more supply-chain security checks failed or had warnings." >> summary.md
+            echo "Please review the individual job results for details." >> summary.md
+            OVERALL_STATUS="REQUIRES_ATTENTION" 
+            OVERALL_SUCCESS="false"
+          fi
+
+          # Generate monitoring data
+          cat > supply-chain-results.json << EOF
+          {
+            "scanType": "supply-chain",
+            "timestamp": "$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")",
+            "gitCommit": "${{ github.sha }}",
+            "workflowRunId": "${{ github.run_id }}",
+            "results": {
+              "dependencyConfusionScan": "${{ needs.dependency-confusion-scan.result }}",
+              "maliciousPackageScan": "${{ needs.malicious-package-scan.result }}",
+              "supplyChainAnalysis": "${{ needs.supply-chain-analysis.result }}"
+            },
+            "overallStatus": "\$OVERALL_STATUS",
+            "success": \$OVERALL_SUCCESS,
+            "environment": "${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}",
+            "dependencyConfusion": [],
+            "typosquatting": [],
+            "maliciousPackages": [],
+            "suspiciousRegistries": []
+          }
+          EOF
+
+      - name: Run supply-chain monitoring
+        continue-on-error: true
+        env:
+          SLACK_SECURITY_WEBHOOK: ${{ secrets.SLACK_SECURITY_WEBHOOK }}
+          EMAIL_ALERT_ENDPOINT: ${{ secrets.EMAIL_ALERT_ENDPOINT }}
+          ENABLE_SLACK_ALERTS: ${{ vars.ENABLE_SLACK_ALERTS || 'true' }}
+          ENABLE_EMAIL_ALERTS: ${{ vars.ENABLE_EMAIL_ALERTS || 'false' }}
+          SECURITY_TEAM_EMAIL: ${{ secrets.SECURITY_TEAM_EMAIL }}
+          NODE_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+        run: |
+          echo "Running supply-chain security monitoring..."
+          node tools/security/security-monitor.js supply-chain supply-chain-results.json
+
+      - name: Log supply-chain audit trail
+        run: |
+          node tools/security/audit-logger.js supply-chain-scan \
+            "Supply-chain security scan completed" \
+            "confusion:${{ needs.dependency-confusion-scan.result }},malicious:${{ needs.malicious-package-scan.result }},analysis:${{ needs.supply-chain-analysis.result }}"
+
+      - name: Upload summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-summary-${{ github.sha }}
+          path: |
+            summary.md
+            supply-chain-results.json
+          retention-days: 30

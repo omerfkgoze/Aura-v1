@@ -1,0 +1,198 @@
+# Dependabot configuration for automated security updates
+# Follows security-first approach with approval workflow for crypto dependencies
+
+version: 2
+updates:
+  # npm/pnpm dependencies (main workspace)
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'tuesday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 5
+    reviewers:
+      - 'aura-security-team'
+    assignees:
+      - 'aura-security-team'
+    commit-message:
+      prefix: 'deps'
+      prefix-development: 'deps-dev'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'security'
+    # Security updates only for production dependencies
+    allow:
+      - dependency-type: 'direct:production'
+        update-type: 'security'
+      - dependency-type: 'indirect:production'
+        update-type: 'security'
+      - dependency-type: 'direct:development'
+        update-type: 'security'
+    # Ignore crypto-related packages (require manual approval)
+    ignore:
+      - dependency-name: 'crypto-js'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: '@noble/*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'argon2*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'bcrypt*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'jsonwebtoken'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'passport*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+
+  # Cargo dependencies (crypto-core)
+  - package-ecosystem: 'cargo'
+    directory: '/libs/crypto-core'
+    schedule:
+      interval: 'weekly'
+      day: 'wednesday'
+      time: '10:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 3
+    reviewers:
+      - 'aura-security-team'
+    assignees:
+      - 'aura-security-team'
+    commit-message:
+      prefix: 'deps(crypto-core)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'crypto-core'
+      - 'security'
+      - 'requires-security-review'
+    # Security patches only for crypto dependencies
+    allow:
+      - dependency-type: 'direct:production'
+        update-type: 'security'
+      - dependency-type: 'indirect:production'
+        update-type: 'security'
+    # All crypto dependencies require manual approval for non-security updates
+    ignore:
+      - dependency-name: 'getrandom'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'wasm-bindgen*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'zeroize'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'sha2'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'hmac'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'aes-gcm'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'rand'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'argon2'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+
+  # GitHub Actions workflows
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 3
+    reviewers:
+      - 'aura-devops-team'
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
+    labels:
+      - 'github-actions'
+      - 'ci-cd'
+    # Allow all GitHub Actions updates (they are generally safe)
+    allow:
+      - dependency-type: 'direct'
+
+  # Docker dependencies (if any)
+  - package-ecosystem: 'docker'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'thursday'
+      time: '11:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 3
+    reviewers:
+      - 'aura-devops-team'
+    commit-message:
+      prefix: 'docker'
+      include: 'scope'
+    labels:
+      - 'docker'
+      - 'dependencies'
+    # Security updates only for Docker
+    allow:
+      - dependency-type: 'direct:production'
+        update-type: 'security'
+
+  # Mobile app dependencies
+  - package-ecosystem: 'npm'
+    directory: '/apps/mobile'
+    schedule:
+      interval: 'weekly'
+      day: 'friday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 3
+    reviewers:
+      - 'aura-mobile-team'
+    commit-message:
+      prefix: 'deps(mobile)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'mobile'
+    # Mobile-specific security updates
+    allow:
+      - dependency-type: 'direct:production'
+        update-type: 'security'
+      - dependency-type: 'indirect:production'
+        update-type: 'security'
+    # Ignore React Native and Expo core updates (require manual testing)
+    ignore:
+      - dependency-name: 'react-native'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: 'expo*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      - dependency-name: '@react-native/*'
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+
+  # Web app dependencies
+  - package-ecosystem: 'npm'
+    directory: '/apps/web'
+    schedule:
+      interval: 'weekly'
+      day: 'friday'
+      time: '10:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 3
+    reviewers:
+      - 'aura-web-team'
+    commit-message:
+      prefix: 'deps(web)'
+      include: 'scope'
+    labels:
+      - 'dependencies'
+      - 'web'
+    # Web-specific security updates
+    allow:
+      - dependency-type: 'direct:production'
+        update-type: 'security'
+      - dependency-type: 'indirect:production'
+        update-type: 'security'
+    # Ignore Next.js major updates (require manual testing)
+    ignore:
+      - dependency-name: 'next'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react*'
+        update-types: ['version-update:semver-major']
