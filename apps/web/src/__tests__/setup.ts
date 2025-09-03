@@ -1,33 +1,41 @@
 import { vi } from 'vitest';
 
 // Mock Next.js server imports
-vi.mock('next/server', () => ({
-  NextRequest: vi.fn().mockImplementation((url: string, init?: RequestInit) => {
-    const request = {
-      url,
-      method: init?.method || 'GET',
-      headers: new Map(Object.entries(init?.headers || {})),
-      nextUrl: new URL(url),
-    };
+vi.mock('next/server', () => {
+  const mockHeaders = new Map();
+  mockHeaders.set = vi.fn();
+  mockHeaders.get = vi.fn();
 
-    // Add headers.get method
-    request.headers.get = function (key: string) {
-      return this.get(key) || null;
-    };
+  const mockResponse = {
+    headers: mockHeaders,
+  };
 
-    return request;
-  }),
-  NextResponse: {
-    next: vi.fn(() => ({
-      headers: new Map(),
-    })),
-    redirect: vi.fn((url: string, status?: number) => ({
-      url,
-      status: status || 302,
-      headers: new Map(),
-    })),
-  },
-}));
+  return {
+    NextRequest: vi.fn().mockImplementation((url: string, init?: RequestInit) => {
+      const request = {
+        url,
+        method: init?.method || 'GET',
+        headers: new Map(Object.entries(init?.headers || {})),
+        nextUrl: new URL(url),
+      };
+
+      // Add headers.get method
+      request.headers.get = function (key: string) {
+        return this.get(key) || null;
+      };
+
+      return request;
+    }),
+    NextResponse: {
+      next: vi.fn(() => mockResponse),
+      redirect: vi.fn((url: string, status?: number) => ({
+        url,
+        status: status || 302,
+        headers: new Map(),
+      })),
+    },
+  };
+});
 
 // Set test environment variables
 process.env['NODE_ENV'] = 'test';

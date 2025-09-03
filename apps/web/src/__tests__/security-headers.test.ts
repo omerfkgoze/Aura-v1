@@ -313,8 +313,8 @@ describe('Security Headers Validation', () => {
 
       const csp = cspDirectives.join('; ');
       expect(csp).not.toContain(';;');
-      expect(csp).not.toStartWith(';');
-      expect(csp).not.toEndWith(';');
+      expect(csp.startsWith(';')).toBe(false);
+      expect(csp.endsWith(';')).toBe(false);
     });
 
     it('should validate CORS origin format', () => {

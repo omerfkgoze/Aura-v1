@@ -1,40 +1,40 @@
 {
-  "name": "utils",
+  "name": "@aura/logger",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "sourceRoot": "libs/utils/src",
+  "sourceRoot": "libs/logger/src",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "main": "libs/utils/src/index.ts",
-        "outputPath": "dist/libs/utils",
-        "tsConfig": "libs/utils/tsconfig.json"
+        "main": "libs/logger/src/index.ts",
+        "outputPath": "dist/libs/logger",
+        "tsConfig": "libs/logger/tsconfig.json"
       }
     },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/utils/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["libs/logger/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "type-check": {
       "executor": "nx:run-commands",
       "options": {
         "command": "tsc --noEmit -p tsconfig.json",
-        "cwd": "libs/utils"
+        "cwd": "libs/logger"
       }
     },
     "test": {
       "executor": "@nx/vite:test",
-      "outputs": ["{workspaceRoot}/coverage/libs/utils"],
+      "outputs": ["{workspaceRoot}/coverage/libs/logger"],
       "options": {
-        "config": "libs/utils/vitest.config.ts",
+        "config": "libs/logger/vitest.config.ts",
         "passWithNoTests": true
       }
     }
   },
-  "tags": ["type:lib", "scope:utils"]
+  "tags": ["type:lib", "scope:logger"]
 }

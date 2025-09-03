@@ -50,7 +50,7 @@
       "executor": "@nx/vite:test",
       "outputs": ["{workspaceRoot}/coverage/libs/crypto-core"],
       "options": {
-        "config": "vitest.config.ts",
+        "config": "libs/crypto-core/vitest.config.ts",
         "passWithNoTests": true
       }
     },
