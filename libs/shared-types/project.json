@@ -22,10 +22,10 @@
       }
     },
     "type-check": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "rootDir": "libs/shared-types",
-        "tsConfig": "libs/shared-types/tsconfig.json"
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/shared-types"
       }
     }
   },

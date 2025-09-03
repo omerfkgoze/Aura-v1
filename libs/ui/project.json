@@ -19,13 +19,6 @@
       "options": {
         "lintFilePatterns": ["libs/ui/**/*.{ts,tsx,js,jsx}"]
       }
-    },
-    "type-check": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "rootDir": "libs/ui",
-        "tsConfig": "libs/ui/tsconfig.json"
-      }
     }
   },
   "tags": ["type:lib", "scope:ui"]

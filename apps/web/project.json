@@ -37,10 +37,10 @@
       }
     },
     "type-check": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "rootDir": "apps/web",
-        "tsConfig": "apps/web/tsconfig.json"
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "apps/web"
       }
     },
     "test": {

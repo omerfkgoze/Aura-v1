@@ -103,8 +103,8 @@ export function generateSecureRandom(length: number = 64): string {
   let result = '';
   const array = new Uint8Array(length);
 
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    crypto.getRandomValues(array);
+  if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+    globalThis.crypto.getRandomValues(array);
   } else if (typeof require !== 'undefined') {
     const nodeCrypto = require('crypto');
     for (let i = 0; i < length; i++) {
