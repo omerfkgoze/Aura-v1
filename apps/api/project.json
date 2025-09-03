@@ -35,13 +35,6 @@
         "runtimeArgs": ["-r", "ts-node/register", "--preserve-symlinks"],
         "args": ["apps/api/src/main.ts"]
       }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/api/**/*.{ts,js}"]
-      }
     }
   },
   "tags": ["type:app", "scope:api"]

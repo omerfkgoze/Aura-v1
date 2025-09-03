@@ -1,6 +1,6 @@
 {
   "root": true,
-  "ignorePatterns": ["**/*"],
+  "ignorePatterns": ["!**/*"],
   "plugins": ["@nx"],
   "overrides": [
     {
@@ -19,7 +19,7 @@
             ]
           }
         ],
-        "no-console": ["error", { "allow": ["warn", "error"] }],
+        "no-console": ["error", { "allow": ["warn", "error", "info", "log"] }],
         "no-debugger": "error",
         "prefer-const": "error",
         "no-var": "error"

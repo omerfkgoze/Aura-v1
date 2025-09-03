@@ -4,3 +4,7 @@ dist/
 .expo/
 *.generated.ts
 *.d.ts
+pkg/
+*.wasm
+*_bg.js
+libs/logger/
