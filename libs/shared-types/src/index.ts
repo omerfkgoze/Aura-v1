@@ -1,7 +1,7 @@
 // API Types
 export * from './api';
 
-// Crypto Types  
+// Crypto Types
 export * from './crypto';
 
 // Data Model Types

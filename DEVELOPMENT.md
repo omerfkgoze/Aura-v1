@@ -19,6 +19,7 @@ pnpm nx run-many --target=dev --all
 ```
 
 **Access your apps:**
+
 - 🌐 Web: https://localhost:3000
 - 📱 Mobile: Expo DevTools will show QR code
 - 🗄️ Database Studio: http://localhost:54323
@@ -29,19 +30,19 @@ pnpm nx run-many --target=dev --all
 
 ### Required Software
 
-| Software | Version | Installation |
-|----------|---------|-------------|
-| **Node.js** | 18+ | [nodejs.org](https://nodejs.org/) |
-| **pnpm** | Latest | `npm install -g pnpm` |
-| **Docker** | Latest | [docker.com](https://docker.com/) |
+| Software    | Version | Installation                      |
+| ----------- | ------- | --------------------------------- |
+| **Node.js** | 18+     | [nodejs.org](https://nodejs.org/) |
+| **pnpm**    | Latest  | `npm install -g pnpm`             |
+| **Docker**  | Latest  | [docker.com](https://docker.com/) |
 
 ### Optional but Recommended
 
-| Software | Purpose | Installation |
-|----------|---------|-------------|
+| Software         | Purpose             | Installation                   |
+| ---------------- | ------------------- | ------------------------------ |
 | **Supabase CLI** | Database management | `npm install -g @supabase/cli` |
-| **mkcert** | HTTPS certificates | `brew install mkcert` (macOS) |
-| **Expo CLI** | Mobile development | `npm install -g @expo/cli` |
+| **mkcert**       | HTTPS certificates  | `brew install mkcert` (macOS)  |
+| **Expo CLI**     | Mobile development  | `npm install -g @expo/cli`     |
 
 ---
 
@@ -68,6 +69,7 @@ cat .env.local
 ```
 
 **Required Environment Variables:**
+
 - `EXPO_PUBLIC_SUPABASE_URL`: Supabase project URL
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key (server-side)
@@ -253,6 +255,7 @@ mkcert -cert-file certificates/mobile.pem \
 ### Common Issues
 
 #### "Environment validation failed"
+
 ```bash
 # Regenerate secrets
 node scripts/generate-secrets.js --write
@@ -262,6 +265,7 @@ grep -E "^[A-Z_]+=" .env.local
 ```
 
 #### "Docker containers won't start"
+
 ```bash
 # Reset Docker environment
 docker-compose down -v
@@ -272,6 +276,7 @@ docker system df
 ```
 
 #### "Supabase connection refused"
+
 ```bash
 # Restart Supabase
 supabase stop
@@ -282,6 +287,7 @@ supabase status
 ```
 
 #### "HTTPS certificates not working"
+
 ```bash
 # Reinstall mkcert CA
 mkcert -uninstall
@@ -293,6 +299,7 @@ rm -rf certificates/
 ```
 
 #### "Mobile app won't connect"
+
 ```bash
 # Check your computer's IP
 ifconfig | grep "inet " | grep -v 127.0.0.1
@@ -304,6 +311,7 @@ EXPO_PUBLIC_API_URL=http://[YOUR_IP]:3000
 ### Performance Issues
 
 #### Slow builds
+
 ```bash
 # Clear Nx cache
 pnpm nx reset
@@ -314,6 +322,7 @@ pnpm install
 ```
 
 #### Database connection timeouts
+
 ```bash
 # Check Docker resources
 docker stats
@@ -336,7 +345,7 @@ aura-app/
 │   ├── utils/         # Shared utilities & env validation
 │   └── logger/        # Privacy-safe structured logging
 ├── db/                # Database initialization scripts
-├── supabase/          # Supabase configuration & migrations  
+├── supabase/          # Supabase configuration & migrations
 ├── scripts/           # Development & deployment scripts
 └── docs/              # Documentation & architecture
 ```

@@ -21,11 +21,12 @@ Advanced security hardening with SLSA compliance, SBOM generation, Sigstore atte
 **Dependencies:** (UPDATED SEQUENCE)
 
 - Epic 1 → Epic 0's project scaffolding and external services ready
-- Epic 2 → Epic 1's database + Rust crypto + key management ready  
+- Epic 2 → Epic 1's database + Rust crypto + key management ready
 - Epic 3 → Epic 2's uncertainty API complete
 - Epic 4 → Epic 1's identity + Epic 2's data model established
 
 **CRITICAL PATH CHANGES:**
+
 - Added Epic 0 as foundation blocker - no development possible without it
 - Epic 1 now starts with database setup before crypto implementation
 - User must complete external service setup in Epic 0.3 before any Epic 1 work

@@ -18,16 +18,16 @@ describe('Generate Secrets Script', () => {
       log: vi.spyOn(console, 'log').mockImplementation(() => {}),
       error: vi.spyOn(console, 'error').mockImplementation(() => {}),
     };
-    
+
     originalArgv = process.argv;
     originalCwd = process.cwd;
-    
+
     // Mock process.cwd()
     process.cwd = vi.fn(() => '/test/project');
-    
+
     // Clear all mocks
     vi.clearAllMocks();
-    
+
     // Reset modules to ensure fresh import
     vi.resetModules();
   });
@@ -45,7 +45,7 @@ describe('Generate Secrets Script', () => {
       // Mock crypto.randomBytes
       const mockBuffer = Buffer.from('mock-random-bytes');
       crypto.randomBytes.mockReturnValue(mockBuffer);
-      
+
       // Import and run the script logic (simulating the main functionality)
       const secrets = {
         EXPO_PUBLIC_DEVICE_PEPPER: crypto.randomBytes(48).toString('base64'),
@@ -59,7 +59,7 @@ describe('Generate Secrets Script', () => {
       // Verify crypto.randomBytes was called correctly
       expect(crypto.randomBytes).toHaveBeenCalledWith(48); // For peppers and NextAuth secret
       expect(crypto.randomBytes).toHaveBeenCalledWith(32); // For JWT, encryption, and session secrets
-      
+
       // Verify all required secrets are generated
       expect(secrets).toHaveProperty('EXPO_PUBLIC_DEVICE_PEPPER');
       expect(secrets).toHaveProperty('DEVICE_HASH_PEPPER');
@@ -72,7 +72,7 @@ describe('Generate Secrets Script', () => {
     it('should generate different values for each secret type', () => {
       // Mock crypto.randomBytes to return different values
       let callCount = 0;
-      crypto.randomBytes.mockImplementation((size) => {
+      crypto.randomBytes.mockImplementation(size => {
         callCount++;
         return Buffer.from(`mock-bytes-${callCount}-${size}`);
       });
@@ -116,13 +116,13 @@ describe('Generate Secrets Script', () => {
     it('should display generation progress', async () => {
       // Mock crypto
       crypto.randomBytes.mockReturnValue(Buffer.from('test-bytes'));
-      
+
       // Mock the script execution without --write flag
       process.argv = ['node', 'generate-secrets.js'];
-      
+
       // Import the script (this will execute it)
       await import('../generate-secrets.js');
-      
+
       // Verify console output includes expected messages
       expect(consoleSpy.log).toHaveBeenCalledWith(
         expect.stringContaining('Generating secure secrets')
@@ -135,9 +135,9 @@ describe('Generate Secrets Script', () => {
     it('should display security recommendations', async () => {
       crypto.randomBytes.mockReturnValue(Buffer.from('test-bytes'));
       process.argv = ['node', 'generate-secrets.js'];
-      
+
       await import('../generate-secrets.js');
-      
+
       expect(consoleSpy.log).toHaveBeenCalledWith(
         expect.stringContaining('Security Recommendations')
       );
@@ -152,10 +152,11 @@ describe('Generate Secrets Script', () => {
     it('should truncate long secrets in display', () => {
       const longSecret = 'a'.repeat(64);
       crypto.randomBytes.mockReturnValue(Buffer.from(longSecret));
-      
+
       // Simulate the display logic
-      const displayValue = longSecret.length > 32 ? `${longSecret.substring(0, 32)}...` : longSecret;
-      
+      const displayValue =
+        longSecret.length > 32 ? `${longSecret.substring(0, 32)}...` : longSecret;
+
       expect(displayValue).toBe('a'.repeat(32) + '...');
       expect(displayValue.length).toBe(35); // 32 chars + '...'
     });
@@ -168,23 +169,23 @@ describe('Generate Secrets Script', () => {
       fs.readFileSync.mockReturnValue('# Example env file\n');
       fs.writeFileSync.mockImplementation(() => {});
       fs.mkdirSync.mockImplementation(() => {});
-      path.dirname.mockImplementation((filePath) => filePath.replace(/\/[^/]+$/, ''));
+      path.dirname.mockImplementation(filePath => filePath.replace(/\/[^/]+$/, ''));
       path.join.mockImplementation((...args) => args.join('/'));
     });
 
     it('should write secrets to .env.local files when --write flag is used', async () => {
       crypto.randomBytes.mockReturnValue(Buffer.from('test-secret-bytes'));
       process.argv = ['node', 'generate-secrets.js', '--write'];
-      
+
       // Mock file exists to simulate updating existing files
       fs.existsSync.mockReturnValue(true);
       fs.readFileSync.mockReturnValue('NODE_ENV=development\nEXISTING_VAR=value\n');
-      
+
       await import('../generate-secrets.js');
-      
+
       // Verify writeFileSync was called for each .env.local file
       expect(fs.writeFileSync).toHaveBeenCalledTimes(3); // root, web, mobile
-      
+
       // Verify directories are created if needed
       expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
     });
@@ -192,19 +193,16 @@ describe('Generate Secrets Script', () => {
     it('should create .env.local from example if file does not exist', async () => {
       crypto.randomBytes.mockReturnValue(Buffer.from('test-secret-bytes'));
       process.argv = ['node', 'generate-secrets.js', '--write'];
-      
+
       // Mock file doesn't exist but example does
-      fs.existsSync.mockImplementation((filePath) => {
+      fs.existsSync.mockImplementation(filePath => {
         return filePath.includes('.env.example');
       });
       fs.readFileSync.mockReturnValue('# Example file\nEXAMPLE_VAR=example\n');
-      
+
       await import('../generate-secrets.js');
-      
-      expect(fs.readFileSync).toHaveBeenCalledWith(
-        expect.stringContaining('.env.example'),
-        'utf8'
-      );
+
+      expect(fs.readFileSync).toHaveBeenCalledWith(expect.stringContaining('.env.example'), 'utf8');
       expect(fs.writeFileSync).toHaveBeenCalled();
     });
 
@@ -220,12 +218,12 @@ NEXTAUTH_SECRET=old-secret`;
       };
 
       let updatedContent = existingContent;
-      
+
       // Simulate the update logic from the script
       Object.entries(secrets).forEach(([key, value]) => {
         const regex = new RegExp(`^${key}=.*$`, 'm');
         const newLine = `${key}=${value}`;
-        
+
         if (regex.test(updatedContent)) {
           updatedContent = updatedContent.replace(regex, newLine);
         } else {
@@ -249,12 +247,12 @@ OTHER_VAR=keep-this`;
       };
 
       let updatedContent = existingContent;
-      
+
       // Simulate adding new secrets
       Object.entries(secrets).forEach(([key, value]) => {
         const regex = new RegExp(`^${key}=.*$`, 'm');
         const newLine = `${key}=${value}`;
-        
+
         if (!regex.test(updatedContent)) {
           updatedContent += updatedContent.endsWith('\n') ? '' : '\n';
           updatedContent += `${newLine}\n`;
@@ -269,17 +267,14 @@ OTHER_VAR=keep-this`;
     it('should handle missing directories', async () => {
       crypto.randomBytes.mockReturnValue(Buffer.from('test-secret-bytes'));
       process.argv = ['node', 'generate-secrets.js', '--write'];
-      
+
       // Mock directory doesn't exist
       fs.existsSync.mockReturnValue(false);
-      
+
       await import('../generate-secrets.js');
-      
+
       // Verify directories are created
-      expect(fs.mkdirSync).toHaveBeenCalledWith(
-        expect.any(String), 
-        { recursive: true }
-      );
+      expect(fs.mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
     });
   });
 
@@ -305,7 +300,7 @@ OTHER_VAR=keep-this`;
     it('should handle file write errors', async () => {
       crypto.randomBytes.mockReturnValue(Buffer.from('test-secret-bytes'));
       process.argv = ['node', 'generate-secrets.js', '--write'];
-      
+
       fs.writeFileSync.mockImplementation(() => {
         throw new Error('Write error');
       });
@@ -318,10 +313,10 @@ OTHER_VAR=keep-this`;
   describe('Security Validation', () => {
     it('should use cryptographically secure random generation', () => {
       crypto.randomBytes.mockReturnValue(Buffer.from('secure-random-bytes'));
-      
+
       // Simulate secret generation
       crypto.randomBytes(48);
-      
+
       // Verify crypto.randomBytes is used (not Math.random)
       expect(crypto.randomBytes).toHaveBeenCalled();
     });
@@ -329,11 +324,11 @@ OTHER_VAR=keep-this`;
     it('should generate secrets with sufficient entropy', () => {
       // Test different secret lengths
       const secretSizes = [32, 48];
-      
+
       secretSizes.forEach(size => {
         crypto.randomBytes.mockReturnValue(Buffer.alloc(size, 1));
         const secret = crypto.randomBytes(size).toString('base64');
-        
+
         // Base64 encoding increases length by ~4/3
         expect(secret.length).toBeGreaterThan(size);
       });
@@ -342,9 +337,9 @@ OTHER_VAR=keep-this`;
     it('should warn about security best practices', async () => {
       crypto.randomBytes.mockReturnValue(Buffer.from('test-bytes'));
       process.argv = ['node', 'generate-secrets.js'];
-      
+
       await import('../generate-secrets.js');
-      
+
       // Verify security warnings are displayed
       const logCalls = consoleSpy.log.mock.calls.flat().join(' ');
       expect(logCalls).toContain('never commit them to git');

@@ -6,10 +6,13 @@ const mockResponse = {
   headers: new Map<string, string>(),
 };
 
-const mockRequest = (url: string, options: Partial<{
-  method: string;
-  headers: Record<string, string>;
-}> = {}) => ({
+const mockRequest = (
+  url: string,
+  options: Partial<{
+    method: string;
+    headers: Record<string, string>;
+  }> = {}
+) => ({
   method: options.method || 'GET',
   nextUrl: new URL(url),
   headers: {
@@ -24,13 +27,13 @@ vi.mock('next/server', () => ({
       const response = {
         headers: new Map<string, string>(),
       };
-      
+
       // Add headers.set method
-      response.headers.set = function(key: string, value: string) {
+      response.headers.set = function (key: string, value: string) {
         this.set(key, value);
         return this;
       };
-      
+
       return response;
     }),
     redirect: vi.fn((url: string, status?: number) => ({
@@ -92,7 +95,7 @@ describe('Security Middleware', () => {
 
     it('should allow localhost with any port in development', () => {
       process.env.NODE_ENV = 'development';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -112,7 +115,7 @@ describe('Security Middleware', () => {
 
     it('should not allow non-localhost origins in development', () => {
       process.env.NODE_ENV = 'development';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -167,16 +170,28 @@ describe('Security Middleware', () => {
 
       middleware(request as any);
 
-      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith('X-DNS-Prefetch-Control', 'off');
+      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith(
+        'X-DNS-Prefetch-Control',
+        'off'
+      );
       expect(mockResponseInstance.headers.set).toHaveBeenCalledWith('X-Frame-Options', 'DENY');
-      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith('X-Content-Type-Options', 'nosniff');
-      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith('Referrer-Policy', 'strict-origin-when-cross-origin');
-      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith('X-XSS-Protection', '1; mode=block');
+      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith(
+        'X-Content-Type-Options',
+        'nosniff'
+      );
+      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith(
+        'Referrer-Policy',
+        'strict-origin-when-cross-origin'
+      );
+      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith(
+        'X-XSS-Protection',
+        '1; mode=block'
+      );
     });
 
     it('should set HSTS header in production only', () => {
       process.env.NODE_ENV = 'production';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -198,7 +213,7 @@ describe('Security Middleware', () => {
 
     it('should not set HSTS header in development', () => {
       process.env.NODE_ENV = 'development';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -218,7 +233,7 @@ describe('Security Middleware', () => {
   describe('Content Security Policy', () => {
     it('should set CSP header with development configuration', () => {
       process.env.NODE_ENV = 'development';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -232,7 +247,7 @@ describe('Security Middleware', () => {
         call => call[0] === 'Content-Security-Policy'
       );
       expect(cspCall).toBeTruthy();
-      
+
       const cspValue = cspCall[1];
       expect(cspValue).toContain("default-src 'self'");
       expect(cspValue).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
@@ -243,7 +258,7 @@ describe('Security Middleware', () => {
 
     it('should set CSP header with production configuration', () => {
       process.env.NODE_ENV = 'production';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -257,7 +272,7 @@ describe('Security Middleware', () => {
         call => call[0] === 'Content-Security-Policy'
       );
       expect(cspCall).toBeTruthy();
-      
+
       const cspValue = cspCall[1];
       expect(cspValue).toContain("default-src 'self'");
       expect(cspValue).toContain('upgrade-insecure-requests'); // Should be present in production
@@ -276,7 +291,7 @@ describe('Security Middleware', () => {
       const cspCall = mockResponseInstance.headers.set.mock.calls.find(
         call => call[0] === 'Content-Security-Policy'
       );
-      
+
       const cspValue = cspCall[1];
       expect(cspValue).toContain('https://*.supabase.co');
       expect(cspValue).toContain('wss://*.supabase.co');
@@ -286,7 +301,7 @@ describe('Security Middleware', () => {
   describe('HTTPS Redirect', () => {
     it('should redirect HTTP to HTTPS in production', () => {
       process.env.NODE_ENV = 'production';
-      
+
       const { NextResponse } = require('next/server');
       NextResponse.redirect.mockReturnValue({ redirected: true });
 
@@ -294,15 +309,12 @@ describe('Security Middleware', () => {
 
       const result = middleware(request as any);
 
-      expect(NextResponse.redirect).toHaveBeenCalledWith(
-        'https://example.com/api/test',
-        301
-      );
+      expect(NextResponse.redirect).toHaveBeenCalledWith('https://example.com/api/test', 301);
     });
 
     it('should not redirect HTTPS in production', () => {
       process.env.NODE_ENV = 'production';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -317,7 +329,7 @@ describe('Security Middleware', () => {
 
     it('should not redirect in development', () => {
       process.env.NODE_ENV = 'development';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -371,7 +383,7 @@ describe('Security Middleware', () => {
   describe('Custom CORS_ORIGIN Environment Variable', () => {
     it('should respect custom CORS_ORIGIN configuration', () => {
       process.env.CORS_ORIGIN = 'https://app.example.com,https://admin.example.com';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -391,7 +403,7 @@ describe('Security Middleware', () => {
 
     it('should trim whitespace from CORS origins', () => {
       process.env.CORS_ORIGIN = ' https://app.example.com , https://admin.example.com ';
-      
+
       const { NextResponse } = require('next/server');
       const mockResponseInstance = { headers: new Map() };
       NextResponse.next.mockReturnValue(mockResponseInstance);
@@ -434,7 +446,10 @@ describe('Security Middleware', () => {
 
       middleware(request as any);
 
-      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith('X-Content-Type-Options', 'nosniff');
+      expect(mockResponseInstance.headers.set).toHaveBeenCalledWith(
+        'X-Content-Type-Options',
+        'nosniff'
+      );
     });
 
     it('should set strict referrer policy', () => {

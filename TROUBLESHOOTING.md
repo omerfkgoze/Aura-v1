@@ -21,12 +21,14 @@ pnpm install
 ### Environment Validation Failed
 
 **Symptoms:**
+
 ```
 ❌ Missing required environment variables: NEXTAUTH_SECRET, DEVICE_HASH_PEPPER
 📝 Copy .env.example to .env.local and fill in the values
 ```
 
 **Solution:**
+
 ```bash
 # Regenerate all secrets
 node scripts/generate-secrets.js --write
@@ -38,11 +40,13 @@ grep -E "^[A-Z_]+=" .env.local | wc -l  # Should show multiple lines
 ### "Insecure environment variables detected"
 
 **Symptoms:**
+
 ```
 ⚠️ Insecure environment variables detected: NEXTAUTH_SECRET (too short: 16 chars, minimum 32)
 ```
 
 **Solution:**
+
 ```bash
 # Generate new secure secrets
 node scripts/generate-secrets.js --write
@@ -58,6 +62,7 @@ grep NEXTAUTH_SECRET .env.local | cut -d'=' -f2 | wc -c  # Should be > 32
 ### Containers Won't Start
 
 **Symptoms:**
+
 ```bash
 docker-compose ps
 # Shows "Exit 1" or "Restarting"
@@ -66,6 +71,7 @@ docker-compose ps
 **Solutions:**
 
 **Option 1: Port conflicts**
+
 ```bash
 # Check what's using port 54322
 lsof -i :54322
@@ -77,6 +83,7 @@ docker-compose up -d
 ```
 
 **Option 2: Disk space**
+
 ```bash
 # Clean Docker
 docker system prune -af
@@ -87,6 +94,7 @@ docker-compose up -d
 ```
 
 **Option 3: Reset volumes**
+
 ```bash
 # Complete reset (DELETES ALL DATA)
 docker-compose down -v
@@ -96,11 +104,13 @@ docker-compose up -d
 ### Database Connection Refused
 
 **Symptoms:**
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:54322
 ```
 
 **Solution:**
+
 ```bash
 # Wait for database to be ready
 docker-compose logs postgres
@@ -117,11 +127,13 @@ docker-compose restart postgres
 ### "supabase start" Fails
 
 **Symptoms:**
+
 ```
 Error: Docker not running
 ```
 
 **Solution:**
+
 ```bash
 # Start Docker Desktop first, then:
 supabase stop
@@ -134,6 +146,7 @@ supabase status
 ### Missing Supabase CLI
 
 **Solution:**
+
 ```bash
 # Install globally
 npm install -g @supabase/cli
@@ -145,11 +158,13 @@ supabase --version
 ### Local Supabase Wrong Version
 
 **Symptoms:**
+
 ```
 Error: Please upgrade your CLI to the latest version
 ```
 
 **Solution:**
+
 ```bash
 # Update CLI
 npm update -g @supabase/cli
@@ -166,6 +181,7 @@ supabase start
 ### mkcert Not Found
 
 **Symptoms:**
+
 ```
 ❌ mkcert is not installed
 ```
@@ -173,12 +189,14 @@ supabase start
 **Solutions:**
 
 **macOS:**
+
 ```bash
 brew install mkcert
 brew install nss  # For Firefox support
 ```
 
 **Linux:**
+
 ```bash
 curl -JLO 'https://dl.filippo.io/mkcert/latest?for=linux/amd64'
 chmod +x mkcert-v*-linux-amd64
@@ -186,6 +204,7 @@ sudo cp mkcert-v*-linux-amd64 /usr/local/bin/mkcert
 ```
 
 **Windows:**
+
 ```bash
 choco install mkcert
 ```
@@ -193,10 +212,12 @@ choco install mkcert
 ### Certificates Not Trusted
 
 **Symptoms:**
+
 - Browser shows "Not Secure" warning
 - ERR_CERT_AUTHORITY_INVALID
 
 **Solution:**
+
 ```bash
 # Reinstall local CA
 mkcert -uninstall
@@ -210,10 +231,12 @@ rm -rf certificates/
 ### Mobile Device Won't Connect (HTTPS)
 
 **Symptoms:**
+
 - Mobile app can't connect to development server
 - Certificate errors on mobile
 
 **Solution:**
+
 ```bash
 # Find your computer's IP
 ifconfig | grep "inet " | grep -v 127.0.0.1
@@ -234,11 +257,13 @@ mkcert -cert-file certificates/mobile.pem \
 ### Expo Won't Start
 
 **Symptoms:**
+
 ```
 Error: Expo CLI not found
 ```
 
 **Solution:**
+
 ```bash
 # Install Expo CLI
 npm install -g @expo/cli
@@ -250,10 +275,12 @@ npx expo start
 ### Metro Bundler Issues
 
 **Symptoms:**
+
 - "Unable to resolve module"
 - Build hanging
 
 **Solution:**
+
 ```bash
 # Clear Metro cache
 pnpm nx run mobile:start --clear
@@ -268,23 +295,27 @@ pnpm install
 ### Can't Connect to Development Server
 
 **Symptoms:**
+
 - QR code scanned but app won't load
 - "Network request failed"
 
 **Solutions:**
 
 **Check your computer's IP:**
+
 ```bash
 ifconfig | grep "inet " | grep -v 127.0.0.1
 ```
 
 **Update environment variables:**
+
 ```bash
 # In .env.local, replace with your IP
 EXPO_PUBLIC_API_URL=http://192.168.1.100:3000
 ```
 
 **Firewall issues:**
+
 ```bash
 # macOS - allow Node.js through firewall
 # System Preferences > Security & Privacy > Firewall > Options
@@ -300,6 +331,7 @@ EXPO_PUBLIC_API_URL=http://192.168.1.100:3000
 **Solutions:**
 
 **Clear caches:**
+
 ```bash
 # Clear Nx cache
 pnpm nx reset
@@ -313,6 +345,7 @@ pnpm install
 ```
 
 **Check disk space:**
+
 ```bash
 df -h
 # Ensure you have at least 5GB free
@@ -323,12 +356,14 @@ df -h
 **Solutions:**
 
 **Limit Node.js memory:**
+
 ```bash
 export NODE_OPTIONS="--max-old-space-size=4096"
 pnpm nx run-many --target=dev --all
 ```
 
 **Docker memory limits:**
+
 ```bash
 # In docker-compose.yml, add to postgres service:
 deploy:
@@ -340,11 +375,13 @@ deploy:
 ### Database Connection Timeouts
 
 **Symptoms:**
+
 ```
 Error: timeout exceeded when trying to connect
 ```
 
 **Solution:**
+
 ```bash
 # Increase Docker memory in Docker Desktop
 # Settings > Resources > Memory: 4GB+
@@ -360,11 +397,13 @@ docker stats
 ### pnpm Install Fails
 
 **Symptoms:**
+
 ```
 ERR_PNPM_NO_MATCHING_VERSION
 ```
 
 **Solution:**
+
 ```bash
 # Clear pnpm cache
 pnpm store prune
@@ -377,6 +416,7 @@ pnpm install
 ### TypeScript Errors
 
 **Symptoms:**
+
 ```
 Type 'string' is not assignable to type 'never'
 ```
@@ -384,6 +424,7 @@ Type 'string' is not assignable to type 'never'
 **Solutions:**
 
 **Regenerate types:**
+
 ```bash
 # If using Supabase
 supabase gen types typescript > libs/shared-types/src/supabase.ts
@@ -393,6 +434,7 @@ pnpm nx run utils:type-check
 ```
 
 **Clear TypeScript cache:**
+
 ```bash
 # Remove TypeScript build info
 find . -name "*.tsbuildinfo" -delete
@@ -402,11 +444,13 @@ pnpm nx run-many --target=build --all
 ### Nx Issues
 
 **Symptoms:**
+
 ```
 Cannot find project 'utils'
 ```
 
 **Solution:**
+
 ```bash
 # Reset Nx workspace
 pnpm nx reset
@@ -470,15 +514,17 @@ try {
 ### Still Stuck?
 
 1. **Check logs:**
+
    ```bash
    # Docker logs
    docker-compose logs
-   
+
    # Application logs
    pnpm nx run web:dev --verbose
    ```
 
 2. **Health check:**
+
    ```bash
    curl http://localhost:3000/api/dev/health
    ```

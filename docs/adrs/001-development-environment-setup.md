@@ -29,6 +29,7 @@ We will implement a comprehensive development environment with:
 **Consequences:**
 
 **Easier:**
+
 - Developers can get a complete environment running with one command
 - Security best practices are enforced from day one
 - WebAuthn testing works locally with proper HTTPS
@@ -36,6 +37,7 @@ We will implement a comprehensive development environment with:
 - Consistent environment across all developers
 
 **More Difficult:**
+
 - Initial setup complexity is higher than basic development environments
 - Requires understanding of security concepts (peppers, HTTPS, etc.)
 - Docker dependency for optimal experience

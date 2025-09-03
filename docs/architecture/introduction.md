@@ -22,7 +22,7 @@ PRD'de belirtildiği üzere:
 
 ## Change Log
 
-| Date       | Version | Description                                     | Author            |
-| ---------- | ------- | ----------------------------------------------- | ----------------- |
-| 2025-08-28 | v1.0    | Initial Architecture from PRD + UX Architecture | Winston-Architect |
+| Date       | Version | Description                                            | Author            |
+| ---------- | ------- | ------------------------------------------------------ | ----------------- |
+| 2025-08-28 | v1.0    | Initial Architecture from PRD + UX Architecture        | Winston-Architect |
 | 2025-08-28 | v1.1    | Integrated UX Architecture with Technical Architecture | BMad-Orchestrator |

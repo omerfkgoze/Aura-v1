@@ -57,7 +57,9 @@ describe('Environment Validation', () => {
         EXPO_PUBLIC_DEVICE_PEPPER: 'a'.repeat(32),
       };
 
-      expect(() => validateFrontendEnv(invalidEnv)).toThrow('Frontend environment validation failed');
+      expect(() => validateFrontendEnv(invalidEnv)).toThrow(
+        'Frontend environment validation failed'
+      );
       expect(() => validateFrontendEnv(invalidEnv)).toThrow('Invalid Supabase URL');
     });
 
@@ -69,7 +71,9 @@ describe('Environment Validation', () => {
         EXPO_PUBLIC_DEVICE_PEPPER: 'too-short',
       };
 
-      expect(() => validateFrontendEnv(invalidEnv)).toThrow('Device pepper must be at least 32 characters');
+      expect(() => validateFrontendEnv(invalidEnv)).toThrow(
+        'Device pepper must be at least 32 characters'
+      );
     });
 
     it('should reject missing required fields', () => {
@@ -80,7 +84,9 @@ describe('Environment Validation', () => {
         EXPO_PUBLIC_DEVICE_PEPPER: 'a'.repeat(32),
       };
 
-      expect(() => validateFrontendEnv(incompleteEnv)).toThrow('Frontend environment validation failed');
+      expect(() => validateFrontendEnv(incompleteEnv)).toThrow(
+        'Frontend environment validation failed'
+      );
     });
   });
 
@@ -140,7 +146,9 @@ describe('Environment Validation', () => {
         NEXTAUTH_SECRET: 'c'.repeat(32),
       };
 
-      expect(() => validateBackendEnv(invalidEnv)).toThrow('Device hash pepper must be at least 32 characters');
+      expect(() => validateBackendEnv(invalidEnv)).toThrow(
+        'Device hash pepper must be at least 32 characters'
+      );
     });
   });
 
@@ -260,8 +268,12 @@ describe('Environment Validation', () => {
       };
 
       const result = checkDevelopmentSecrets(remoteEnv);
-      expect(result.warnings).toContain('Using remote Supabase in development - consider local setup');
-      expect(result.warnings).toContain('Using remote database in development - consider local setup');
+      expect(result.warnings).toContain(
+        'Using remote Supabase in development - consider local setup'
+      );
+      expect(result.warnings).toContain(
+        'Using remote database in development - consider local setup'
+      );
     });
 
     it('should return no issues for valid development environment', () => {

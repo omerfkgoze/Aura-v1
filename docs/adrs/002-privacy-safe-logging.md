@@ -7,6 +7,7 @@
 **Context:**
 
 Reproductive health applications handle extremely sensitive personal data. Traditional logging approaches risk exposing:
+
 - Menstrual cycle data
 - Health symptoms
 - Personal identifiable information (PII)
@@ -14,6 +15,7 @@ Reproductive health applications handle extremely sensitive personal data. Tradi
 - User behavioral patterns
 
 However, we still need comprehensive logging for:
+
 - System health monitoring
 - Security incident detection
 - Performance optimization
@@ -34,6 +36,7 @@ Implement a privacy-safe logging architecture with:
 **Consequences:**
 
 **Easier:**
+
 - Developers can log freely without risk of exposing sensitive data
 - Automated PII protection prevents accidental exposure
 - Structured logs enable better monitoring and alerting
@@ -41,6 +44,7 @@ Implement a privacy-safe logging architecture with:
 - Security incidents can be tracked without compromising privacy
 
 **More Difficult:**
+
 - Debugging issues may require more careful log analysis
 - Cannot log actual data values for troubleshooting
 - Requires discipline to use context-appropriate loggers
@@ -56,12 +60,14 @@ Implement a privacy-safe logging architecture with:
 **Implementation Details:**
 
 **Prohibited Fields (automatically redacted):**
+
 - Health data: `cycleData`, `symptoms`, `temperature`, `mood`, `notes`, `healthData`
 - PII: `email`, `phone`, `name`, `address`, `birthDate`
 - Auth: `password`, `token`, `jwt`, `apiKey`, `secret`
 - Device: Raw `deviceId`, `fingerprint`, `hardwareId`
 
 **Logger Categories:**
+
 - `technical`: System health, performance metrics
 - `security`: Authentication, authorization, threats
 - `api`: Request/response metadata (no body content)
@@ -70,6 +76,7 @@ Implement a privacy-safe logging architecture with:
 - `dev`: Development-only debugging (disabled in production)
 
 **Sanitization Rules:**
+
 - Replace UUIDs with `[UUID]`
 - Replace email addresses with `[EMAIL]`
 - Replace phone numbers with `[PHONE]`

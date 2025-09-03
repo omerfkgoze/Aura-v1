@@ -15,7 +15,7 @@ function generateSecrets() {
     EXPO_PUBLIC_DEVICE_PEPPER: crypto.randomBytes(48).toString('base64'),
     DEVICE_HASH_PEPPER: crypto.randomBytes(48).toString('base64'),
     NEXTAUTH_SECRET: crypto.randomBytes(48).toString('base64'),
-    
+
     JWT_SECRET: crypto.randomBytes(32).toString('hex'),
     ENCRYPTION_KEY: crypto.randomBytes(32).toString('hex'),
     SESSION_SECRET: crypto.randomBytes(32).toString('hex'),
@@ -27,7 +27,7 @@ function generateSecrets() {
  */
 function updateEnvFile(filePath, examplePath, secrets) {
   let envContent = '';
-  
+
   try {
     if (fs.existsSync(filePath)) {
       envContent = fs.readFileSync(filePath, 'utf8');
@@ -38,12 +38,12 @@ function updateEnvFile(filePath, examplePath, secrets) {
     // Handle error gracefully, start with empty content
     console.log(`Warning: Could not read template for ${filePath}`);
   }
-  
+
   // Update or add secrets in the content
   Object.entries(secrets).forEach(([key, value]) => {
     const regex = new RegExp(`^${key}=.*$`, 'm');
     const newLine = `${key}=${value}`;
-    
+
     if (regex.test(envContent)) {
       envContent = envContent.replace(regex, newLine);
     } else {
@@ -51,13 +51,13 @@ function updateEnvFile(filePath, examplePath, secrets) {
       envContent += `${newLine}\n`;
     }
   });
-  
+
   // Create directory if it doesn't exist
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
-  
+
   try {
     fs.writeFileSync(filePath, envContent);
   } catch (error) {
@@ -79,7 +79,7 @@ function displaySecrets(secrets) {
   });
 
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-  
+
   console.log('💡 To automatically update .env.local files, run:');
   console.log('   node scripts/generate-secrets.js --write\n');
 }
@@ -89,7 +89,7 @@ function displaySecrets(secrets) {
  */
 function getEnvPaths() {
   const cwd = process.cwd();
-  
+
   return {
     root: path.join(cwd, '.env.local'),
     web: path.join(cwd, 'apps/web/.env.local'),
@@ -107,17 +107,17 @@ function validateSecretStrength(secret, minLength = 32) {
   if (!secret || typeof secret !== 'string') {
     return { valid: false, reason: 'Secret must be a non-empty string' };
   }
-  
+
   if (secret.length < minLength) {
     return { valid: false, reason: `Secret must be at least ${minLength} characters` };
   }
-  
+
   // Check for placeholder values
   const placeholders = ['change-me', 'your-secret-here', 'placeholder', 'test-secret'];
   if (placeholders.some(placeholder => secret.toLowerCase().includes(placeholder))) {
     return { valid: false, reason: 'Secret appears to be a placeholder value' };
   }
-  
+
   return { valid: true };
 }
 
@@ -126,12 +126,8 @@ function validateSecretStrength(secret, minLength = 32) {
  */
 function validateAllSecrets(secrets) {
   const results = {};
-  const requiredSecrets = [
-    'EXPO_PUBLIC_DEVICE_PEPPER',
-    'DEVICE_HASH_PEPPER', 
-    'NEXTAUTH_SECRET',
-  ];
-  
+  const requiredSecrets = ['EXPO_PUBLIC_DEVICE_PEPPER', 'DEVICE_HASH_PEPPER', 'NEXTAUTH_SECRET'];
+
   // Check required secrets exist
   requiredSecrets.forEach(key => {
     if (!secrets[key]) {
@@ -140,14 +136,14 @@ function validateAllSecrets(secrets) {
       results[key] = validateSecretStrength(secrets[key]);
     }
   });
-  
+
   // Check optional secrets if present
   Object.entries(secrets).forEach(([key, value]) => {
     if (!results[key]) {
       results[key] = validateSecretStrength(value);
     }
   });
-  
+
   return results;
 }
 

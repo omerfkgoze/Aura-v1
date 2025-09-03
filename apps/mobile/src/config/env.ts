@@ -10,22 +10,22 @@ export const frontendEnv = validateFrontendEnv(env);
 // Development environment checking (only in development builds)
 if (__DEV__) {
   const secretCheck = checkDevelopmentSecrets(env);
-  
+
   if (secretCheck.missing.length > 0) {
     console.error('❌ Missing required environment variables:', secretCheck.missing.join(', '));
     console.error('📝 Copy .env.example to .env.local and fill in the values');
     // In mobile, we warn but don't exit as it might crash the app
   }
-  
+
   if (secretCheck.insecure.length > 0) {
     console.warn('⚠️  Insecure environment variables detected:', secretCheck.insecure.join(', '));
     console.warn('🔐 Generate secure secrets using: pnpm nx run utils:generate-secrets');
   }
-  
+
   if (secretCheck.warnings.length > 0) {
     console.info('ℹ️  Development warnings:', secretCheck.warnings.join(', '));
   }
-  
+
   console.log('✅ Mobile environment variables validated successfully');
 }
 
@@ -55,5 +55,6 @@ export const uxConfig = {
 export const appConfig = {
   name: Constants.expoConfig?.name || 'Aura',
   version: Constants.expoConfig?.version || frontendEnv.APP_VERSION,
-  buildVersion: Constants.expoConfig?.ios?.buildNumber || Constants.expoConfig?.android?.versionCode || '1',
+  buildVersion:
+    Constants.expoConfig?.ios?.buildNumber || Constants.expoConfig?.android?.versionCode || '1',
 } as const;

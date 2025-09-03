@@ -21,14 +21,7 @@ vi.mock('pino', () => ({
 }));
 
 // Import after mocking
-import {
-  logger,
-  devLogger,
-  securityLogger,
-  apiLogger,
-  dbLogger,
-  cryptoLogger,
-} from '../index';
+import { logger, devLogger, securityLogger, apiLogger, dbLogger, cryptoLogger } from '../index';
 
 describe('Logger Privacy and Security', () => {
   beforeEach(() => {
@@ -42,17 +35,33 @@ describe('Logger Privacy and Security', () => {
   describe('Logger Configuration', () => {
     it('should create logger with privacy-safe configuration', () => {
       const pino = vi.mocked(require('pino').default);
-      
+
       // Verify pino was called with privacy configuration
       expect(pino).toHaveBeenCalledWith(
         expect.objectContaining({
           redact: expect.objectContaining({
             paths: expect.arrayContaining([
-              'password', 'token', 'jwt', 'apiKey', 'secret',
-              'email', 'phone', 'name', 'address', 'birthDate',
-              'cycleData', 'symptoms', 'temperature', 'mood', 'notes',
-              'healthData', 'personalData', 'biometricData',
-              'deviceId', 'fingerprint', 'hardwareId',
+              'password',
+              'token',
+              'jwt',
+              'apiKey',
+              'secret',
+              'email',
+              'phone',
+              'name',
+              'address',
+              'birthDate',
+              'cycleData',
+              'symptoms',
+              'temperature',
+              'mood',
+              'notes',
+              'healthData',
+              'personalData',
+              'biometricData',
+              'deviceId',
+              'fingerprint',
+              'hardwareId',
             ]),
             remove: true,
           }),
@@ -129,7 +138,7 @@ describe('Logger Privacy and Security', () => {
 
     it('should not log in non-development environments', () => {
       process.env.NODE_ENV = 'production';
-      
+
       devLogger.envValidation({ missing: [], insecure: [], warnings: [] });
       devLogger.migration('up', 'test', true);
       devLogger.cryptoTest('test', true);
@@ -141,7 +150,7 @@ describe('Logger Privacy and Security', () => {
   describe('Security Logger', () => {
     it('should log authentication events with partial user IDs', () => {
       const userId = 'user-12345678-abcd-efgh-ijkl-mnopqrstuvwx';
-      
+
       securityLogger.auth('login', userId, true);
 
       expect(mockChildLogger.info).toHaveBeenCalledWith(
@@ -172,7 +181,7 @@ describe('Logger Privacy and Security', () => {
 
     it('should log authorization failures', () => {
       const userId = 'user-12345678-abcd-efgh-ijkl-mnopqrstuvwx';
-      
+
       securityLogger.authz('/api/admin/users', 'DELETE', userId);
 
       expect(mockChildLogger.warn).toHaveBeenCalledWith(
@@ -220,7 +229,7 @@ describe('Logger Privacy and Security', () => {
   describe('API Logger', () => {
     it('should log API requests with sanitized paths', () => {
       const userId = 'user-12345678-abcd-efgh-ijkl-mnopqrstuvwx';
-      
+
       apiLogger.request(
         'GET',
         '/api/users/user-12345678-abcd-efgh-ijkl-mnopqrstuvwx/profile',
@@ -243,12 +252,7 @@ describe('Logger Privacy and Security', () => {
     });
 
     it('should sanitize UUIDs in paths', () => {
-      apiLogger.request(
-        'POST',
-        '/api/data/f47ac10b-58cc-4372-a567-0e02b2c3d479/update',
-        201,
-        300
-      );
+      apiLogger.request('POST', '/api/data/f47ac10b-58cc-4372-a567-0e02b2c3d479/update', 201, 300);
 
       expect(mockChildLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -260,7 +264,7 @@ describe('Logger Privacy and Security', () => {
 
     it('should log API errors with sanitized messages', () => {
       const error = new Error('Failed to process data for user@example.com');
-      
+
       apiLogger.error('POST', '/api/users/create', error);
 
       expect(mockChildLogger.error).toHaveBeenCalledWith(
@@ -375,17 +379,21 @@ describe('Logger Privacy and Security', () => {
     });
 
     it('should sanitize error messages', () => {
-      const errorWithPII = new Error('Database error: duplicate email user@test.com and phone 123-456-7890');
-      
+      const errorWithPII = new Error(
+        'Database error: duplicate email user@test.com and phone 123-456-7890'
+      );
+
       apiLogger.error('POST', '/api/test', errorWithPII);
 
       const logCall = mockChildLogger.error.mock.calls[0][0];
-      expect(logCall.error_message).toBe('Database error: duplicate email [EMAIL] and phone [PHONE]');
+      expect(logCall.error_message).toBe(
+        'Database error: duplicate email [EMAIL] and phone [PHONE]'
+      );
     });
 
     it('should sanitize UUIDs in error messages', () => {
       const errorWithUUID = new Error('Record not found: f47ac10b-58cc-4372-a567-0e02b2c3d479');
-      
+
       apiLogger.error('GET', '/api/test', errorWithUUID);
 
       const logCall = mockChildLogger.error.mock.calls[0][0];
@@ -396,19 +404,19 @@ describe('Logger Privacy and Security', () => {
   describe('No-Op Logger in Production', () => {
     it('should create no-op logger when not in development', () => {
       process.env.NODE_ENV = 'production';
-      
+
       // Re-import to test production behavior
       vi.resetModules();
       const { devLogger: prodDevLogger } = require('../index');
-      
+
       // Dev logger should be no-op in production
       expect(typeof prodDevLogger).toBe('object');
-      
+
       // These calls should not throw and should not log
       prodDevLogger.envValidation({ missing: [], insecure: [], warnings: [] });
       prodDevLogger.migration('up', 'test', true);
       prodDevLogger.cryptoTest('test', true);
-      
+
       // No calls should have been made to the underlying logger
       expect(mockChildLogger.info).not.toHaveBeenCalled();
     });

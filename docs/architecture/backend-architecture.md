@@ -43,16 +43,13 @@ class CycleDataRepository {
     currentVersion: number,
     deviceIdHash: string
   ): Promise<UpdateResult> {
-    const { data, error } = await this.supabase.rpc(
-      'update_cycle_data_optimistic',
-      {
-        record_id: recordId,
-        new_payload: encryptedPayload,
-        new_envelope: cryptoEnvelope,
-        current_version: currentVersion,
-        device_hash: deviceIdHash,
-      }
-    );
+    const { data, error } = await this.supabase.rpc('update_cycle_data_optimistic', {
+      record_id: recordId,
+      new_payload: encryptedPayload,
+      new_envelope: cryptoEnvelope,
+      current_version: currentVersion,
+      device_hash: deviceIdHash,
+    });
 
     if (error) {
       throw new DatabaseError('Failed to update cycle data', error);

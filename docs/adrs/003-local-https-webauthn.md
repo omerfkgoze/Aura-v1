@@ -7,11 +7,13 @@
 **Context:**
 
 WebAuthn (Web Authentication) is a critical security feature for the Aura app, enabling:
+
 - Passwordless authentication with biometrics
 - Hardware security key support
 - Enhanced user privacy and security
 
 However, WebAuthn requires HTTPS to function, even in development. Browser security policies prevent WebAuthn from working over HTTP connections, except for localhost in some browsers. This creates challenges for:
+
 - Local development testing
 - Mobile device testing (requires computer IP, not localhost)
 - Team development consistency
@@ -31,6 +33,7 @@ Implement local HTTPS certificates using mkcert with:
 **Consequences:**
 
 **Easier:**
+
 - WebAuthn works seamlessly in local development
 - No browser security warnings for HTTPS
 - Mobile testing possible with IP-based certificates
@@ -38,6 +41,7 @@ Implement local HTTPS certificates using mkcert with:
 - Real-world production-like testing environment
 
 **More Difficult:**
+
 - Additional setup step required for new developers
 - mkcert installation dependency
 - Certificate management and renewal
@@ -54,6 +58,7 @@ Implement local HTTPS certificates using mkcert with:
 **Implementation Details:**
 
 **Certificate Generation:**
+
 ```bash
 mkcert -cert-file certificates/localhost.pem \
        -key-file certificates/localhost-key.pem \
@@ -62,18 +67,21 @@ mkcert -cert-file certificates/localhost.pem \
 ```
 
 **Supported Domains:**
+
 - `https://localhost:3000` - Standard localhost
 - `https://127.0.0.1:3000` - IP localhost
 - `https://local.aura-app.dev:3000` - Custom domain
 - `https://[COMPUTER_IP]:3000` - Mobile testing (requires additional certificate)
 
 **Certificate Security:**
+
 - Certificates stored in `certificates/` directory
 - Directory added to `.gitignore` to prevent committing
 - Proper file permissions set (644 for cert, 600 for key)
 - Local CA installed only on developer machines
 
 **Next.js Configuration:**
+
 - Conditional HTTPS configuration for development only
 - Automatic certificate loading from `certificates/` directory
 - Fallback to HTTP if certificates not available

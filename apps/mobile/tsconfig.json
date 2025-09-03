@@ -15,13 +15,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": [
-    "src/**/*",
-    "App.tsx"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts", 
-    "**/*.test.ts"
-  ]
+  "include": ["src/**/*", "App.tsx"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
 }
