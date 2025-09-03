@@ -182,7 +182,7 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build for staging
         run: |
@@ -273,7 +273,7 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build for production
         run: |
@@ -345,7 +345,7 @@ jobs:
         run: pnpm add -g @expo/cli@latest eas-cli@latest
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build mobile app for staging
         working-directory: apps/mobile
@@ -391,7 +391,7 @@ jobs:
         run: pnpm add -g @expo/cli@latest eas-cli@latest
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Build and submit mobile app
         working-directory: apps/mobile
