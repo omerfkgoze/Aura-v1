@@ -1,0 +1,364 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-format:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prettier format check
+        run: |
+          echo "Running Prettier format check..."
+          pnpm format:check || {
+            echo "❌ Code formatting issues detected!"
+            echo "Run 'pnpm format' to fix formatting issues"
+            exit 1
+          }
+          echo "✅ Code formatting validation passed"
+
+      - name: ESLint validation
+        run: |
+          echo "Running ESLint validation..."
+          pnpm lint || {
+            echo "❌ ESLint violations detected!"
+            echo "Run 'pnpm lint' to see detailed violations"
+            exit 1
+          }
+          echo "✅ ESLint validation passed"
+
+  type-check:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript compilation check
+        run: |
+          echo "Running TypeScript compilation checks across all packages..."
+          pnpm type-check || {
+            echo "❌ TypeScript compilation errors detected!"
+            echo "Fix TypeScript errors before proceeding"
+            exit 1
+          }
+          echo "✅ TypeScript compilation validation passed"
+
+  build-verification:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, type-check]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust for WASM builds
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: |
+          echo "Building all packages with Nx..."
+          pnpm build || {
+            echo "❌ Build failed!"
+            echo "Check build errors in the logs above"
+            exit 1
+          }
+          echo "✅ All packages built successfully"
+
+      - name: Verify WASM build
+        run: |
+          echo "Verifying WASM build for crypto-core..."
+          cd libs/crypto-core
+
+          # Verify wasm-pack output exists
+          if [ ! -f "pkg/crypto_core_bg.wasm" ]; then
+            echo "❌ WASM binary not found!"
+            exit 1
+          fi
+
+          # Verify TypeScript bindings exist
+          if [ ! -f "pkg/crypto_core.d.ts" ]; then
+            echo "❌ TypeScript bindings not found!"
+            exit 1
+          fi
+
+          echo "✅ WASM build verification passed"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            libs/crypto-core/pkg/
+          retention-days: 1
+
+  test-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, type-check]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust for crypto-core tests
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run all tests with coverage
+        run: |
+          echo "Running tests with coverage reporting..."
+          pnpm test -- --coverage || {
+            echo "❌ Tests failed!"
+            exit 1
+          }
+
+      - name: Validate coverage thresholds
+        run: |
+          echo "Validating coverage thresholds..."
+
+          # Check crypto-core coverage (minimum 80%)
+          if [ -f "libs/crypto-core/coverage/coverage-summary.json" ]; then
+            CRYPTO_COVERAGE=$(node -e "
+              const fs = require('fs');
+              const coverage = JSON.parse(fs.readFileSync('libs/crypto-core/coverage/coverage-summary.json', 'utf8'));
+              console.log(coverage.total.lines.pct);
+            ")
+            echo "Crypto-core coverage: ${CRYPTO_COVERAGE}%"
+            
+            if (( $(echo "$CRYPTO_COVERAGE < 80" | bc -l) )); then
+              echo "❌ Crypto-core coverage ($CRYPTO_COVERAGE%) below minimum (80%)"
+              exit 1
+            fi
+          fi
+
+          # Check overall coverage for other packages (minimum 60%)
+          if [ -f "coverage/coverage-summary.json" ]; then
+            OVERALL_COVERAGE=$(node -e "
+              const fs = require('fs');
+              const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+              console.log(coverage.total.lines.pct);
+            ")
+            echo "Overall coverage: ${OVERALL_COVERAGE}%"
+            
+            if (( $(echo "$OVERALL_COVERAGE < 60" | bc -l) )); then
+              echo "❌ Overall coverage ($OVERALL_COVERAGE%) below minimum (60%)"
+              exit 1
+            fi
+          fi
+
+          echo "✅ Coverage thresholds met"
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            coverage/
+            libs/*/coverage/
+          retention-days: 7
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let coverageComment = '## 📊 Test Coverage Report\n\n';
+
+            // Crypto-core coverage
+            if (fs.existsSync('libs/crypto-core/coverage/coverage-summary.json')) {
+              const cryptoCoverage = JSON.parse(fs.readFileSync('libs/crypto-core/coverage/coverage-summary.json', 'utf8'));
+              const lines = cryptoCoverage.total.lines.pct;
+              const status = lines >= 80 ? '✅' : '❌';
+              coverageComment += `${status} **Crypto-core**: ${lines}% (threshold: 80%)\n`;
+            }
+
+            // Overall coverage
+            if (fs.existsSync('coverage/coverage-summary.json')) {
+              const overallCoverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+              const lines = overallCoverage.total.lines.pct;
+              const status = lines >= 60 ? '✅' : '❌';
+              coverageComment += `${status} **Overall**: ${lines}% (threshold: 60%)\n`;
+            }
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: coverageComment
+            });
+
+  e2e-tests:
+    name: End-to-End Tests
+    runs-on: ubuntu-latest
+    needs: [build-verification]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Run E2E tests
+        run: |
+          echo "Running end-to-end tests..."
+          # Note: Adjust this command based on actual E2E test setup
+          pnpm nx run-many --target=e2e --all || {
+            echo "❌ E2E tests failed!"
+            exit 1
+          }
+          echo "✅ E2E tests passed"
+
+      - name: Upload E2E test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+  build-test-summary:
+    name: Build & Test Summary
+    needs: [lint-and-format, type-check, build-verification, test-coverage, e2e-tests]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Generate build test report
+        run: |
+          echo "# Build & Test Summary" > build-test-report.md
+          echo "Generated: $(date)" >> build-test-report.md
+          echo "" >> build-test-report.md
+
+          echo "## Job Results" >> build-test-report.md
+          echo "- Lint & Format: ${{ needs.lint-and-format.result }}" >> build-test-report.md
+          echo "- Type Check: ${{ needs.type-check.result }}" >> build-test-report.md
+          echo "- Build Verification: ${{ needs.build-verification.result }}" >> build-test-report.md
+          echo "- Test Coverage: ${{ needs.test-coverage.result }}" >> build-test-report.md
+          echo "- E2E Tests: ${{ needs.e2e-tests.result }}" >> build-test-report.md
+          echo "" >> build-test-report.md
+
+          # Overall status
+          if [[ "${{ needs.lint-and-format.result }}" == "success" ]] && \
+             [[ "${{ needs.type-check.result }}" == "success" ]] && \
+             [[ "${{ needs.build-verification.result }}" == "success" ]] && \
+             [[ "${{ needs.test-coverage.result }}" == "success" ]] && \
+             [[ "${{ needs.e2e-tests.result }}" == "success" ]]; then
+            echo "## ✅ Overall Status: PASSED" >> build-test-report.md
+            echo "All build and test checks completed successfully." >> build-test-report.md
+          else
+            echo "## ❌ Overall Status: FAILED" >> build-test-report.md
+            echo "One or more build/test checks failed. Review the job details above." >> build-test-report.md
+          fi
+
+      - name: Upload build test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-test-report
+          path: build-test-report.md

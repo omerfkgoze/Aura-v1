@@ -1,0 +1,509 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+jobs:
+  validate-environment:
+    name: Validate Environment Variables
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets for staging
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Validating staging environment variables..."
+
+          # Check required secrets for staging deployment
+          MISSING_SECRETS=""
+
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_TOKEN"
+          fi
+
+          if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_ORG_ID"
+          fi
+
+          if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_PROJECT_ID"
+          fi
+
+          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS SUPABASE_ACCESS_TOKEN"
+          fi
+
+          if [ -z "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS SUPABASE_DB_PASSWORD"
+          fi
+
+          if [ -n "$MISSING_SECRETS" ]; then
+            echo "❌ Missing required secrets:$MISSING_SECRETS"
+            exit 1
+          else
+            echo "✅ All staging environment variables validated"
+          fi
+
+      - name: Validate required secrets for production
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Validating production environment variables..."
+
+          # Check all required secrets for production deployment
+          MISSING_SECRETS=""
+
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_TOKEN"
+          fi
+
+          if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_ORG_ID"
+          fi
+
+          if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS VERCEL_PROJECT_ID"
+          fi
+
+          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS SUPABASE_ACCESS_TOKEN"
+          fi
+
+          if [ -z "${{ secrets.SUPABASE_DB_PASSWORD }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS SUPABASE_DB_PASSWORD"
+          fi
+
+          if [ -z "${{ secrets.EAS_PROJECT_ID }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS EAS_PROJECT_ID"
+          fi
+
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS EXPO_TOKEN"
+          fi
+
+          if [ -z "${{ secrets.SENTRY_AUTH_TOKEN }}" ]; then
+            MISSING_SECRETS="$MISSING_SECRETS SENTRY_AUTH_TOKEN"
+          fi
+
+          if [ -n "$MISSING_SECRETS" ]; then
+            echo "❌ Missing required secrets:$MISSING_SECRETS"
+            exit 1
+          else
+            echo "✅ All production environment variables validated"
+          fi
+
+  database-migration:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: validate-environment
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Run database migrations (staging)
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Running database migrations for staging..."
+
+          # Link to staging project
+          supabase link --project-ref ${{ secrets.SUPABASE_STAGING_PROJECT_REF }}
+
+          # Run migrations against staging
+          supabase db push --include-seed || {
+            echo "❌ Staging database migration failed!"
+            exit 1
+          }
+
+          echo "✅ Staging database migrations completed successfully"
+
+      - name: Run database migrations (production)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Running database migrations for production..."
+
+          # Link to production project
+          supabase link --project-ref ${{ secrets.SUPABASE_PRODUCTION_PROJECT_REF }}
+
+          # Run migrations against production (without seed data)
+          supabase db push || {
+            echo "❌ Production database migration failed!"
+            exit 1
+          }
+
+          echo "✅ Production database migrations completed successfully"
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [validate-environment, database-migration]
+    if: github.event_name == 'pull_request'
+    environment:
+      name: staging
+      url: ${{ steps.vercel-deploy.outputs.preview-url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust for WASM builds
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for staging
+        run: |
+          echo "Building applications for staging deployment..."
+
+          # Set staging environment variables
+          export NODE_ENV=staging
+          export NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_STAGING_URL }}
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+          export NEXT_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_STAGING_DSN }}
+
+          # Build all packages
+          pnpm build || {
+            echo "❌ Staging build failed!"
+            exit 1
+          }
+
+          echo "✅ Staging build completed successfully"
+
+      - name: Deploy to Vercel (staging)
+        id: vercel-deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: apps/web
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Comment PR with staging URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployUrl = '${{ steps.vercel-deploy.outputs.preview-url }}';
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚀 Staging Deployment\n\n✅ **Deployed successfully!**\n\n🔗 **Preview URL**: ${deployUrl}\n\n📊 **Environment**: Staging\n⏱️ **Deployed at**: ${new Date().toISOString()}`
+            });
+
+  approve-production:
+    name: Approve Production Deployment
+    runs-on: ubuntu-latest
+    needs: validate-environment
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production-approval
+
+    steps:
+      - name: Manual approval checkpoint
+        run: |
+          echo "🚨 Production deployment requires manual approval"
+          echo "✅ Approval granted - proceeding with production deployment"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [approve-production, database-migration]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: ${{ secrets.PRODUCTION_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust for WASM builds
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for production
+        run: |
+          echo "Building applications for production deployment..."
+
+          # Set production environment variables
+          export NODE_ENV=production
+          export NEXT_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_PRODUCTION_URL }}
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_PRODUCTION_ANON_KEY }}
+          export NEXT_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_PRODUCTION_DSN }}
+
+          # Build all packages
+          pnpm build || {
+            echo "❌ Production build failed!"
+            exit 1
+          }
+
+          echo "✅ Production build completed successfully"
+
+      - name: Deploy to Vercel (production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: apps/web
+          vercel-args: '--prod'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Configure Sentry release
+        run: |
+          echo "Configuring Sentry release tracking..."
+
+          # Create Sentry release
+          curl -sH "Authorization: Bearer ${{ secrets.SENTRY_AUTH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"version\":\"${{ github.sha }}\",\"projects\":[\"aura-web\"]}" \
+            -X POST "https://sentry.io/api/0/organizations/${{ secrets.SENTRY_ORG }}/releases/"
+
+          # Associate commits with release
+          curl -sH "Authorization: Bearer ${{ secrets.SENTRY_AUTH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"refs\":[{\"repository\":\"${{ github.repository }}\",\"commit\":\"${{ github.sha }}\"}]}" \
+            -X POST "https://sentry.io/api/0/organizations/${{ secrets.SENTRY_ORG }}/releases/${{ github.sha }}/refs/"
+
+          echo "✅ Sentry release configured"
+
+  deploy-mobile-staging:
+    name: Deploy Mobile App (Staging)
+    runs-on: ubuntu-latest
+    needs: [validate-environment, database-migration]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Expo CLI
+        run: pnpm add -g @expo/cli@latest eas-cli@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build mobile app for staging
+        working-directory: apps/mobile
+        run: |
+          echo "Building mobile app for staging..."
+
+          # Configure staging environment
+          export EXPO_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_STAGING_URL }}
+          export EXPO_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_STAGING_ANON_KEY }}
+
+          # Build with EAS
+          eas build --platform=all --profile=staging --non-interactive || {
+            echo "❌ Mobile staging build failed!"
+            exit 1
+          }
+
+          echo "✅ Mobile staging build completed"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+
+  deploy-mobile-production:
+    name: Deploy Mobile App (Production)
+    runs-on: ubuntu-latest
+    needs: [approve-production, database-migration]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Expo CLI
+        run: pnpm add -g @expo/cli@latest eas-cli@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and submit mobile app
+        working-directory: apps/mobile
+        run: |
+          echo "Building mobile app for production..."
+
+          # Configure production environment
+          export EXPO_PUBLIC_SUPABASE_URL=${{ secrets.SUPABASE_PRODUCTION_URL }}
+          export EXPO_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_PRODUCTION_ANON_KEY }}
+
+          # Build for production
+          eas build --platform=all --profile=production --non-interactive || {
+            echo "❌ Mobile production build failed!"
+            exit 1
+          }
+
+          # Submit to app stores (if configured)
+          eas submit --platform=all --profile=production --non-interactive || {
+            echo "⚠️ App store submission failed - continuing deployment"
+          }
+
+          echo "✅ Mobile production deployment completed"
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+
+  post-deployment-health-check:
+    name: Post-Deployment Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: github.ref == 'refs/heads/main' && always()
+
+    steps:
+      - name: Health check - Web application
+        run: |
+          echo "Performing health check on web application..."
+
+          # Wait for deployment to be ready
+          sleep 30
+
+          # Check health endpoint
+          HEALTH_URL="${{ secrets.PRODUCTION_URL }}/api/health"
+
+          for i in {1..10}; do
+            if curl -sSf "$HEALTH_URL" > /dev/null; then
+              echo "✅ Web application health check passed"
+              break
+            fi
+            
+            if [ $i -eq 10 ]; then
+              echo "❌ Web application health check failed after 10 attempts"
+              exit 1
+            fi
+            
+            echo "Health check attempt $i failed, retrying in 30s..."
+            sleep 30
+          done
+
+      - name: Health check - Database connectivity
+        run: |
+          echo "Performing database connectivity check..."
+
+          # Simple connectivity test (adjust based on actual health endpoint)
+          curl -sSf "${{ secrets.PRODUCTION_URL }}/api/health/db" || {
+            echo "❌ Database connectivity check failed!"
+            exit 1
+          }
+
+          echo "✅ Database connectivity check passed"
+
+  deployment-summary:
+    name: Deployment Summary
+    needs:
+      [
+        deploy-staging,
+        deploy-production,
+        deploy-mobile-staging,
+        deploy-mobile-production,
+        post-deployment-health-check,
+      ]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Generate deployment report
+        run: |
+          echo "# Deployment Summary" > deployment-report.md
+          echo "Generated: $(date)" >> deployment-report.md
+          echo "" >> deployment-report.md
+
+          echo "## Deployment Results" >> deployment-report.md
+
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "- Staging Web: ${{ needs.deploy-staging.result }}" >> deployment-report.md
+            echo "- Staging Mobile: ${{ needs.deploy-mobile-staging.result }}" >> deployment-report.md
+          else
+            echo "- Production Web: ${{ needs.deploy-production.result }}" >> deployment-report.md
+            echo "- Production Mobile: ${{ needs.deploy-mobile-production.result }}" >> deployment-report.md
+            echo "- Health Check: ${{ needs.post-deployment-health-check.result }}" >> deployment-report.md
+          fi
+
+          echo "" >> deployment-report.md
+          echo "## Environment: ${{ github.event_name == 'pull_request' && 'Staging' || 'Production' }}" >> deployment-report.md
+          echo "## Git SHA: ${{ github.sha }}" >> deployment-report.md
+          echo "## Deployed by: ${{ github.actor }}" >> deployment-report.md
+
+      - name: Upload deployment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report
+          path: deployment-report.md
