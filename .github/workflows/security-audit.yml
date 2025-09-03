@@ -22,7 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -85,7 +84,8 @@ jobs:
 
           # Check for vulnerabilities
           if [ -s ../../rust-audit-results.json ]; then
-            VULN_COUNT=$(cat ../../rust-audit-results.json | jq -r '.vulnerabilities.found | length')
+            # Handle both array and boolean responses from cargo audit
+            VULN_COUNT=$(cat ../../rust-audit-results.json | jq -r 'if .vulnerabilities.found then (.vulnerabilities.found | if type == "array" then length else 0 end) else 0 end')
             if [ "$VULN_COUNT" -gt 0 ]; then
               echo "❌ Rust vulnerabilities found!"
               cargo audit
@@ -140,9 +140,13 @@ jobs:
 
       - name: Install wasm-opt
         run: |
-          wget https://github.com/WebAssembly/binaryen/releases/latest/download/binaryen-version_116-x86_64-linux.tar.gz
-          tar -xzf binaryen-version_116-x86_64-linux.tar.gz
-          sudo cp binaryen-version_116/bin/wasm-opt /usr/local/bin/
+          # Get the latest version dynamically
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/WebAssembly/binaryen/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "Installing Binaryen $LATEST_RELEASE"
+
+          wget https://github.com/WebAssembly/binaryen/releases/download/$LATEST_RELEASE/binaryen-$LATEST_RELEASE-x86_64-linux.tar.gz
+          tar -xzf binaryen-$LATEST_RELEASE-x86_64-linux.tar.gz
+          sudo cp binaryen-$LATEST_RELEASE/bin/wasm-opt /usr/local/bin/
 
       - name: Setup Node.js for WASM validation
         uses: actions/setup-node@v4
