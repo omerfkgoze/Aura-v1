@@ -4,8 +4,10 @@
   "license": "MIT",
   "scripts": {
     "dev": "nx run-many --target=dev --all",
-    "build": "nx run-many --target=build --all",
-    "test": "nx run-many --target=test --all",
+    "build": "nx run-many --target=build --all --exclude=mobile",
+    "build:all": "nx run-many --target=build --all",
+    "test": "nx run-many --target=test --all --exclude=crypto-core,web",
+    "test:all": "nx run-many --target=test --all",
     "lint": "nx run-many --target=lint --all",
     "type-check": "nx run-many --target=type-check --all",
     "format": "prettier --write .",

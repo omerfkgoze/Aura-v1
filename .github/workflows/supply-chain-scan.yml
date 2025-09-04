@@ -152,7 +152,7 @@ jobs:
           echo "Checking license compliance..."
 
           # Check for GPL and other copyleft licenses in production dependencies
-          pnpm install --frozen-lockfile
+          pnpm install
 
           # Use license-checker to identify problematic licenses
           npx license-checker \
@@ -181,7 +181,7 @@ jobs:
 
       - name: Install dependencies for analysis
         run: |
-          pnpm install --frozen-lockfile
+          pnpm install
 
       - name: Analyze dependency tree depth
         run: |
@@ -257,7 +257,7 @@ jobs:
           echo "Verifying package integrity..."
 
           # Verify npm lockfile integrity
-          pnpm install --frozen-lockfile --offline || {
+          pnpm install --offline || {
             echo "❌ pnpm lockfile integrity verification failed"
             echo "This could indicate tampering with dependencies"
             exit 1

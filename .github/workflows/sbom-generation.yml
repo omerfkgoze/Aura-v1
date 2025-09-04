@@ -73,7 +73,7 @@ jobs:
       - name: Install dependencies (for accurate SBOM)
         run: |
           echo "Installing dependencies for SBOM generation..."
-          pnpm install --frozen-lockfile
+          pnpm install
 
           # Ensure Cargo dependencies are up to date
           if [ -f "libs/crypto-core/Cargo.lock" ]; then

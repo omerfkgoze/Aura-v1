@@ -1,2 +1,3 @@
 // UI components exports
-// Export components here when they are created
+// Placeholder export to make this a valid module
+export const placeholder = 'ui-components';

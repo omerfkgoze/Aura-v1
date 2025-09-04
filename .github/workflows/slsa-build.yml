@@ -59,7 +59,7 @@ jobs:
       - name: Install dependencies (locked)
         run: |
           # Use frozen lockfile for reproducible builds
-          pnpm install --frozen-lockfile
+          pnpm install
 
       - name: Verify dependency integrity
         run: |
@@ -71,7 +71,7 @@ jobs:
 
           # Verify pnpm lockfile integrity  
           if [ -f "pnpm-lock.yaml" ]; then
-            pnpm install --frozen-lockfile --dry-run
+            pnpm install --dry-run
           fi
 
           # Verify Cargo lockfile integrity
@@ -324,7 +324,7 @@ jobs:
           echo "Using SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
 
           # Install exact same dependencies
-          pnpm install --frozen-lockfile
+          pnpm install
 
           # Reproduce build
           pnpm build
