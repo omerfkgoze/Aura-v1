@@ -1,0 +1,26 @@
+{
+  "name": "@aura/database-security",
+  "version": "1.0.0",
+  "description": "Database security utilities including certificate pinning and connection security",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "eslint": "^8.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-native": "^0.73.0"
+  }
+}
