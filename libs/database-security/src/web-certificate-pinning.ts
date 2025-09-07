@@ -222,7 +222,7 @@ export class WebCertificatePinning {
         // Emit security event
         window.dispatchEvent(
           new CustomEvent('certificateValidationFailed', {
-            detail: { hostname, error: error.message },
+            detail: { hostname, error: error instanceof Error ? error.message : String(error) },
           })
         );
       }

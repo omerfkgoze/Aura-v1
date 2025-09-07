@@ -84,9 +84,9 @@ export class SecurityEventLogger {
       level,
       message,
       timestamp: new Date(),
-      userId: context.userId,
-      sessionId: context.sessionId,
-      clientInfo: this.sanitizeClientInfo(context.clientInfo),
+      userId: context['userId'],
+      sessionId: context['sessionId'],
+      clientInfo: this.sanitizeClientInfo(context['clientInfo']),
       context: this.sanitizeContext(context),
       fingerprint: this.generateFingerprint(eventType, level, context),
       tags: this.generateTags(eventType, level, context),
@@ -246,7 +246,7 @@ export class SecurityEventLogger {
     level: SecurityEventLevel,
     context: Record<string, any>
   ): string[] {
-    return [eventType, level, context.component || 'unknown', context.errorType || 'general'];
+    return [eventType, level, context['component'] || 'unknown', context['errorType'] || 'general'];
   }
 
   /**
@@ -260,9 +260,9 @@ export class SecurityEventLogger {
     return {
       level,
       eventType,
-      component: context.component || 'database-security',
-      environment: context.environment || 'production',
-      platform: context.platform || 'unknown',
+      component: context['component'] || 'database-security',
+      environment: context['environment'] || 'production',
+      platform: context['platform'] || 'unknown',
     };
   }
 
@@ -285,7 +285,7 @@ export class SecurityEventLogger {
   private logToConsoleOutput(event: SecurityEvent): void {
     // In development, this would log to console
     // In production, logs are handled by secure audit system
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       // Development logging would be handled here with appropriate methods
       // Disabled for ESLint compliance
     }
@@ -444,7 +444,7 @@ export class SecurityEventLogger {
  */
 export const securityLogger = new SecurityEventLogger({
   maxEvents: 10000,
-  sentryEnabled: typeof window !== 'undefined' && process.env.NODE_ENV === 'production',
+  sentryEnabled: typeof window !== 'undefined' && process.env['NODE_ENV'] === 'production',
   logToConsole: true,
 });
 
@@ -497,7 +497,7 @@ export const SecurityLogger = {
   // Rate limiting events
   rateLimitExceeded: (clientIp: string, context: Record<string, any> = {}) => {
     securityLogger.logEvent('rate_limit_exceeded', 'warning', 'Rate limit exceeded', {
-      clientIpHash: securityLogger.hashSensitiveData(clientIp),
+      clientIpHash: (securityLogger as any).hashSensitiveData(clientIp),
       ...context,
     });
   },

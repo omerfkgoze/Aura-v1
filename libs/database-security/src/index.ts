@@ -59,7 +59,7 @@ export {
 /**
  * Initialize database security configuration
  */
-export function initializeDatabaseSecurity(config: {
+export async function initializeDatabaseSecurity(config: {
   enableCertificatePinning?: boolean;
   enableConnectionSecurity?: boolean;
   enableRLSEnforcement?: boolean;
@@ -82,6 +82,12 @@ export function initializeDatabaseSecurity(config: {
     securityLogging: enableSecurityLogging,
     environment,
   });
+
+  // Import the instances dynamically to avoid circular dependencies
+  const { certificatePinningManager } = await import('./certificate-pinning');
+  const { connectionSecurityManager } = await import('./connection-security');
+  const { rlsPolicyEnforcer } = await import('./rls-enforcement');
+  const { securityLogger } = await import('./security-logger');
 
   // Initialize security components based on configuration
   return {

@@ -41,9 +41,8 @@ export class MobileCertificatePinning {
         try {
           require.resolve('@react-native-async-storage/async-storage');
           // React Native secure storage implementation
-          const { default: AsyncStorage } = await import(
-            '@react-native-async-storage/async-storage'
-          );
+          const AsyncStorageModule = '@react-native-async-storage/async-storage';
+          const AsyncStorage = (await import(AsyncStorageModule)).default;
 
           this.secureStorage = {
             setItem: async (key: string, value: string) => {
@@ -239,7 +238,9 @@ export class MobileCertificatePinning {
       if (typeof require !== 'undefined' && typeof require.resolve !== 'undefined') {
         try {
           require.resolve('react-native');
-          const { Platform: RNPlatform } = await import('react-native');
+          const reactNativeModule = 'react-native';
+          const RNModule = await import(reactNativeModule);
+          const RNPlatform = RNModule.Platform;
 
           if (RNPlatform.OS === 'ios') {
             return this.validateCertificateIOS(hostname, certificate);
