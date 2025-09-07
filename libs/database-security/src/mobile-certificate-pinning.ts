@@ -36,22 +36,33 @@ export class MobileCertificatePinning {
     }
 
     try {
-      // React Native secure storage implementation
-      // This would use react-native-keychain or @react-native-async-storage/async-storage with encryption
-      const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+      // Check if we're in a React Native environment
+      if (typeof require !== 'undefined' && typeof require.resolve !== 'undefined') {
+        try {
+          require.resolve('@react-native-async-storage/async-storage');
+          // React Native secure storage implementation
+          const { default: AsyncStorage } = await import(
+            '@react-native-async-storage/async-storage'
+          );
 
-      this.secureStorage = {
-        setItem: async (key: string, value: string) => {
-          // In production, encrypt the value before storing
-          await AsyncStorage.setItem(`cert_pin_${key}`, value);
-        },
-        getItem: async (key: string) => {
-          return await AsyncStorage.getItem(`cert_pin_${key}`);
-        },
-        removeItem: async (key: string) => {
-          await AsyncStorage.removeItem(`cert_pin_${key}`);
-        },
-      };
+          this.secureStorage = {
+            setItem: async (key: string, value: string) => {
+              // In production, encrypt the value before storing
+              await AsyncStorage.setItem(`cert_pin_${key}`, value);
+            },
+            getItem: async (key: string) => {
+              return await AsyncStorage.getItem(`cert_pin_${key}`);
+            },
+            removeItem: async (key: string) => {
+              await AsyncStorage.removeItem(`cert_pin_${key}`);
+            },
+          };
+          return;
+        } catch (resolveError) {
+          // AsyncStorage not available, fall through to fallback
+        }
+      }
+      throw new Error('React Native environment not detected');
     } catch (error) {
       console.warn('Failed to initialize secure storage for certificate pinning:', error);
 
@@ -224,12 +235,21 @@ export class MobileCertificatePinning {
 
     // For React Native, detect iOS vs Android
     try {
-      const { Platform: RNPlatform } = await import('react-native');
+      // Check if React Native is available before importing
+      if (typeof require !== 'undefined' && typeof require.resolve !== 'undefined') {
+        try {
+          require.resolve('react-native');
+          const { Platform: RNPlatform } = await import('react-native');
 
-      if (RNPlatform.OS === 'ios') {
-        return this.validateCertificateIOS(hostname, certificate);
-      } else if (RNPlatform.OS === 'android') {
-        return this.validateCertificateAndroid(hostname, certificate);
+          if (RNPlatform.OS === 'ios') {
+            return this.validateCertificateIOS(hostname, certificate);
+          } else if (RNPlatform.OS === 'android') {
+            return this.validateCertificateAndroid(hostname, certificate);
+          }
+        } catch (resolveError) {
+          // React Native not available, use fallback
+          console.warn('React Native not available in test environment:', resolveError);
+        }
       }
     } catch (error) {
       console.warn('React Native Platform detection failed:', error);

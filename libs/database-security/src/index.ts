@@ -42,6 +42,8 @@ export {
 export {
   RLSPolicyEnforcer,
   rlsPolicyEnforcer,
+  initializeRLSPolicyEnforcer,
+  useRLSValidation,
   type RLSValidationResult,
   type UserIsolationCheck,
 } from './rls-enforcement';
