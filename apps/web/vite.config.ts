@@ -1,5 +1,6 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
+import { createSRIPlugin } from './src/security/vite-sri-plugin';
 
 export default defineConfig({
   root: __dirname,
@@ -15,7 +16,14 @@ export default defineConfig({
     host: 'localhost',
   },
 
-  plugins: [],
+  plugins: [
+    createSRIPlugin({
+      algorithms: ['sha384', 'sha256'],
+      crossOrigin: 'anonymous',
+      include: ['**/*.js', '**/*.css', '**/*.mjs'],
+      exclude: ['**/*.map', '**/sri-manifest.json'],
+    }),
+  ],
 
   // Uncomment this if you are using workers.
   // worker: {
