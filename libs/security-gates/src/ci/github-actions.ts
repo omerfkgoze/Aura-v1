@@ -2,6 +2,7 @@ import { GateRunner, GateRunnerConfig } from '../core/gate-runner';
 import { CryptoGate } from '../crypto/crypto-gate';
 import { NetworkGate } from '../network/network-gate';
 import { TestingGate, createTestingGate } from '../testing/testing-gate';
+import { PIIPreventionGate, validatePIIPrevention } from '../pii/pii-gate';
 import {
   SecurityGate,
   SecurityGateResult,
@@ -24,6 +25,11 @@ export interface CIGateConfig extends GateRunnerConfig {
   enableNetworkAnalysis?: boolean;
   pcapFile?: string;
   networkAnalysisTimeout?: number;
+  // PII prevention options
+  enablePIIPrevention?: boolean;
+  logPaths?: string[];
+  errorSamples?: string[];
+  piiFailOnCritical?: boolean;
 }
 
 export class GitHubActionsCrypto implements SecurityGate {

@@ -22,5 +22,12 @@ export * from './testing/chaos-engineering';
 export * from './testing/load-testing';
 export * from './testing/testing-gate';
 
+// PII prevention system
+export * from './pii/log-analyzer';
+export * from './pii/error-sanitizer';
+export * from './pii/debug-filter';
+export * from './pii/memory-analyzer';
+export * from './pii/pii-gate';
+
 // CI/CD integration
 export * from './ci/github-actions';
