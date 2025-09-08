@@ -16,6 +16,7 @@ import XSSTester, { XSSTestResult } from './xss-tester';
 import CryptoValidator, { CryptoValidationResult } from './crypto-validator';
 
 export interface ClientSecurityGateResult extends SecurityGateResult {
+  name: string;
   ssrValidation: SSRValidationResult;
   storageValidation: Map<StorageType, StorageValidationResult>;
   xssValidation: XSSTestResult;
@@ -141,7 +142,10 @@ export class ClientSecurityGate implements SecurityGate {
 
       const result: ClientSecurityGateResult = {
         name: this.name,
+        valid: passed,
         passed,
+        errors: this.collectErrors(ssrResult, storageResult, xssResult, cryptoResult),
+        warnings: this.collectWarnings(ssrResult, storageResult, xssResult, cryptoResult),
         executionTime,
         details: this.generateDetails(ssrResult, storageResult, xssResult, cryptoResult),
         ssrValidation: ssrResult,
@@ -162,7 +166,10 @@ export class ClientSecurityGate implements SecurityGate {
 
       return {
         name: this.name,
+        valid: false,
         passed: false,
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        warnings: [],
         executionTime,
         details: `Client security gate execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         ssrValidation: this.createEmptySSRResult(),
@@ -413,6 +420,88 @@ export class ClientSecurityGate implements SecurityGate {
     }
 
     return true;
+  }
+
+  private collectErrors(
+    ssrResult: SSRValidationResult,
+    storageResult: Map<StorageType, StorageValidationResult>,
+    xssResult: XSSTestResult,
+    cryptoResult: CryptoValidationResult
+  ): string[] {
+    const errors: string[] = [];
+
+    // Collect SSR errors
+    if (!ssrResult.isValid) {
+      const criticalViolations = ssrResult.violations.filter(
+        v => v.severity === 'high' || v.severity === 'critical'
+      );
+      errors.push(...criticalViolations.map(v => `SSR: ${v.content}`));
+    }
+
+    // Collect storage errors
+    for (const [storageType, result] of storageResult) {
+      if (!result.isValid) {
+        const criticalViolations = result.violations.filter(
+          v => v.severity === 'high' || v.severity === 'critical'
+        );
+        errors.push(...criticalViolations.map(v => `Storage(${storageType}): ${v.key}`));
+      }
+    }
+
+    // Collect XSS errors
+    if (xssResult.isVulnerable) {
+      const criticalVulns = xssResult.vulnerabilities.filter(
+        v => v.severity === 'high' || v.severity === 'critical'
+      );
+      errors.push(...criticalVulns.map(v => `XSS: ${v.payload}`));
+    }
+
+    // Collect crypto errors
+    if (!cryptoResult.isValid) {
+      const criticalViolations = cryptoResult.violations.filter(
+        v => v.severity === 'high' || v.severity === 'critical'
+      );
+      errors.push(...criticalViolations.map(v => `Crypto: ${v.context}`));
+    }
+
+    return errors;
+  }
+
+  private collectWarnings(
+    ssrResult: SSRValidationResult,
+    storageResult: Map<StorageType, StorageValidationResult>,
+    xssResult: XSSTestResult,
+    cryptoResult: CryptoValidationResult
+  ): string[] {
+    const warnings: string[] = [];
+
+    // Collect SSR warnings
+    const ssrWarnings = ssrResult.violations.filter(
+      v => v.severity === 'medium' || v.severity === 'low'
+    );
+    warnings.push(...ssrWarnings.map(v => `SSR: ${v.content}`));
+
+    // Collect storage warnings
+    for (const [storageType, result] of storageResult) {
+      const storageWarnings = result.violations.filter(
+        v => v.severity === 'medium' || v.severity === 'low'
+      );
+      warnings.push(...storageWarnings.map(v => `Storage(${storageType}): ${v.key}`));
+    }
+
+    // Collect XSS warnings
+    const xssWarnings = xssResult.vulnerabilities.filter(
+      v => v.severity === 'medium' || v.severity === 'low'
+    );
+    warnings.push(...xssWarnings.map(v => `XSS: ${v.payload}`));
+
+    // Collect crypto warnings
+    const cryptoWarnings = cryptoResult.violations.filter(
+      v => v.severity === 'medium' || v.severity === 'low'
+    );
+    warnings.push(...cryptoWarnings.map(v => `Crypto: ${v.context}`));
+
+    return warnings;
   }
 
   private generateDetails(

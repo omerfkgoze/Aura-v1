@@ -1,7 +1,10 @@
 export interface SecurityGateResult {
   valid: boolean;
+  passed: boolean;
   errors: string[];
   warnings: string[];
+  details?: string;
+  executionTime?: number;
   metadata?: Record<string, unknown>;
 }
 

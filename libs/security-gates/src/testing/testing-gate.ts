@@ -46,6 +46,10 @@ export interface TestingSuiteResult {
 }
 
 export class TestingGate implements SecurityGate {
+  name = 'Testing Gate';
+  description = 'Comprehensive security testing framework';
+  version = '1.0.0';
+
   private readonly config: TestingGateConfig;
   private readonly propertyTester: PropertyTestingSuite;
   private readonly fuzzTester: FuzzTestingSuite;
@@ -83,17 +87,20 @@ export class TestingGate implements SecurityGate {
   /**
    * Execute all enabled testing frameworks
    */
-  async validate(): Promise<SecurityGateResult> {
+  async execute(_input?: unknown): Promise<SecurityGateResult> {
     console.log('🧪 Starting comprehensive security testing gate...');
 
     const startTime = Date.now();
     const maxTestingTimeMs = this.config.maxTestingTime * 60 * 1000;
 
     const result: SecurityGateResult = {
-      gateName: 'TestingGate',
+      valid: true,
       passed: true,
-      timestamp: new Date(),
-      details: {
+      errors: [],
+      warnings: [],
+      executionTime: 0,
+      details: `Testing gate execution with config: ${JSON.stringify(this.config)}`,
+      metadata: {
         config: this.config,
         suiteResults: [] as TestingSuiteResult[],
         totalDuration: 0,
@@ -111,27 +118,67 @@ export class TestingGate implements SecurityGate {
       }
 
       // Aggregate results
-      const allPassed = result.details.suiteResults.every((sr: TestingSuiteResult) => sr.passed);
-      const hasCriticalIssues = result.details.criticalIssuesFound.length > 0;
+      const metadata = result.metadata as any;
+      const allPassed = metadata.suiteResults.every((sr: TestingSuiteResult) => sr.passed);
+      const hasCriticalIssues = metadata.criticalIssuesFound.length > 0;
 
+      result.valid = allPassed && !hasCriticalIssues;
       result.passed = allPassed && !hasCriticalIssues;
-      result.details.totalDuration = Date.now() - startTime;
+      metadata.totalDuration = Date.now() - startTime;
+      result.executionTime = Date.now() - startTime;
+      result.errors = hasCriticalIssues ? metadata.criticalIssuesFound : [];
 
       if (result.passed) {
         console.log('✅ All security testing suites passed');
       } else {
         console.error('❌ Security testing gate failed');
         if (hasCriticalIssues) {
-          console.error('Critical issues found:', result.details.criticalIssuesFound);
+          console.error('Critical issues found:', metadata.criticalIssuesFound);
         }
       }
     } catch (error) {
+      result.valid = false;
       result.passed = false;
-      result.details.error = error.message;
-      console.error('Security testing gate encountered an error:', error.message);
+      result.errors = [error instanceof Error ? error.message : 'Unknown error'];
+      result.executionTime = Date.now() - startTime;
+      (result.metadata as any).error = error instanceof Error ? error.message : 'Unknown error';
+      console.error(
+        'Security testing gate encountered an error:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
     }
 
     return result;
+  }
+
+  /**
+   * Get gate configuration
+   */
+  getConfig(): Record<string, unknown> {
+    return { ...this.config };
+  }
+
+  /**
+   * Validate gate configuration
+   */
+  validateConfig(config: Record<string, unknown>): SecurityGateResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (typeof config['maxTestingTime'] !== 'number' || config['maxTestingTime'] <= 0) {
+      errors.push('maxTestingTime must be a positive number');
+    }
+
+    if (typeof config['outputDirectory'] !== 'string' || !config['outputDirectory'].trim()) {
+      warnings.push('outputDirectory should be a non-empty string');
+    }
+
+    return {
+      valid: errors.length === 0,
+      passed: errors.length === 0,
+      errors,
+      warnings,
+    };
   }
 
   /**
@@ -194,19 +241,21 @@ export class TestingGate implements SecurityGate {
       const suiteName = suites[index].name;
 
       if (suiteResult.status === 'fulfilled') {
-        result.details.suiteResults.push(suiteResult.value);
+        (result.metadata as any).suiteResults.push(suiteResult.value);
         this.processSuiteResult(suiteResult.value, result);
       } else {
+        const errorMessage =
+          suiteResult.reason instanceof Error ? suiteResult.reason.message : 'Unknown error';
         const failedResult: TestingSuiteResult = {
           suiteName,
           passed: false,
           duration: 0,
           testsExecuted: 0,
           testsFailed: 1,
-          criticalIssues: [`Suite failed: ${suiteResult.reason.message}`],
-          details: { error: suiteResult.reason.message },
+          criticalIssues: [`Suite failed: ${errorMessage}`],
+          details: { error: errorMessage },
         };
-        result.details.suiteResults.push(failedResult);
+        (result.metadata as any).suiteResults.push(failedResult);
         this.processSuiteResult(failedResult, result);
       }
 
@@ -237,7 +286,7 @@ export class TestingGate implements SecurityGate {
           timePerSuite
         );
 
-        result.details.suiteResults.push(suiteResult);
+        (result.metadata as any).suiteResults.push(suiteResult);
         this.processSuiteResult(suiteResult, result);
 
         if (this.config.failFast && !suiteResult.passed) {
@@ -245,16 +294,17 @@ export class TestingGate implements SecurityGate {
           break;
         }
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         const failedResult: TestingSuiteResult = {
           suiteName: suite.name,
           passed: false,
           duration: 0,
           testsExecuted: 0,
           testsFailed: 1,
-          criticalIssues: [`Suite failed: ${error.message}`],
-          details: { error: error.message },
+          criticalIssues: [`Suite failed: ${errorMessage}`],
+          details: { error: errorMessage },
         };
-        result.details.suiteResults.push(failedResult);
+        (result.metadata as any).suiteResults.push(failedResult);
         this.processSuiteResult(failedResult, result);
         break;
       }
@@ -290,7 +340,7 @@ export class TestingGate implements SecurityGate {
     }
 
     // Add critical issues to overall result
-    result.details.criticalIssuesFound.push(...suiteResult.criticalIssues);
+    (result.metadata as any).criticalIssuesFound.push(...suiteResult.criticalIssues);
 
     console.log(
       `${suiteResult.passed ? '✅' : '❌'} ${suiteResult.suiteName}: ` +
@@ -328,7 +378,8 @@ export class TestingGate implements SecurityGate {
             await this.propertyTester.testSecurityProperty(test);
           } catch (error) {
             testsFailed++;
-            criticalIssues.push(`Property test failed: ${test.name} - ${error.message}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            criticalIssues.push(`Property test failed: ${test.name} - ${errorMessage}`);
           }
         }
       }
@@ -346,14 +397,15 @@ export class TestingGate implements SecurityGate {
         },
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         suiteName: 'PropertyTesting',
         passed: false,
         duration: Date.now() - startTime,
         testsExecuted,
         testsFailed: testsExecuted,
-        criticalIssues: [`Property testing suite failed: ${error.message}`],
-        details: { error: error.message },
+        criticalIssues: [`Property testing suite failed: ${errorMessage}`],
+        details: { error: errorMessage },
       };
     }
   }
@@ -387,7 +439,8 @@ export class TestingGate implements SecurityGate {
         },
       };
     } catch (error) {
-      criticalIssues.push(`Fuzz testing failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      criticalIssues.push(`Fuzz testing failed: ${errorMessage}`);
 
       return {
         suiteName: 'FuzzTesting',
@@ -396,7 +449,7 @@ export class TestingGate implements SecurityGate {
         testsExecuted: 4,
         testsFailed: 1,
         criticalIssues,
-        details: { error: error.message },
+        details: { error: errorMessage },
       };
     }
   }
@@ -437,7 +490,8 @@ export class TestingGate implements SecurityGate {
         },
       };
     } catch (error) {
-      criticalIssues.push(`Chaos engineering failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      criticalIssues.push(`Chaos engineering failed: ${errorMessage}`);
 
       return {
         suiteName: 'ChaosEngineering',
@@ -446,7 +500,7 @@ export class TestingGate implements SecurityGate {
         testsExecuted: 0,
         testsFailed: 1,
         criticalIssues,
-        details: { error: error.message },
+        details: { error: errorMessage },
       };
     }
   }
@@ -493,7 +547,8 @@ export class TestingGate implements SecurityGate {
         },
       };
     } catch (error) {
-      criticalIssues.push(`Load testing failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      criticalIssues.push(`Load testing failed: ${errorMessage}`);
 
       return {
         suiteName: 'LoadTesting',
@@ -502,7 +557,7 @@ export class TestingGate implements SecurityGate {
         testsExecuted: 0,
         testsFailed: 1,
         criticalIssues,
-        details: { error: error.message },
+        details: { error: errorMessage },
       };
     }
   }
