@@ -145,13 +145,13 @@ export class ViolationMonitor {
 
     switch (type) {
       case 'csp':
-        return `CSP violation detected: ${violation.count} violations of ${metadata.violatedDirective} in ${timeSpanStr}. Blocked URI: ${metadata.blockedUri}`;
+        return `CSP violation detected: ${violation.count} violations of ${metadata['violatedDirective']} in ${timeSpanStr}. Blocked URI: ${metadata['blockedUri']}`;
 
       case 'sri':
-        return `SRI violation detected: ${violation.count} integrity failures for ${metadata.resourceUrl} in ${timeSpanStr}. Expected hash: ${metadata.expectedHash}`;
+        return `SRI violation detected: ${violation.count} integrity failures for ${metadata['resourceUrl']} in ${timeSpanStr}. Expected hash: ${metadata['expectedHash']}`;
 
       case 'cert-pinning':
-        return `Certificate pinning violation: ${violation.count} pinning failures for ${metadata.hostname} in ${timeSpanStr}. Expected pin: ${metadata.expectedPin}`;
+        return `Certificate pinning violation: ${violation.count} pinning failures for ${metadata['hostname']} in ${timeSpanStr}. Expected pin: ${metadata['expectedPin']}`;
 
       default:
         return `Security violation detected: ${violation.count} violations in ${timeSpanStr}`;
@@ -194,7 +194,7 @@ export class ViolationMonitor {
     const now = new Date();
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
 
-    for (const [key, violation] of this.violations.entries()) {
+    for (const [key, violation] of Array.from(this.violations.entries())) {
       if (now.getTime() - violation.lastSeen.getTime() > maxAge) {
         this.violations.delete(key);
       }
@@ -213,7 +213,7 @@ export class ViolationMonitor {
       recentViolations: [] as Array<{ key: string; count: number; lastSeen: Date }>,
     };
 
-    for (const [key, violation] of this.violations.entries()) {
+    for (const [key, violation] of Array.from(this.violations.entries())) {
       const type = key.split(':')[0];
       stats.byType[type] = (stats.byType[type] || 0) + 1;
 
@@ -237,7 +237,7 @@ export const violationMonitor = new ViolationMonitor();
 // Setup default alert callbacks
 violationMonitor.addAlertCallback(async alert => {
   // In production, this would send to Sentry, Slack, email, etc.
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     // Send to monitoring service
     console.log('Would send alert to monitoring service:', alert);
   }

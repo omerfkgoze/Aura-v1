@@ -17,7 +17,7 @@ export class CSPPolicy {
     this.config = {
       enableWasm: true,
       enableTrustedTypes: true,
-      isDevelopment: process.env.NODE_ENV === 'development',
+      isDevelopment: process.env['NODE_ENV'] === 'development',
       ...config,
     };
   }

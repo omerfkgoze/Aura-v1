@@ -25,8 +25,8 @@ export interface SecurityReporter {
 }
 
 class PrivacySafeSecurityReporter implements SecurityReporter {
-  private readonly isProduction = process.env.NODE_ENV === 'production';
-  private readonly sentryDsn = process.env.SENTRY_DSN;
+  private readonly isProduction = process.env['NODE_ENV'] === 'production';
+  private readonly sentryDsn = process.env['SENTRY_DSN'];
 
   async reportCSPViolation(violation: CSPViolation): Promise<void> {
     // Remove potentially sensitive data

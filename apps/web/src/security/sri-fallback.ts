@@ -51,10 +51,10 @@ export class SRIFallbackManager {
         lastError = error as Error;
         this.incrementAttempts(url);
 
-        console.warn(`Failed to load script from ${url}:`, error);
+        console.warn(`Failed to load script from ${url}:`, error as Error);
 
         // Report SRI failure if this was an integrity check failure
-        if (error.message.includes('integrity')) {
+        if ((error as Error).message.includes('integrity')) {
           this.reportSRIFailure(url, resource.integrity || 'unknown');
         }
 
@@ -96,10 +96,10 @@ export class SRIFallbackManager {
         lastError = error as Error;
         this.incrementAttempts(url);
 
-        console.warn(`Failed to load stylesheet from ${url}:`, error);
+        console.warn(`Failed to load stylesheet from ${url}:`, error as Error);
 
         // Report SRI failure if this was an integrity check failure
-        if (error.message.includes('integrity')) {
+        if ((error as Error).message.includes('integrity')) {
           this.reportSRIFailure(url, resource.integrity || 'unknown');
         }
 

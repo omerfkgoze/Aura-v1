@@ -3,7 +3,7 @@ import { useTrustedTypes } from '../../middleware/trusted-types';
 
 export interface SafeHTMLProps {
   html: string;
-  tag?: keyof JSX.IntrinsicElements;
+  tag?: keyof React.JSX.IntrinsicElements;
   className?: string;
   style?: React.CSSProperties;
   onClick?: (event: React.MouseEvent) => void;
@@ -13,7 +13,7 @@ export interface SafeHTMLProps {
 
 export const SafeHTML: React.FC<SafeHTMLProps> = ({
   html,
-  tag: Tag = 'div',
+  tag: Tag = 'div' as keyof React.JSX.IntrinsicElements,
   className,
   style,
   onClick,
@@ -44,7 +44,7 @@ export const SafeHTML: React.FC<SafeHTMLProps> = ({
   }, [html, sanitizationLevel, createSafeHTML, onError]);
 
   // Trusted Types compliance check
-  if (!isConfigured() && process.env.NODE_ENV === 'development') {
+  if (!isConfigured() && process.env['NODE_ENV'] === 'development') {
     console.warn('SafeHTML: Trusted Types not configured, falling back to basic sanitization');
   }
 

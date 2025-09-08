@@ -32,7 +32,7 @@ export const SafeScript: React.FC<SafeScriptProps> = ({
   requireSRI = true,
 }) => {
   const { createSafeScript, createSafeScriptURL, isConfigured } = useTrustedTypes();
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | undefined>(undefined);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
   const mountedRef = useRef(true);
 
@@ -72,10 +72,11 @@ export const SafeScript: React.FC<SafeScriptProps> = ({
           // Check if SRI hash is available and required
           let finalIntegrity = integrity;
           if (!finalIntegrity && requireSRI) {
-            finalIntegrity = clientSRIVerifier.getExpectedHash(src);
-            if (!finalIntegrity) {
+            const expectedHash = clientSRIVerifier.getExpectedHash(src);
+            if (!expectedHash) {
               throw new Error(`SRI hash required but not found for: ${src}`);
             }
+            finalIntegrity = expectedHash;
           }
 
           if (finalIntegrity) {
@@ -83,13 +84,13 @@ export const SafeScript: React.FC<SafeScriptProps> = ({
           }
 
           const safeSrc = createSafeScriptURL(src);
-          script.src = safeSrc as string;
+          script.src = (safeSrc as string) || '';
         }
 
         // Set up event handlers
         script.onload = () => {
           if (mountedRef.current) {
-            setLoadError(null);
+            setLoadError(undefined);
             onLoad?.();
           }
         };
@@ -101,7 +102,7 @@ export const SafeScript: React.FC<SafeScriptProps> = ({
           setLoadError(error.message);
 
           // Try fallback URLs if available
-          if (src && fallbackSrc.length > 0) {
+          if (src && fallbackSrc.length > 0 && script) {
             tryFallback(script, fallbackSrc, 0);
             return;
           }
@@ -153,7 +154,7 @@ export const SafeScript: React.FC<SafeScriptProps> = ({
 
       fallbackScript.onload = () => {
         if (mountedRef.current) {
-          setLoadError(null);
+          setLoadError(undefined);
           onLoad?.();
         }
       };
@@ -201,7 +202,7 @@ export const SafeScript: React.FC<SafeScriptProps> = ({
   ]);
 
   // Render error state if needed
-  if (loadError && process.env.NODE_ENV === 'development') {
+  if (loadError && process.env['NODE_ENV'] === 'development') {
     return (
       <div
         style={{

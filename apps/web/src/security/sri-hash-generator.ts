@@ -93,7 +93,7 @@ export class SRIHashGenerator {
   async loadManifest(): Promise<SRIManifest | null> {
     try {
       // Check cache first in production
-      if (process.env.NODE_ENV === 'production' && this.manifestCache) {
+      if (process.env['NODE_ENV'] === 'production' && this.manifestCache) {
         const { stat } = await import('fs/promises');
         const stats = await stat(this.manifestPath);
         const lastModified = stats.mtime.getTime();
@@ -109,7 +109,7 @@ export class SRIHashGenerator {
       this.manifest = JSON.parse(content);
 
       // Cache in production
-      if (process.env.NODE_ENV === 'production' && this.manifest) {
+      if (process.env['NODE_ENV'] === 'production' && this.manifest) {
         const { stat } = await import('fs/promises');
         const stats = await stat(this.manifestPath);
         this.manifestCache = {
@@ -202,7 +202,7 @@ export class ClientSRIVerifier {
 
   async loadManifest(manifestUrl: string = '/sri-manifest.json'): Promise<void> {
     // Check cache first in production
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+    if (typeof window !== 'undefined' && process.env['NODE_ENV'] === 'production') {
       const cached = this.manifestCache.get(manifestUrl);
       if (cached && Date.now() < cached.expiresAt) {
         this.manifest = cached.manifest;
@@ -218,7 +218,11 @@ export class ClientSRIVerifier {
       this.manifest = await response.json();
 
       // Cache in production
-      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && this.manifest) {
+      if (
+        typeof window !== 'undefined' &&
+        process.env['NODE_ENV'] === 'production' &&
+        this.manifest
+      ) {
         this.manifestCache.set(manifestUrl, {
           manifest: this.manifest,
           expiresAt: Date.now() + this.cacheMaxAge,

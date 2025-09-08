@@ -10,6 +10,47 @@ export interface SRIPluginOptions {
   crossOrigin?: 'anonymous' | 'use-credentials';
 }
 
+// Simple minimatch implementation for pattern matching
+function minimatch(str: string, pattern: string): boolean {
+  if (pattern.includes('**')) {
+    const [prefix, suffix] = pattern.split('**');
+    return str.startsWith(prefix.replace(/\*/g, '')) && str.endsWith(suffix.replace(/\*/g, ''));
+  }
+
+  if (pattern.includes('*')) {
+    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+    return regex.test(str);
+  }
+
+  return str === pattern;
+}
+
+// Helper function for pattern matching
+function shouldIncludeFile(
+  fileName: string,
+  ext: string,
+  include: string[],
+  exclude: string[]
+): boolean {
+  // Check exclude patterns first
+  for (const pattern of exclude) {
+    if (minimatch(fileName, pattern)) {
+      return false;
+    }
+  }
+
+  // Check include patterns
+  for (const pattern of include) {
+    if (minimatch(fileName, pattern)) {
+      return true;
+    }
+  }
+
+  // Default inclusion for common web assets
+  const includedExtensions = ['.js', '.css', '.mjs'];
+  return includedExtensions.includes(ext);
+}
+
 export function createSRIPlugin(options: SRIPluginOptions = {}): Plugin {
   const {
     algorithms = ['sha384'],
@@ -32,46 +73,62 @@ export function createSRIPlugin(options: SRIPluginOptions = {}): Plugin {
     },
 
     generateBundle(options, bundle) {
-      const resources: Omit<SRIResource, 'hash'>[] = [];
-
-      // Process all output files
-      for (const [fileName, chunk] of Object.entries(bundle)) {
-        if (chunk.type === 'chunk' || chunk.type === 'asset') {
-          const ext = extname(fileName);
-
-          // Check if file should be included
-          if (!this.shouldIncludeFile(fileName, ext, include, exclude)) {
-            continue;
-          }
-
-          const publicPath = `/${fileName}`;
-          const filePath = join(buildOutputDir, fileName);
-
-          // Use the primary algorithm for hash generation
-          const algorithm = algorithms[0];
-
-          resources.push({
-            url: publicPath,
-            filePath,
-            algorithm,
-            crossorigin: crossOrigin,
-          });
-        }
-      }
-
-      // Store resources for writeBundle hook
-      (this as any)._sriResources = resources;
+      // Store the bundle for later use in writeBundle
+      (this as any)._bundle = bundle;
     },
 
     async writeBundle() {
-      const resources = (this as any)._sriResources as Omit<SRIResource, 'hash'>[];
-      if (!resources || resources.length === 0) {
+      const bundle = (this as any)._bundle;
+      if (!bundle) {
         return;
       }
 
       try {
-        // Generate manifest with hashes
-        const manifest = await sriGenerator.generateManifest(resources);
+        const resources: SRIResource[] = [];
+
+        // Process all output files and generate hashes from their content
+        for (const [fileName, chunk] of Object.entries(bundle)) {
+          const bundleChunk = chunk as any;
+          if (bundleChunk.type === 'chunk' || bundleChunk.type === 'asset') {
+            const ext = extname(fileName);
+
+            // Check if file should be included
+            if (!shouldIncludeFile(fileName, ext, include, exclude)) {
+              continue;
+            }
+
+            const publicPath = `/${fileName}`;
+            const algorithm = algorithms[0];
+
+            // Get content from the bundle
+            let content: string | Buffer;
+            if (bundleChunk.type === 'chunk') {
+              content = bundleChunk.code;
+            } else {
+              content =
+                bundleChunk.source instanceof Uint8Array
+                  ? Buffer.from(bundleChunk.source)
+                  : bundleChunk.source;
+            }
+
+            // Generate hash from content directly
+            const hash = await sriGenerator.generateHash(content, algorithm);
+
+            resources.push({
+              url: publicPath,
+              hash,
+              algorithm,
+              crossorigin: crossOrigin,
+            });
+          }
+        }
+
+        // Create manifest
+        const manifest: import('./sri-hash-generator').SRIManifest = {
+          version: '1.0',
+          buildTimestamp: new Date().toISOString(),
+          resources,
+        };
 
         // Save manifest to build output
         await sriGenerator.saveManifest(manifest);
@@ -126,46 +183,6 @@ export function createSRIPlugin(options: SRIPluginOptions = {}): Plugin {
       },
     },
   };
-
-  function shouldIncludeFile(
-    fileName: string,
-    ext: string,
-    include: string[],
-    exclude: string[]
-  ): boolean {
-    // Check exclude patterns first
-    for (const pattern of exclude) {
-      if (minimatch(fileName, pattern)) {
-        return false;
-      }
-    }
-
-    // Check include patterns
-    for (const pattern of include) {
-      if (minimatch(fileName, pattern)) {
-        return true;
-      }
-    }
-
-    // Default inclusion for common web assets
-    const includedExtensions = ['.js', '.css', '.mjs'];
-    return includedExtensions.includes(ext);
-  }
-}
-
-// Simple minimatch implementation for pattern matching
-function minimatch(str: string, pattern: string): boolean {
-  if (pattern.includes('**')) {
-    const [prefix, suffix] = pattern.split('**');
-    return str.startsWith(prefix.replace(/\*/g, '')) && str.endsWith(suffix.replace(/\*/g, ''));
-  }
-
-  if (pattern.includes('*')) {
-    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
-    return regex.test(str);
-  }
-
-  return str === pattern;
 }
 
 // Helper to create SRI attributes for manual use

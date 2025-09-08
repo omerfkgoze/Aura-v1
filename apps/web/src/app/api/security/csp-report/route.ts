@@ -93,7 +93,7 @@ export async function OPTIONS(request: NextRequest) {
 setInterval(
   () => {
     const now = Date.now();
-    for (const [key, record] of rateLimitStore.entries()) {
+    for (const [key, record] of Array.from(rateLimitStore.entries())) {
       if (now > record.resetTime) {
         rateLimitStore.delete(key);
       }

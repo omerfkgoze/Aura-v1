@@ -18,7 +18,7 @@ export class SecurityHeaders {
   private isDevelopment: boolean;
 
   constructor(config: SecurityHeadersConfig = {}) {
-    this.isDevelopment = process.env.NODE_ENV === 'development';
+    this.isDevelopment = process.env['NODE_ENV'] === 'development';
     this.config = {
       hsts: {
         maxAge: 31536000, // 1 year

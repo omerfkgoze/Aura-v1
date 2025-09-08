@@ -315,7 +315,7 @@ export class DOMSinkProtector {
     this.originalMethods.set('setTimeout', originalSetTimeout);
     this.originalMethods.set('setInterval', originalSetInterval);
 
-    window.setTimeout = (handler: any, timeout?: number, ...args: any[]) => {
+    (window as any).setTimeout = (handler: any, timeout?: number, ...args: any[]): number => {
       if (typeof handler === 'string') {
         if (this.shouldBlock('setTimeout', handler)) {
           this.reportViolation('setTimeout', handler);
@@ -323,13 +323,13 @@ export class DOMSinkProtector {
         }
 
         const safeHandler = this.getSafeValue(handler, 'Script') as string;
-        return originalSetTimeout.call(window, safeHandler, timeout, ...args);
+        return (originalSetTimeout as any).call(window, safeHandler, timeout, ...args);
       }
 
-      return originalSetTimeout.call(window, handler, timeout, ...args);
+      return (originalSetTimeout as any).call(window, handler, timeout, ...args);
     };
 
-    window.setInterval = (handler: any, timeout?: number, ...args: any[]) => {
+    (window as any).setInterval = (handler: any, timeout?: number, ...args: any[]): number => {
       if (typeof handler === 'string') {
         if (this.shouldBlock('setInterval', handler)) {
           this.reportViolation('setInterval', handler);
@@ -337,10 +337,10 @@ export class DOMSinkProtector {
         }
 
         const safeHandler = this.getSafeValue(handler, 'Script') as string;
-        return originalSetInterval.call(window, safeHandler, timeout, ...args);
+        return (originalSetInterval as any).call(window, safeHandler, timeout, ...args);
       }
 
-      return originalSetInterval.call(window, handler, timeout, ...args);
+      return (originalSetInterval as any).call(window, handler, timeout, ...args);
     };
   }
 

@@ -36,7 +36,7 @@ export class CertificatePinner {
     }
 
     // Skip validation in development unless explicitly enabled
-    if (process.env.NODE_ENV === 'development' && !this.policy.enforceInDevelopment) {
+    if (process.env['NODE_ENV'] === 'development' && !this.policy.enforceInDevelopment) {
       return true;
     }
 
@@ -52,7 +52,7 @@ export class CertificatePinner {
       this.handlePinningViolation(hostname, config.pins);
       return false;
     } catch (error) {
-      console.error('Certificate pinning validation error:', error);
+      console.error('Certificate pinning validation error:', error as Error);
       return true; // Fail open on validation errors
     }
   }
@@ -82,7 +82,7 @@ export class CertificatePinner {
     const hashArray = new Uint8Array(hashBuffer);
 
     // Convert to base64
-    const hashBase64 = btoa(String.fromCharCode(...hashArray));
+    const hashBase64 = btoa(String.fromCharCode.apply(null, Array.from(hashArray)));
 
     return `${algorithm}/${hashBase64}`;
   }
@@ -129,7 +129,7 @@ export class CertificatePinner {
       return response;
     } catch (error) {
       // Handle pinning failures
-      if (error.message.includes('pinning failed')) {
+      if ((error as Error).message.includes('pinning failed')) {
         await this.handlePinningViolation(
           urlObj.hostname,
           this.getDomainConfig(urlObj.hostname)?.pins || []
