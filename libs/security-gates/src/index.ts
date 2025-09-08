@@ -29,5 +29,12 @@ export * from './pii/debug-filter';
 export * from './pii/memory-analyzer';
 export * from './pii/pii-gate';
 
+// RLS and access control testing
+export * from './rls/rls-tester';
+export * from './rls/access-control-tester';
+export * from './rls/privilege-tester';
+export * from './rls/session-tester';
+export * from './rls/rls-gate';
+
 // CI/CD integration
 export * from './ci/github-actions';
