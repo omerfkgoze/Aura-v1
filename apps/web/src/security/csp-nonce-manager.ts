@@ -6,8 +6,13 @@ export interface NonceManager {
   cleanup(): void;
 }
 
+interface NonceEntry {
+  nonce: string;
+  expiresAt: number;
+}
+
 class ServerSideNonceManager implements NonceManager {
-  private validNonces = new Set<string>();
+  private validNonces = new Map<string, number>(); // nonce -> expiresAt timestamp
   private readonly maxAge = 5 * 60 * 1000; // 5 minutes
   private readonly cleanupInterval = 60 * 1000; // 1 minute
   private cleanupTimer?: NodeJS.Timer;
@@ -18,18 +23,22 @@ class ServerSideNonceManager implements NonceManager {
 
   generate(): string {
     const nonce = randomBytes(16).toString('base64');
-    this.validNonces.add(nonce);
-
-    // Auto-remove after maxAge
-    setTimeout(() => {
-      this.validNonces.delete(nonce);
-    }, this.maxAge);
-
+    const expiresAt = Date.now() + this.maxAge;
+    this.validNonces.set(nonce, expiresAt);
     return nonce;
   }
 
   validate(nonce: string): boolean {
-    return this.validNonces.has(nonce);
+    const expiresAt = this.validNonces.get(nonce);
+    if (!expiresAt) return false;
+
+    // Check if expired
+    if (Date.now() > expiresAt) {
+      this.validNonces.delete(nonce);
+      return false;
+    }
+
+    return true;
   }
 
   cleanup(): void {
@@ -41,8 +50,22 @@ class ServerSideNonceManager implements NonceManager {
 
   private startCleanup(): void {
     this.cleanupTimer = setInterval(() => {
-      // Cleanup happens automatically via setTimeout in generate()
-      // This is just a safety net
+      const now = Date.now();
+      const expiredNonces: string[] = [];
+
+      // Collect expired nonces for deletion
+      this.validNonces.forEach((expiresAt, nonce) => {
+        if (now > expiresAt) {
+          expiredNonces.push(nonce);
+        }
+      });
+
+      // Remove expired nonces
+      expiredNonces.forEach(nonce => {
+        this.validNonces.delete(nonce);
+      });
+
+      // Safety net: clear all if too many accumulate
       if (this.validNonces.size > 1000) {
         this.validNonces.clear();
       }

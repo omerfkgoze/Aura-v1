@@ -19,6 +19,7 @@ export interface SRIManifest {
 export class SRIHashGenerator {
   private readonly manifestPath: string;
   private manifest: SRIManifest | null = null;
+  private manifestCache: { manifest: SRIManifest; lastModified: number } | null = null;
 
   constructor(buildOutputDir: string) {
     this.manifestPath = join(buildOutputDir, 'sri-manifest.json');
@@ -91,8 +92,32 @@ export class SRIHashGenerator {
 
   async loadManifest(): Promise<SRIManifest | null> {
     try {
+      // Check cache first in production
+      if (process.env.NODE_ENV === 'production' && this.manifestCache) {
+        const { stat } = await import('fs/promises');
+        const stats = await stat(this.manifestPath);
+        const lastModified = stats.mtime.getTime();
+
+        // Return cached version if file hasn't changed
+        if (lastModified <= this.manifestCache.lastModified) {
+          this.manifest = this.manifestCache.manifest;
+          return this.manifest;
+        }
+      }
+
       const content = await readFile(this.manifestPath, 'utf8');
       this.manifest = JSON.parse(content);
+
+      // Cache in production
+      if (process.env.NODE_ENV === 'production' && this.manifest) {
+        const { stat } = await import('fs/promises');
+        const stats = await stat(this.manifestPath);
+        this.manifestCache = {
+          manifest: this.manifest,
+          lastModified: stats.mtime.getTime(),
+        };
+      }
+
       return this.manifest;
     } catch (error) {
       return null;
@@ -172,14 +197,33 @@ export class SRIHashGenerator {
 // Runtime SRI verification for client-side
 export class ClientSRIVerifier {
   private manifest: SRIManifest | null = null;
+  private manifestCache: Map<string, { manifest: SRIManifest; expiresAt: number }> = new Map();
+  private readonly cacheMaxAge = 5 * 60 * 1000; // 5 minutes
 
   async loadManifest(manifestUrl: string = '/sri-manifest.json'): Promise<void> {
+    // Check cache first in production
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+      const cached = this.manifestCache.get(manifestUrl);
+      if (cached && Date.now() < cached.expiresAt) {
+        this.manifest = cached.manifest;
+        return;
+      }
+    }
+
     try {
       const response = await fetch(manifestUrl);
       if (!response.ok) {
         throw new Error(`Failed to load SRI manifest: ${response.statusText}`);
       }
       this.manifest = await response.json();
+
+      // Cache in production
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && this.manifest) {
+        this.manifestCache.set(manifestUrl, {
+          manifest: this.manifest,
+          expiresAt: Date.now() + this.cacheMaxAge,
+        });
+      }
     } catch (error) {
       console.warn('Failed to load SRI manifest:', error);
       this.manifest = null;
