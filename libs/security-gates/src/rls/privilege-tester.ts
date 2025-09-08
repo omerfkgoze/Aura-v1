@@ -45,28 +45,36 @@ const ServiceAccountSchema = z.object({
   name: z.string(),
   description: z.string(),
   expectedPrivileges: z.array(z.string()),
-  prohibitedOperations: z.array(z.string())
+  prohibitedOperations: z.array(z.string()),
 });
 
 const PrivilegeTestConfigSchema = z.object({
   serviceAccounts: z.array(ServiceAccountSchema),
-  escalationTests: z.array(z.object({
-    testName: z.string(),
-    serviceAccount: z.string(),
-    escalationAttempts: z.array(z.object({
-      description: z.string(),
-      query: z.string(),
-      expectedBlocked: z.boolean()
-    }))
-  })),
-  adminTests: z.array(z.object({
-    adminAccount: z.string(),
-    testScenarios: z.array(z.object({
-      description: z.string(),
-      operation: z.string(),
-      shouldSucceed: z.boolean()
-    }))
-  }))
+  escalationTests: z.array(
+    z.object({
+      testName: z.string(),
+      serviceAccount: z.string(),
+      escalationAttempts: z.array(
+        z.object({
+          description: z.string(),
+          query: z.string(),
+          expectedBlocked: z.boolean(),
+        })
+      ),
+    })
+  ),
+  adminTests: z.array(
+    z.object({
+      adminAccount: z.string(),
+      testScenarios: z.array(
+        z.object({
+          description: z.string(),
+          operation: z.string(),
+          shouldSucceed: z.boolean(),
+        })
+      ),
+    })
+  ),
 });
 
 export type PrivilegeTestConfig = z.infer<typeof PrivilegeTestConfigSchema>;
@@ -97,7 +105,7 @@ export class PrivilegeTester {
       testName: test.testName,
       passed: true,
       escalationAttempts: [],
-      summary: ''
+      summary: '',
     };
 
     for (const attempt of test.escalationAttempts) {
@@ -125,7 +133,7 @@ export class PrivilegeTester {
         query: attempt.query,
         expectedBlocked: attempt.expectedBlocked,
         actuallyBlocked,
-        error
+        error,
       });
     }
 
@@ -133,13 +141,20 @@ export class PrivilegeTester {
     return result;
   }
 
-  async testServiceAccountIsolation(): Promise<{
-    account: string;
-    isolated: boolean;
-    violations: string[];
-  }[]> {
+  async testServiceAccountIsolation(): Promise<
+    {
+      account: string;
+      isolated: boolean;
+      violations: string[];
+    }[]
+  > {
     const results = [];
-    const criticalUserTables = ['encrypted_cycle_data', 'encrypted_user_prefs', 'healthcare_share', 'device_key'];
+    const criticalUserTables = [
+      'encrypted_cycle_data',
+      'encrypted_user_prefs',
+      'healthcare_share',
+      'device_key',
+    ];
 
     for (const serviceAccount of this.config.serviceAccounts) {
       const violations: string[] = [];
@@ -148,8 +163,11 @@ export class PrivilegeTester {
       // Test access to user data tables
       for (const table of criticalUserTables) {
         try {
-          const result = await this.db.queryAsUser(`SELECT COUNT(*) as count FROM ${table}`, serviceAccount.name);
-          
+          const result = await this.db.queryAsUser(
+            `SELECT COUNT(*) as count FROM ${table}`,
+            serviceAccount.name
+          );
+
           // Service accounts should not have access to user data
           if (result.length > 0 && result[0].count !== undefined) {
             violations.push(`Unauthorized access to ${table}`);
@@ -171,7 +189,7 @@ export class PrivilegeTester {
         'CREATE USER malicious_user WITH SUPERUSER',
         'DROP POLICY IF EXISTS cycle_data_rls_policy ON encrypted_cycle_data',
         'ALTER TABLE encrypted_cycle_data DISABLE ROW LEVEL SECURITY',
-        'SET ROLE postgres'
+        'SET ROLE postgres',
       ];
 
       for (const query of escalationQueries) {
@@ -191,42 +209,47 @@ export class PrivilegeTester {
       results.push({
         account: serviceAccount.name,
         isolated,
-        violations
+        violations,
       });
     }
 
     return results;
   }
 
-  async testRolePermissionBoundaries(): Promise<{
-    role: string;
-    boundariesRespected: boolean;
-    permissionTests: {
-      permission: string;
-      granted: boolean;
-      shouldBeGranted: boolean;
-    }[];
-  }[]> {
+  async testRolePermissionBoundaries(): Promise<
+    {
+      role: string;
+      boundariesRespected: boolean;
+      permissionTests: {
+        permission: string;
+        granted: boolean;
+        shouldBeGranted: boolean;
+      }[];
+    }[]
+  > {
     const results = [];
     const rolePermissionTests = [
       {
         role: 'authenticated',
         permissions: [
-          { permission: 'SELECT on encrypted_cycle_data WHERE user_id = auth.uid()', shouldHave: true },
+          {
+            permission: 'SELECT on encrypted_cycle_data WHERE user_id = auth.uid()',
+            shouldHave: true,
+          },
           { permission: 'SELECT on encrypted_cycle_data (all rows)', shouldHave: false },
           { permission: 'CREATE TABLE', shouldHave: false },
           { permission: 'DROP TABLE', shouldHave: false },
-          { permission: 'ALTER USER', shouldHave: false }
-        ]
+          { permission: 'ALTER USER', shouldHave: false },
+        ],
       },
       {
         role: 'anon',
         permissions: [
           { permission: 'SELECT on encrypted_cycle_data', shouldHave: false },
           { permission: 'INSERT into encrypted_cycle_data', shouldHave: false },
-          { permission: 'SELECT on public tables (non-sensitive)', shouldHave: true }
-        ]
-      }
+          { permission: 'SELECT on public tables (non-sensitive)', shouldHave: true },
+        ],
+      },
     ];
 
     for (const roleTest of rolePermissionTests) {
@@ -239,7 +262,7 @@ export class PrivilegeTester {
         try {
           // Test permission by attempting operation
           let testQuery = '';
-          
+
           if (permTest.permission.includes('SELECT on encrypted_cycle_data WHERE')) {
             testQuery = 'SELECT COUNT(*) FROM encrypted_cycle_data WHERE user_id = auth.uid()';
           } else if (permTest.permission.includes('SELECT on encrypted_cycle_data (all')) {
@@ -251,7 +274,8 @@ export class PrivilegeTester {
           } else if (permTest.permission.includes('ALTER USER')) {
             testQuery = 'ALTER USER current_user SUPERUSER';
           } else if (permTest.permission.includes('INSERT into encrypted_cycle_data')) {
-            testQuery = "INSERT INTO encrypted_cycle_data (user_id, encrypted_data) VALUES ('test', 'test')";
+            testQuery =
+              "INSERT INTO encrypted_cycle_data (user_id, encrypted_data) VALUES ('test', 'test')";
           } else {
             continue; // Skip unknown permission tests
           }
@@ -271,29 +295,31 @@ export class PrivilegeTester {
         permissionTests.push({
           permission: permTest.permission,
           granted,
-          shouldBeGranted: permTest.shouldHave
+          shouldBeGranted: permTest.shouldHave,
         });
       }
 
       results.push({
         role: roleTest.role,
         boundariesRespected,
-        permissionTests
+        permissionTests,
       });
     }
 
     return results;
   }
 
-  async testAdminAccountSecurity(): Promise<{
-    adminAccount: string;
-    securityScore: number;
-    findings: {
-      category: string;
-      issue: string;
-      severity: 'low' | 'medium' | high' | 'critical';
-    }[];
-  }[]> {
+  async testAdminAccountSecurity(): Promise<
+    {
+      adminAccount: string;
+      securityScore: number;
+      findings: {
+        category: string;
+        issue: string;
+        severity: 'low' | 'medium' | 'high' | 'critical';
+      }[];
+    }[]
+  > {
     const results = [];
 
     for (const adminTest of this.config.adminTests) {
@@ -309,26 +335,26 @@ export class PrivilegeTester {
           description: 'Can create/drop tables',
           query: 'CREATE TABLE admin_test_table (id integer); DROP TABLE admin_test_table;',
           category: 'DDL Operations',
-          expectedSuccess: true
+          expectedSuccess: true,
         },
         {
           description: 'Can modify RLS policies',
           query: 'SELECT COUNT(*) FROM pg_policy',
           category: 'Security Controls',
-          expectedSuccess: true
+          expectedSuccess: true,
         },
         {
           description: 'Can access user data (should be restricted)',
           query: 'SELECT COUNT(*) FROM encrypted_cycle_data',
           category: 'Data Access',
-          expectedSuccess: false // Even admins should not have direct user data access
+          expectedSuccess: false, // Even admins should not have direct user data access
         },
         {
           description: 'Can create users',
           query: 'CREATE USER test_admin_created_user',
           category: 'User Management',
-          expectedSuccess: true
-        }
+          expectedSuccess: true,
+        },
       ];
 
       let securityScore = 100;
@@ -336,12 +362,12 @@ export class PrivilegeTester {
       for (const test of adminPrivilegeTests) {
         try {
           await this.db.queryAsUser(test.query, adminTest.adminAccount);
-          
+
           if (!test.expectedSuccess) {
             findings.push({
               category: test.category,
               issue: `Admin has excessive privilege: ${test.description}`,
-              severity: 'high'
+              severity: 'high',
             });
             securityScore -= 20;
           }
@@ -352,7 +378,7 @@ export class PrivilegeTester {
               findings.push({
                 category: test.category,
                 issue: `Admin lacks expected privilege: ${test.description}`,
-                severity: 'medium'
+                severity: 'medium',
               });
               securityScore -= 10;
             }
@@ -366,16 +392,18 @@ export class PrivilegeTester {
       const vulnerabilityTests = [
         {
           description: 'Check for default admin credentials',
-          test: () => adminTest.adminAccount === 'admin' || adminTest.adminAccount === 'administrator',
+          test: () =>
+            adminTest.adminAccount === 'admin' || adminTest.adminAccount === 'administrator',
           severity: 'critical' as const,
-          category: 'Authentication'
+          category: 'Authentication',
         },
         {
           description: 'Check for shared admin accounts',
-          test: () => adminTest.adminAccount.includes('shared') || adminTest.adminAccount.includes('generic'),
+          test: () =>
+            adminTest.adminAccount.includes('shared') || adminTest.adminAccount.includes('generic'),
           severity: 'high' as const,
-          category: 'Authentication'
-        }
+          category: 'Authentication',
+        },
       ];
 
       for (const vulnTest of vulnerabilityTests) {
@@ -383,9 +411,9 @@ export class PrivilegeTester {
           findings.push({
             category: vulnTest.category,
             issue: vulnTest.description,
-            severity: vulnTest.severity
+            severity: vulnTest.severity,
           });
-          
+
           if (vulnTest.severity === 'critical') {
             securityScore -= 40;
           } else if (vulnTest.severity === 'high') {
@@ -397,7 +425,7 @@ export class PrivilegeTester {
       results.push({
         adminAccount: adminTest.adminAccount,
         securityScore: Math.max(0, securityScore),
-        findings
+        findings,
       });
     }
 
@@ -414,7 +442,7 @@ export class PrivilegeTester {
       'not authorized',
       'cannot execute',
       'role does not exist',
-      'authentication failed'
+      'authentication failed',
     ];
 
     const lowerError = errorMessage.toLowerCase();
@@ -429,8 +457,8 @@ export class PrivilegeTester {
     if (result.passed) {
       return `✅ All ${total} escalation attempts properly handled (${blocked} blocked, ${successful} allowed as expected)`;
     } else {
-      const failures = result.escalationAttempts.filter(attempt => 
-        attempt.actuallyBlocked !== attempt.expectedBlocked
+      const failures = result.escalationAttempts.filter(
+        attempt => attempt.actuallyBlocked !== attempt.expectedBlocked
       );
       return `❌ ${failures.length}/${total} escalation tests failed: ${failures
         .map(f => f.description)
@@ -441,7 +469,7 @@ export class PrivilegeTester {
   generateReport(results: PrivilegeTestResult[]): string {
     const passedCount = results.filter(r => r.passed).length;
     const totalCount = results.length;
-    
+
     let report = `\n⚔️ Privilege Escalation Test Report\n`;
     report += `====================================\n`;
     report += `Total Service Accounts Tested: ${totalCount}\n`;
@@ -453,25 +481,25 @@ export class PrivilegeTester {
       const status = result.passed ? '✅ SECURE' : '🚨 VULNERABLE';
       report += `${status} ${result.serviceAccount} - ${result.testName}\n`;
       report += `  ${result.summary}\n`;
-      
+
       if (!result.passed) {
-        const violations = result.escalationAttempts.filter(attempt => 
-          attempt.actuallyBlocked !== attempt.expectedBlocked
+        const violations = result.escalationAttempts.filter(
+          attempt => attempt.actuallyBlocked !== attempt.expectedBlocked
         );
-        
+
         for (const violation of violations) {
           if (violation.expectedBlocked && !violation.actuallyBlocked) {
             report += `    🚨 CRITICAL: ${violation.description} - Escalation succeeded when it should have been blocked\n`;
           } else if (!violation.expectedBlocked && violation.actuallyBlocked) {
             report += `    ⚠️  WARNING: ${violation.description} - Expected operation was blocked\n`;
           }
-          
+
           if (violation.error) {
             report += `       Error: ${violation.error}\n`;
           }
         }
       }
-      
+
       report += '\n';
     }
 
@@ -486,20 +514,24 @@ export const DEFAULT_PRIVILEGE_CONFIG: PrivilegeTestConfig = {
       name: 'service_backup',
       description: 'Backup service account for data archival',
       expectedPrivileges: ['SELECT on backup tables', 'INSERT into backup_log'],
-      prohibitedOperations: ['SELECT on encrypted_cycle_data', 'ALTER USER', 'CREATE TABLE']
+      prohibitedOperations: ['SELECT on encrypted_cycle_data', 'ALTER USER', 'CREATE TABLE'],
     },
     {
       name: 'service_analytics',
       description: 'Analytics service account for aggregated reporting',
       expectedPrivileges: ['SELECT on analytics_views', 'INSERT into analytics_log'],
-      prohibitedOperations: ['SELECT on encrypted_cycle_data', 'UPDATE user data', 'DROP TABLE']
+      prohibitedOperations: ['SELECT on encrypted_cycle_data', 'UPDATE user data', 'DROP TABLE'],
     },
     {
       name: 'service_migration',
       description: 'Migration service account for database schema updates',
       expectedPrivileges: ['ALTER TABLE', 'CREATE INDEX', 'UPDATE schema_version'],
-      prohibitedOperations: ['SELECT on encrypted_cycle_data', 'ALTER USER', 'GRANT privileges to other users']
-    }
+      prohibitedOperations: [
+        'SELECT on encrypted_cycle_data',
+        'ALTER USER',
+        'GRANT privileges to other users',
+      ],
+    },
   ],
   escalationTests: [
     {
@@ -509,29 +541,29 @@ export const DEFAULT_PRIVILEGE_CONFIG: PrivilegeTestConfig = {
         {
           description: 'Attempt to access encrypted user data',
           query: 'SELECT * FROM encrypted_cycle_data LIMIT 1',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to create admin user',
           query: 'CREATE USER backup_admin WITH SUPERUSER',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to disable RLS',
           query: 'ALTER TABLE encrypted_cycle_data DISABLE ROW LEVEL SECURITY',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to elevate own privileges',
           query: 'ALTER USER service_backup SUPERUSER',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to access backup tables (should succeed)',
           query: 'SELECT COUNT(*) FROM backup_metadata',
-          expectedBlocked: false
-        }
-      ]
+          expectedBlocked: false,
+        },
+      ],
     },
     {
       testName: 'Analytics Service Privilege Escalation',
@@ -540,24 +572,24 @@ export const DEFAULT_PRIVILEGE_CONFIG: PrivilegeTestConfig = {
         {
           description: 'Attempt to access raw encrypted data',
           query: 'SELECT encrypted_data FROM encrypted_cycle_data LIMIT 1',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to modify user data',
           query: "UPDATE encrypted_cycle_data SET encrypted_data = 'modified' WHERE id = 1",
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to create new tables',
           query: 'CREATE TABLE analytics_backdoor (data text)',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to grant privileges to others',
           query: 'GRANT SELECT ON encrypted_cycle_data TO public',
-          expectedBlocked: true
-        }
-      ]
+          expectedBlocked: true,
+        },
+      ],
     },
     {
       testName: 'Migration Service Privilege Escalation',
@@ -566,25 +598,26 @@ export const DEFAULT_PRIVILEGE_CONFIG: PrivilegeTestConfig = {
         {
           description: 'Attempt to access user data during migration',
           query: 'SELECT user_id, encrypted_data FROM encrypted_cycle_data',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to create superuser account',
-          query: 'CREATE USER migration_admin WITH SUPERUSER PASSWORD \'password\'',
-          expectedBlocked: true
+          query: "CREATE USER migration_admin WITH SUPERUSER PASSWORD 'password'",
+          expectedBlocked: true,
         },
         {
           description: 'Attempt to modify RLS policies',
           query: 'DROP POLICY cycle_data_rls_policy ON encrypted_cycle_data',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           description: 'Schema modification (should succeed for migration)',
-          query: 'CREATE INDEX CONCURRENTLY IF NOT EXISTS test_migration_index ON schema_version (version)',
-          expectedBlocked: false
-        }
-      ]
-    }
+          query:
+            'CREATE INDEX CONCURRENTLY IF NOT EXISTS test_migration_index ON schema_version (version)',
+          expectedBlocked: false,
+        },
+      ],
+    },
   ],
   adminTests: [
     {
@@ -593,14 +626,14 @@ export const DEFAULT_PRIVILEGE_CONFIG: PrivilegeTestConfig = {
         {
           description: 'Admin can manage database schema',
           operation: 'CREATE TABLE test_admin_table (id integer)',
-          shouldSucceed: true
+          shouldSucceed: true,
         },
         {
           description: 'Admin should not have direct user data access',
           operation: 'SELECT * FROM encrypted_cycle_data',
-          shouldSucceed: false
-        }
-      ]
-    }
-  ]
+          shouldSucceed: false,
+        },
+      ],
+    },
+  ],
 };
