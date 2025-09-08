@@ -30,8 +30,8 @@ const RLSPolicySchema = z.object({
   expectedCondition: z.string().min(1),
   testQueries: z.object({
     authorized: z.array(z.string()),
-    unauthorized: z.array(z.string())
-  })
+    unauthorized: z.array(z.string()),
+  }),
 });
 
 const RLSTestConfigSchema = z.object({
@@ -39,8 +39,8 @@ const RLSTestConfigSchema = z.object({
   testUsers: z.object({
     validUser: z.string(),
     otherUser: z.string(),
-    adminUser: z.string().optional()
-  })
+    adminUser: z.string().optional(),
+  }),
 });
 
 export type RLSTestConfig = z.infer<typeof RLSTestConfigSchema>;
@@ -68,7 +68,9 @@ export class RLSTester {
           passed: false,
           authorizedTests: [],
           unauthorizedTests: [],
-          errors: [`Critical testing error: ${error instanceof Error ? error.message : 'Unknown error'}`]
+          errors: [
+            `Critical testing error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ],
         });
       }
     }
@@ -83,7 +85,7 @@ export class RLSTester {
       passed: true,
       authorizedTests: [],
       unauthorizedTests: [],
-      errors: []
+      errors: [],
     };
 
     // Verify RLS is enabled on the table
@@ -95,10 +97,16 @@ export class RLSTester {
     }
 
     // Verify policy exists and matches expected condition
-    const policyExists = await this.verifyPolicyExists(policy.tableName, policy.policyName, policy.expectedCondition);
+    const policyExists = await this.verifyPolicyExists(
+      policy.tableName,
+      policy.policyName,
+      policy.expectedCondition
+    );
     if (!policyExists) {
       result.passed = false;
-      result.errors.push(`Policy ${policy.policyName} does not exist or condition mismatch on table ${policy.tableName}`);
+      result.errors.push(
+        `Policy ${policy.policyName} does not exist or condition mismatch on table ${policy.tableName}`
+      );
       return result;
     }
 
@@ -112,7 +120,7 @@ export class RLSTester {
         result.authorizedTests.push({
           query,
           passed: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -126,15 +134,16 @@ export class RLSTester {
         result.unauthorizedTests.push({
           query,
           blocked: false,
-          error: 'Query should have been blocked by RLS but succeeded'
+          error: 'Query should have been blocked by RLS but succeeded',
         });
       } catch (error) {
         // Query failed as expected (blocked by RLS)
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        const isRLSBlock = errorMessage.includes('permission denied') || 
-                          errorMessage.includes('access denied') ||
-                          errorMessage.includes('insufficient privilege');
-        
+        const isRLSBlock =
+          errorMessage.includes('permission denied') ||
+          errorMessage.includes('access denied') ||
+          errorMessage.includes('insufficient privilege');
+
         if (isRLSBlock) {
           result.unauthorizedTests.push({ query, blocked: true });
         } else {
@@ -143,7 +152,7 @@ export class RLSTester {
           result.unauthorizedTests.push({
             query,
             blocked: false,
-            error: `Unexpected error: ${errorMessage}`
+            error: `Unexpected error: ${errorMessage}`,
           });
         }
       }
@@ -157,14 +166,13 @@ export class RLSTester {
       // Try to access user B's data as user A
       const query = `SELECT * FROM ${tableName} WHERE user_id = $1`;
       const result = await this.db.queryAsUser(query, userAId, [userBId]);
-      
+
       // If we get results, RLS is not working properly
       return result.length === 0;
     } catch (error) {
       // Access denied is the expected behavior
       const errorMessage = error instanceof Error ? error.message : '';
-      return errorMessage.includes('permission denied') || 
-             errorMessage.includes('access denied');
+      return errorMessage.includes('permission denied') || errorMessage.includes('access denied');
     }
   }
 
@@ -177,7 +185,7 @@ export class RLSTester {
         // Service accounts should not have access to user data
         const userDataQuery = 'SELECT * FROM encrypted_cycle_data LIMIT 1';
         await this.db.queryAsUser(userDataQuery, account);
-        
+
         // If query succeeds, service account has too much access
         results.push({ account, hasMinimalAccess: false });
       } catch (error) {
@@ -203,7 +211,11 @@ export class RLSTester {
     }
   }
 
-  private async verifyPolicyExists(tableName: string, policyName: string, expectedCondition: string): Promise<boolean> {
+  private async verifyPolicyExists(
+    tableName: string,
+    policyName: string,
+    expectedCondition: string
+  ): Promise<boolean> {
     try {
       const query = `
         SELECT pol.polname, pol.polcmd, pol.polqual::text as condition
@@ -212,13 +224,13 @@ export class RLSTester {
         WHERE cls.relname = $1 AND pol.polname = $2
       `;
       const result = await this.db.query(query, [tableName, policyName]);
-      
+
       if (result.length === 0) return false;
-      
+
       // Normalize whitespace for comparison
       const actualCondition = result[0].condition?.replace(/\s+/g, ' ').trim();
       const normalizedExpected = expectedCondition.replace(/\s+/g, ' ').trim();
-      
+
       return actualCondition === normalizedExpected;
     } catch (error) {
       return false;
@@ -228,7 +240,7 @@ export class RLSTester {
   generateReport(results: RLSTestResult[]): string {
     const passedCount = results.filter(r => r.passed).length;
     const totalCount = results.length;
-    
+
     let report = `\n🔒 RLS Policy Test Report\n`;
     report += `=====================================\n`;
     report += `Total Policies Tested: ${totalCount}\n`;
@@ -239,21 +251,21 @@ export class RLSTester {
     for (const result of results) {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
       report += `${status} ${result.tableName}.${result.policyName}\n`;
-      
+
       if (result.errors.length > 0) {
         report += `  Errors: ${result.errors.join(', ')}\n`;
       }
-      
+
       if (result.authorizedTests.length > 0) {
         const authPassed = result.authorizedTests.filter(t => t.passed).length;
         report += `  Authorized Tests: ${authPassed}/${result.authorizedTests.length} passed\n`;
       }
-      
+
       if (result.unauthorizedTests.length > 0) {
         const blockedCount = result.unauthorizedTests.filter(t => t.blocked).length;
         report += `  Unauthorized Tests: ${blockedCount}/${result.unauthorizedTests.length} properly blocked\n`;
       }
-      
+
       report += '\n';
     }
 
@@ -271,15 +283,15 @@ export const DEFAULT_RLS_CONFIG: RLSTestConfig = {
       testQueries: {
         authorized: [
           'SELECT * FROM encrypted_user_prefs WHERE user_id = auth.uid()::text',
-          'INSERT INTO encrypted_user_prefs (user_id, encrypted_data) VALUES (auth.uid()::text, \'test\')',
-          'UPDATE encrypted_user_prefs SET encrypted_data = \'updated\' WHERE user_id = auth.uid()::text'
+          "INSERT INTO encrypted_user_prefs (user_id, encrypted_data) VALUES (auth.uid()::text, 'test')",
+          "UPDATE encrypted_user_prefs SET encrypted_data = 'updated' WHERE user_id = auth.uid()::text",
         ],
         unauthorized: [
           'SELECT * FROM encrypted_user_prefs WHERE user_id != auth.uid()::text',
           'SELECT * FROM encrypted_user_prefs',
-          'UPDATE encrypted_user_prefs SET encrypted_data = \'hacked\' WHERE user_id != auth.uid()::text'
-        ]
-      }
+          "UPDATE encrypted_user_prefs SET encrypted_data = 'hacked' WHERE user_id != auth.uid()::text",
+        ],
+      },
     },
     {
       tableName: 'encrypted_cycle_data',
@@ -288,15 +300,15 @@ export const DEFAULT_RLS_CONFIG: RLSTestConfig = {
       testQueries: {
         authorized: [
           'SELECT * FROM encrypted_cycle_data WHERE user_id = auth.uid()::text',
-          'INSERT INTO encrypted_cycle_data (user_id, encrypted_data, created_at) VALUES (auth.uid()::text, \'test\', NOW())',
-          'DELETE FROM encrypted_cycle_data WHERE user_id = auth.uid()::text AND id = 1'
+          "INSERT INTO encrypted_cycle_data (user_id, encrypted_data, created_at) VALUES (auth.uid()::text, 'test', NOW())",
+          'DELETE FROM encrypted_cycle_data WHERE user_id = auth.uid()::text AND id = 1',
         ],
         unauthorized: [
           'SELECT * FROM encrypted_cycle_data WHERE user_id != auth.uid()::text',
           'SELECT * FROM encrypted_cycle_data',
-          'DELETE FROM encrypted_cycle_data WHERE user_id != auth.uid()::text'
-        ]
-      }
+          'DELETE FROM encrypted_cycle_data WHERE user_id != auth.uid()::text',
+        ],
+      },
     },
     {
       tableName: 'healthcare_share',
@@ -305,15 +317,15 @@ export const DEFAULT_RLS_CONFIG: RLSTestConfig = {
       testQueries: {
         authorized: [
           'SELECT * FROM healthcare_share WHERE user_id = auth.uid()::text',
-          'INSERT INTO healthcare_share (user_id, share_token, expires_at) VALUES (auth.uid()::text, \'token\', NOW() + INTERVAL \'1 day\')',
-          'UPDATE healthcare_share SET expires_at = NOW() + INTERVAL \'2 days\' WHERE user_id = auth.uid()::text'
+          "INSERT INTO healthcare_share (user_id, share_token, expires_at) VALUES (auth.uid()::text, 'token', NOW() + INTERVAL '1 day')",
+          "UPDATE healthcare_share SET expires_at = NOW() + INTERVAL '2 days' WHERE user_id = auth.uid()::text",
         ],
         unauthorized: [
           'SELECT * FROM healthcare_share WHERE user_id != auth.uid()::text',
           'SELECT * FROM healthcare_share',
-          'UPDATE healthcare_share SET share_token = \'hacked\' WHERE user_id != auth.uid()::text'
-        ]
-      }
+          "UPDATE healthcare_share SET share_token = 'hacked' WHERE user_id != auth.uid()::text",
+        ],
+      },
     },
     {
       tableName: 'device_key',
@@ -322,20 +334,20 @@ export const DEFAULT_RLS_CONFIG: RLSTestConfig = {
       testQueries: {
         authorized: [
           'SELECT * FROM device_key WHERE user_id = auth.uid()::text',
-          'INSERT INTO device_key (user_id, device_hash, public_key) VALUES (auth.uid()::text, \'hash\', \'key\')',
-          'DELETE FROM device_key WHERE user_id = auth.uid()::text AND device_hash = \'old_hash\''
+          "INSERT INTO device_key (user_id, device_hash, public_key) VALUES (auth.uid()::text, 'hash', 'key')",
+          "DELETE FROM device_key WHERE user_id = auth.uid()::text AND device_hash = 'old_hash'",
         ],
         unauthorized: [
           'SELECT * FROM device_key WHERE user_id != auth.uid()::text',
           'SELECT * FROM device_key',
-          'UPDATE device_key SET public_key = \'compromised\' WHERE user_id != auth.uid()::text'
-        ]
-      }
-    }
+          "UPDATE device_key SET public_key = 'compromised' WHERE user_id != auth.uid()::text",
+        ],
+      },
+    },
   ],
   testUsers: {
     validUser: 'test-user-a-uuid',
     otherUser: 'test-user-b-uuid',
-    adminUser: 'admin-user-uuid'
-  }
+    adminUser: 'admin-user-uuid',
+  },
 };

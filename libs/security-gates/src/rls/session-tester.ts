@@ -51,19 +51,19 @@ const SessionTestConfigSchema = z.object({
     validUser: z.string(),
     expiredUser: z.string(),
     revokedUser: z.string(),
-    maliciousUser: z.string()
+    maliciousUser: z.string(),
   }),
   tokenTests: z.object({
     validToken: z.string(),
     expiredToken: z.string(),
     invalidSignature: z.string(),
-    tamperedPayload: z.string()
+    tamperedPayload: z.string(),
   }),
   sessionTimeouts: z.object({
     shortSession: z.number().positive(),
     longSession: z.number().positive(),
-    maxSession: z.number().positive()
-  })
+    maxSession: z.number().positive(),
+  }),
 });
 
 export class SessionTester {
@@ -79,19 +79,19 @@ export class SessionTester {
     const results: SessionTestResult[] = [];
 
     // Authentication tests
-    results.push(...await this.testAuthentication());
-    
+    results.push(...(await this.testAuthentication()));
+
     // Token validation tests
-    results.push(...await this.testTokenValidation());
-    
+    results.push(...(await this.testTokenValidation()));
+
     // Session management tests
-    results.push(...await this.testSessionManagement());
-    
+    results.push(...(await this.testSessionManagement()));
+
     // Authorization tests
-    results.push(...await this.testAuthorization());
-    
+    results.push(...(await this.testAuthorization()));
+
     // Session hijacking tests
-    results.push(...await this.testSessionSecurity());
+    results.push(...(await this.testSessionSecurity()));
 
     return this.generateAuditReport(results);
   }
@@ -101,12 +101,17 @@ export class SessionTester {
 
     // Test valid authentication
     try {
-      const authResult = await this.authenticateUser(this.config.testUsers.validUser, 'valid_password');
+      const authResult = await this.authenticateUser(
+        this.config.testUsers.validUser,
+        'valid_password'
+      );
       results.push({
         testName: 'Valid User Authentication',
         category: 'authentication',
         passed: authResult.success,
-        details: authResult.success ? 'Valid user authenticated successfully' : 'Valid user authentication failed'
+        details: authResult.success
+          ? 'Valid user authenticated successfully'
+          : 'Valid user authentication failed',
       });
     } catch (error) {
       results.push({
@@ -114,7 +119,7 @@ export class SessionTester {
         category: 'authentication',
         passed: false,
         details: 'Authentication test threw exception',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
 
@@ -125,14 +130,16 @@ export class SessionTester {
         testName: 'Invalid Credentials Rejection',
         category: 'authentication',
         passed: !authResult.success,
-        details: authResult.success ? 'Invalid credentials were accepted (SECURITY VIOLATION)' : 'Invalid credentials properly rejected'
+        details: authResult.success
+          ? 'Invalid credentials were accepted (SECURITY VIOLATION)'
+          : 'Invalid credentials properly rejected',
       });
     } catch (error) {
       results.push({
         testName: 'Invalid Credentials Rejection',
         category: 'authentication',
         passed: true,
-        details: 'Invalid credentials properly rejected with exception'
+        details: 'Invalid credentials properly rejected with exception',
       });
     }
 
@@ -142,7 +149,7 @@ export class SessionTester {
       testName: 'Brute Force Protection',
       category: 'authentication',
       passed: bruteForceResult.protected,
-      details: bruteForceResult.details
+      details: bruteForceResult.details,
     });
 
     // Test account lockout mechanism
@@ -151,7 +158,7 @@ export class SessionTester {
       testName: 'Account Lockout Mechanism',
       category: 'authentication',
       passed: lockoutResult.working,
-      details: lockoutResult.details
+      details: lockoutResult.details,
     });
 
     return results;
@@ -166,7 +173,7 @@ export class SessionTester {
       testName: 'Valid Token Acceptance',
       category: 'token_validation',
       passed: validTokenResult.isValid,
-      details: validTokenResult.reason
+      details: validTokenResult.reason,
     });
 
     // Test expired token
@@ -175,7 +182,7 @@ export class SessionTester {
       testName: 'Expired Token Rejection',
       category: 'token_validation',
       passed: !expiredTokenResult.isValid,
-      details: expiredTokenResult.reason
+      details: expiredTokenResult.reason,
     });
 
     // Test invalid signature
@@ -184,7 +191,7 @@ export class SessionTester {
       testName: 'Invalid Signature Rejection',
       category: 'token_validation',
       passed: !invalidSigResult.isValid,
-      details: invalidSigResult.reason
+      details: invalidSigResult.reason,
     });
 
     // Test tampered payload
@@ -193,7 +200,7 @@ export class SessionTester {
       testName: 'Tampered Token Rejection',
       category: 'token_validation',
       passed: !tamperedResult.isValid,
-      details: tamperedResult.reason
+      details: tamperedResult.reason,
     });
 
     // Test token replay attack
@@ -202,7 +209,7 @@ export class SessionTester {
       testName: 'Token Replay Attack Prevention',
       category: 'token_validation',
       passed: replayResult.prevented,
-      details: replayResult.details
+      details: replayResult.details,
     });
 
     return results;
@@ -217,7 +224,7 @@ export class SessionTester {
       testName: 'Session Timeout Enforcement',
       category: 'session_management',
       passed: timeoutResult.enforced,
-      details: timeoutResult.details
+      details: timeoutResult.details,
     });
 
     // Test session renewal
@@ -226,7 +233,7 @@ export class SessionTester {
       testName: 'Session Renewal Security',
       category: 'session_management',
       passed: renewalResult.secure,
-      details: renewalResult.details
+      details: renewalResult.details,
     });
 
     // Test concurrent session limits
@@ -235,7 +242,7 @@ export class SessionTester {
       testName: 'Concurrent Session Control',
       category: 'session_management',
       passed: concurrentResult.controlled,
-      details: concurrentResult.details
+      details: concurrentResult.details,
     });
 
     // Test session invalidation
@@ -244,7 +251,7 @@ export class SessionTester {
       testName: 'Session Invalidation',
       category: 'session_management',
       passed: invalidationResult.working,
-      details: invalidationResult.details
+      details: invalidationResult.details,
     });
 
     return results;
@@ -259,7 +266,7 @@ export class SessionTester {
       testName: 'Role-Based Access Control',
       category: 'authorization',
       passed: rbacResult.enforced,
-      details: rbacResult.details
+      details: rbacResult.details,
     });
 
     // Test resource-level permissions
@@ -268,7 +275,7 @@ export class SessionTester {
       testName: 'Resource-Level Permissions',
       category: 'authorization',
       passed: resourceResult.enforced,
-      details: resourceResult.details
+      details: resourceResult.details,
     });
 
     // Test privilege escalation prevention
@@ -277,7 +284,7 @@ export class SessionTester {
       testName: 'Privilege Escalation Prevention',
       category: 'authorization',
       passed: escalationResult.prevented,
-      details: escalationResult.details
+      details: escalationResult.details,
     });
 
     return results;
@@ -292,7 +299,7 @@ export class SessionTester {
       testName: 'Session Hijacking Protection',
       category: 'session_management',
       passed: hijackResult.protected,
-      details: hijackResult.details
+      details: hijackResult.details,
     });
 
     // Test CSRF protection
@@ -301,7 +308,7 @@ export class SessionTester {
       testName: 'CSRF Protection',
       category: 'session_management',
       passed: csrfResult.protected,
-      details: csrfResult.details
+      details: csrfResult.details,
     });
 
     // Test session fixation protection
@@ -310,7 +317,7 @@ export class SessionTester {
       testName: 'Session Fixation Protection',
       category: 'session_management',
       passed: fixationResult.protected,
-      details: fixationResult.details
+      details: fixationResult.details,
     });
 
     return results;
@@ -318,15 +325,18 @@ export class SessionTester {
 
   // Implementation methods for each test category
 
-  private async authenticateUser(username: string, password: string): Promise<{ success: boolean; token?: string }> {
+  private async authenticateUser(
+    username: string,
+    password: string
+  ): Promise<{ success: boolean; token?: string }> {
     try {
       // Simulate authentication against Supabase Auth
       const query = 'SELECT auth.authenticate($1, $2) as result';
       const result = await this.db.query(query, [username, password]);
-      
+
       return {
         success: result.length > 0 && result[0].result !== null,
-        token: result[0]?.result
+        token: result[0]?.result,
       };
     } catch (error) {
       return { success: false };
@@ -338,22 +348,22 @@ export class SessionTester {
       // Simulate JWT token validation
       const query = 'SELECT auth.jwt_verify($1) as validation';
       const result = await this.db.query(query, [token]);
-      
+
       if (result.length === 0) {
         return {
           token,
           isValid: false,
-          reason: 'Token validation query returned no results'
+          reason: 'Token validation query returned no results',
         };
       }
 
       const validation = result[0].validation;
-      
+
       if (validation === null) {
         return {
           token,
           isValid: false,
-          reason: 'Token validation returned null (invalid token)'
+          reason: 'Token validation returned null (invalid token)',
         };
       }
 
@@ -363,13 +373,13 @@ export class SessionTester {
         isValid: validation.valid === true,
         reason: validation.valid ? 'Valid token' : validation.reason || 'Invalid token',
         claims: validation.claims,
-        expiresAt: validation.exp ? new Date(validation.exp * 1000) : undefined
+        expiresAt: validation.exp ? new Date(validation.exp * 1000) : undefined,
       };
     } catch (error) {
       return {
         token,
         isValid: false,
-        reason: `Token validation error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        reason: `Token validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
   }
@@ -389,7 +399,7 @@ export class SessionTester {
         if (i >= maxAttempts) {
           return {
             protected: true,
-            details: `Brute force protection activated after ${i} attempts`
+            details: `Brute force protection activated after ${i} attempts`,
           };
         }
       }
@@ -397,9 +407,10 @@ export class SessionTester {
 
     return {
       protected: successfulAttempts === 0,
-      details: successfulAttempts > 0 
-        ? `Brute force protection failed: ${successfulAttempts} successful attempts out of ${maxAttempts + 2}`
-        : 'Brute force protection working - all attempts properly blocked'
+      details:
+        successfulAttempts > 0
+          ? `Brute force protection failed: ${successfulAttempts} successful attempts out of ${maxAttempts + 2}`
+          : 'Brute force protection working - all attempts properly blocked',
     };
   }
 
@@ -408,47 +419,49 @@ export class SessionTester {
     try {
       const lockoutQuery = 'SELECT auth.check_account_lockout($1) as locked';
       const result = await this.db.query(lockoutQuery, ['test_lockout_user']);
-      
+
       const isLocked = result.length > 0 && result[0].locked === true;
-      
+
       return {
         working: true, // Assume lockout is working if query succeeds
-        details: isLocked ? 'Account lockout mechanism active' : 'Account lockout mechanism available'
+        details: isLocked
+          ? 'Account lockout mechanism active'
+          : 'Account lockout mechanism available',
       };
     } catch (error) {
       return {
         working: false,
-        details: 'Account lockout mechanism not available or not working'
+        details: 'Account lockout mechanism not available or not working',
       };
     }
   }
 
   private async testTokenReplayAttack(): Promise<{ prevented: boolean; details: string }> {
     const token = this.config.tokenTests.validToken;
-    
+
     try {
       // First use of token
       const firstUse = await this.validateToken(token);
-      
+
       // Second use of same token (should be prevented if nonce/jti is used)
       const secondUse = await this.validateToken(token);
-      
+
       // If both succeed, replay attack is possible
       if (firstUse.isValid && secondUse.isValid) {
         return {
           prevented: false,
-          details: 'Token replay attack possible - same token accepted multiple times'
+          details: 'Token replay attack possible - same token accepted multiple times',
         };
       }
-      
+
       return {
         prevented: true,
-        details: 'Token replay attack prevented - token reuse blocked'
+        details: 'Token replay attack prevented - token reuse blocked',
       };
     } catch (error) {
       return {
         prevented: true,
-        details: 'Token replay attack prevented by exception handling'
+        details: 'Token replay attack prevented by exception handling',
       };
     }
   }
@@ -456,22 +469,23 @@ export class SessionTester {
   private async testSessionTimeout(): Promise<{ enforced: boolean; details: string }> {
     try {
       // Check if session timeout is properly configured
-      const timeoutQuery = 'SELECT current_setting(\'idle_in_transaction_session_timeout\') as timeout';
+      const timeoutQuery =
+        "SELECT current_setting('idle_in_transaction_session_timeout') as timeout";
       const result = await this.db.query(timeoutQuery);
-      
+
       const timeout = result[0]?.timeout;
       const hasTimeout = timeout && timeout !== '0' && timeout !== '';
-      
+
       return {
         enforced: hasTimeout,
-        details: hasTimeout 
+        details: hasTimeout
           ? `Session timeout configured: ${timeout}`
-          : 'No session timeout configured (potential security risk)'
+          : 'No session timeout configured (potential security risk)',
       };
     } catch (error) {
       return {
         enforced: false,
-        details: 'Unable to verify session timeout configuration'
+        details: 'Unable to verify session timeout configuration',
       };
     }
   }
@@ -482,19 +496,19 @@ export class SessionTester {
       // This would test the session renewal endpoint
       const sessionId1 = 'session_123';
       const sessionId2 = await this.simulateSessionRenewal(sessionId1);
-      
+
       const secure = sessionId1 !== sessionId2;
-      
+
       return {
         secure,
-        details: secure 
+        details: secure
           ? 'Session renewal generates new session ID'
-          : 'Session renewal security issue - session ID not changed'
+          : 'Session renewal security issue - session ID not changed',
       };
     } catch (error) {
       return {
         secure: false,
-        details: 'Session renewal test failed'
+        details: 'Session renewal test failed',
       };
     }
   }
@@ -503,7 +517,7 @@ export class SessionTester {
     // Test concurrent session limits
     const maxSessions = 3;
     let activeSessions = 0;
-    
+
     try {
       // Simulate creating multiple sessions for same user
       for (let i = 0; i < maxSessions + 2; i++) {
@@ -512,19 +526,19 @@ export class SessionTester {
           activeSessions++;
         }
       }
-      
+
       const controlled = activeSessions <= maxSessions;
-      
+
       return {
         controlled,
-        details: controlled 
+        details: controlled
           ? `Concurrent sessions limited to ${activeSessions}/${maxSessions}`
-          : `Too many concurrent sessions allowed: ${activeSessions} (limit should be ${maxSessions})`
+          : `Too many concurrent sessions allowed: ${activeSessions} (limit should be ${maxSessions})`,
       };
     } catch (error) {
       return {
         controlled: false,
-        details: 'Concurrent session test failed'
+        details: 'Concurrent session test failed',
       };
     }
   }
@@ -532,26 +546,26 @@ export class SessionTester {
   private async testSessionInvalidation(): Promise<{ working: boolean; details: string }> {
     try {
       const sessionId = 'test_session_123';
-      
+
       // Invalidate session
       const invalidateQuery = 'SELECT auth.invalidate_session($1) as result';
       const result = await this.db.query(invalidateQuery, [sessionId]);
-      
+
       // Try to use invalidated session
       const useResult = await this.validateToken(sessionId);
-      
+
       const working = !useResult.isValid;
-      
+
       return {
         working,
-        details: working 
+        details: working
           ? 'Session invalidation working - invalidated session rejected'
-          : 'Session invalidation failed - invalidated session still accepted'
+          : 'Session invalidation failed - invalidated session still accepted',
       };
     } catch (error) {
       return {
         working: false,
-        details: 'Session invalidation test failed'
+        details: 'Session invalidation test failed',
       };
     }
   }
@@ -563,21 +577,22 @@ export class SessionTester {
         'SELECT * FROM admin_only_table LIMIT 1',
         this.config.testUsers.validUser
       );
-      
+
       // If query succeeds, RBAC is not working
       return {
         enforced: false,
-        details: 'RBAC failure - user accessed admin-only resource'
+        details: 'RBAC failure - user accessed admin-only resource',
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '';
-      const isAccessDenied = errorMsg.includes('permission denied') || errorMsg.includes('insufficient privilege');
-      
+      const isAccessDenied =
+        errorMsg.includes('permission denied') || errorMsg.includes('insufficient privilege');
+
       return {
         enforced: isAccessDenied,
-        details: isAccessDenied 
+        details: isAccessDenied
           ? 'RBAC working - access properly denied'
-          : `RBAC test error: ${errorMsg}`
+          : `RBAC test error: ${errorMsg}`,
       };
     }
   }
@@ -589,27 +604,31 @@ export class SessionTester {
         "SELECT * FROM encrypted_cycle_data WHERE user_id = 'other_user_id'",
         this.config.testUsers.validUser
       );
-      
+
       // Should return empty result due to RLS
       return {
         enforced: result.length === 0,
-        details: result.length === 0 
-          ? 'Resource permissions enforced - cross-user access blocked'
-          : 'Resource permission violation - cross-user access allowed'
+        details:
+          result.length === 0
+            ? 'Resource permissions enforced - cross-user access blocked'
+            : 'Resource permission violation - cross-user access allowed',
       };
     } catch (error) {
       return {
         enforced: true,
-        details: 'Resource permissions enforced - access denied with exception'
+        details: 'Resource permissions enforced - access denied with exception',
       };
     }
   }
 
-  private async testPrivilegeEscalationPrevention(): Promise<{ prevented: boolean; details: string }> {
+  private async testPrivilegeEscalationPrevention(): Promise<{
+    prevented: boolean;
+    details: string;
+  }> {
     const escalationAttempts = [
       'SET ROLE postgres',
       'ALTER USER current_user SUPERUSER',
-      'GRANT ALL PRIVILEGES ON ALL TABLES TO current_user'
+      'GRANT ALL PRIVILEGES ON ALL TABLES TO current_user',
     ];
 
     let escalationSucceeded = false;
@@ -626,9 +645,9 @@ export class SessionTester {
 
     return {
       prevented: !escalationSucceeded,
-      details: escalationSucceeded 
+      details: escalationSucceeded
         ? 'Privilege escalation succeeded - CRITICAL SECURITY ISSUE'
-        : 'Privilege escalation properly prevented'
+        : 'Privilege escalation properly prevented',
     };
   }
 
@@ -636,30 +655,30 @@ export class SessionTester {
     // Test session binding to client characteristics
     try {
       const sessionToken = this.config.tokenTests.validToken;
-      
+
       // Simulate token use from different IP/User-Agent
       const originalResult = await this.validateTokenWithContext(sessionToken, {
         ip: '192.168.1.1',
-        userAgent: 'Original-Client/1.0'
+        userAgent: 'Original-Client/1.0',
       });
-      
+
       const hijackResult = await this.validateTokenWithContext(sessionToken, {
         ip: '10.0.0.1',
-        userAgent: 'Attacker-Client/1.0'
+        userAgent: 'Attacker-Client/1.0',
       });
-      
+
       const protected = originalResult.isValid && !hijackResult.isValid;
-      
+
       return {
         protected,
-        details: protected 
+        details: protected
           ? 'Session hijacking protection active - context change blocked token'
-          : 'Session hijacking vulnerability - token accepted from different context'
+          : 'Session hijacking vulnerability - token accepted from different context',
       };
     } catch (error) {
       return {
         protected: false,
-        details: 'Session hijacking test failed'
+        details: 'Session hijacking test failed',
       };
     }
   }
@@ -669,22 +688,22 @@ export class SessionTester {
     try {
       // Simulate request without CSRF token
       const noTokenResult = await this.simulateStateChangingRequest(false);
-      
+
       // Simulate request with valid CSRF token
       const validTokenResult = await this.simulateStateChangingRequest(true);
-      
+
       const protected = !noTokenResult.success && validTokenResult.success;
-      
+
       return {
         protected,
-        details: protected 
+        details: protected
           ? 'CSRF protection active - requests without token blocked'
-          : 'CSRF vulnerability - requests without token allowed'
+          : 'CSRF vulnerability - requests without token allowed',
       };
     } catch (error) {
       return {
         protected: false,
-        details: 'CSRF protection test failed'
+        details: 'CSRF protection test failed',
       };
     }
   }
@@ -695,19 +714,19 @@ export class SessionTester {
       const preAuthSessionId = await this.getSessionId();
       await this.authenticateUser(this.config.testUsers.validUser, 'valid_password');
       const postAuthSessionId = await this.getSessionId();
-      
+
       const protected = preAuthSessionId !== postAuthSessionId;
-      
+
       return {
         protected,
-        details: protected 
+        details: protected
           ? 'Session fixation protection active - session ID changed on auth'
-          : 'Session fixation vulnerability - session ID unchanged on auth'
+          : 'Session fixation vulnerability - session ID unchanged on auth',
       };
     } catch (error) {
       return {
         protected: false,
-        details: 'Session fixation test failed'
+        details: 'Session fixation test failed',
       };
     }
   }
@@ -719,24 +738,32 @@ export class SessionTester {
     return `renewed_${sessionId}_${Date.now()}`;
   }
 
-  private async createUserSession(userId: string): Promise<{ success: boolean; sessionId?: string }> {
+  private async createUserSession(
+    userId: string
+  ): Promise<{ success: boolean; sessionId?: string }> {
     // Simulate session creation
     return { success: true, sessionId: `session_${userId}_${Date.now()}` };
   }
 
-  private async validateTokenWithContext(token: string, context: { ip: string; userAgent: string }): Promise<TokenValidationResult> {
+  private async validateTokenWithContext(
+    token: string,
+    context: { ip: string; userAgent: string }
+  ): Promise<TokenValidationResult> {
     // Simulate context-aware token validation
     const baseResult = await this.validateToken(token);
-    
+
     // If context doesn't match stored context, invalidate
-    if (baseResult.isValid && (context.ip !== '192.168.1.1' || context.userAgent !== 'Original-Client/1.0')) {
+    if (
+      baseResult.isValid &&
+      (context.ip !== '192.168.1.1' || context.userAgent !== 'Original-Client/1.0')
+    ) {
       return {
         ...baseResult,
         isValid: false,
-        reason: 'Token context mismatch - possible hijacking'
+        reason: 'Token context mismatch - possible hijacking',
       };
     }
-    
+
     return baseResult;
   }
 
@@ -756,31 +783,33 @@ export class SessionTester {
   private generateAuditReport(results: SessionTestResult[]): SessionSecurityAudit {
     const passed = results.filter(r => r.passed).length;
     const failed = results.filter(r => r.passed === false).length;
-    
+
     const criticalVulnerabilities: string[] = [];
     const warnings: string[] = [];
     const recommendations: string[] = [];
-    
+
     for (const result of results) {
       if (!result.passed) {
-        if (result.testName.includes('Brute Force') || 
-            result.testName.includes('Privilege Escalation') ||
-            result.testName.includes('Session Hijacking') ||
-            result.testName.includes('CSRF')) {
+        if (
+          result.testName.includes('Brute Force') ||
+          result.testName.includes('Privilege Escalation') ||
+          result.testName.includes('Session Hijacking') ||
+          result.testName.includes('CSRF')
+        ) {
           criticalVulnerabilities.push(`${result.testName}: ${result.details}`);
         } else {
           warnings.push(`${result.testName}: ${result.details}`);
         }
       }
     }
-    
+
     // Generate recommendations based on failures
     if (criticalVulnerabilities.length > 0) {
       recommendations.push('Immediate action required for critical vulnerabilities');
       recommendations.push('Review and strengthen authentication mechanisms');
       recommendations.push('Implement or fix session security measures');
     }
-    
+
     if (warnings.length > 0) {
       recommendations.push('Address security warnings to improve overall security posture');
       recommendations.push('Consider implementing additional security controls');
@@ -792,7 +821,7 @@ export class SessionTester {
       failed,
       criticalVulnerabilities,
       warnings,
-      recommendations
+      recommendations,
     };
   }
 
@@ -838,17 +867,21 @@ export const DEFAULT_SESSION_CONFIG: SessionTestConfig = {
     validUser: 'test-user-valid-uuid',
     expiredUser: 'test-user-expired-uuid',
     revokedUser: 'test-user-revoked-uuid',
-    maliciousUser: 'test-user-malicious-uuid'
+    maliciousUser: 'test-user-malicious-uuid',
   },
   tokenTests: {
-    validToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItdmFsaWQtdXVpZCIsImV4cCI6MTk5OTk5OTk5OX0.test-signature',
-    expiredToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItZXhwaXJlZC11dWlkIiwiZXhwIjoxfQ.expired-signature',
-    invalidSignature: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItdmFsaWQtdXVpZCIsImV4cCI6MTk5OTk5OTk5OX0.invalid-signature',
-    tamperedPayload: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbi11c2VyIiwiZXhwIjoxOTk5OTk5OTk5fQ.test-signature'
+    validToken:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItdmFsaWQtdXVpZCIsImV4cCI6MTk5OTk5OTk5OX0.test-signature',
+    expiredToken:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItZXhwaXJlZC11dWlkIiwiZXhwIjoxfQ.expired-signature',
+    invalidSignature:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXItdmFsaWQtdXVpZCIsImV4cCI6MTk5OTk5OTk5OX0.invalid-signature',
+    tamperedPayload:
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbi11c2VyIiwiZXhwIjoxOTk5OTk5OTk5fQ.test-signature',
   },
   sessionTimeouts: {
-    shortSession: 15,  // 15 minutes
-    longSession: 60,   // 1 hour
-    maxSession: 480    // 8 hours
-  }
+    shortSession: 15, // 15 minutes
+    longSession: 60, // 1 hour
+    maxSession: 480, // 8 hours
+  },
 };

@@ -43,38 +43,50 @@ export interface DataIsolationTest {
 }
 
 const CrossUserTestConfigSchema = z.object({
-  scenarios: z.array(z.object({
-    scenarioName: z.string(),
-    userA: z.string(),
-    userB: z.string(),
-    tableName: z.string(),
-    testOperations: z.array(z.object({
-      operation: z.enum(['SELECT', 'INSERT', 'UPDATE', 'DELETE']),
-      query: z.string(),
-      expectedBlocked: z.boolean()
-    }))
-  })),
-  isolationTests: z.array(z.object({
-    tableName: z.string(),
-    userA: z.string(),
-    userB: z.string(),
-    setupData: z.object({
-      userAData: z.array(z.object({
-        query: z.string(),
-        params: z.array(z.any()).optional()
-      })),
-      userBData: z.array(z.object({
-        query: z.string(),
-        params: z.array(z.any()).optional()
-      }))
-    }),
-    isolationTests: z.array(z.object({
-      description: z.string(),
-      query: z.string(),
-      executingUser: z.string(),
-      shouldReturnRows: z.number()
-    }))
-  }))
+  scenarios: z.array(
+    z.object({
+      scenarioName: z.string(),
+      userA: z.string(),
+      userB: z.string(),
+      tableName: z.string(),
+      testOperations: z.array(
+        z.object({
+          operation: z.enum(['SELECT', 'INSERT', 'UPDATE', 'DELETE']),
+          query: z.string(),
+          expectedBlocked: z.boolean(),
+        })
+      ),
+    })
+  ),
+  isolationTests: z.array(
+    z.object({
+      tableName: z.string(),
+      userA: z.string(),
+      userB: z.string(),
+      setupData: z.object({
+        userAData: z.array(
+          z.object({
+            query: z.string(),
+            params: z.array(z.any()).optional(),
+          })
+        ),
+        userBData: z.array(
+          z.object({
+            query: z.string(),
+            params: z.array(z.any()).optional(),
+          })
+        ),
+      }),
+      isolationTests: z.array(
+        z.object({
+          description: z.string(),
+          query: z.string(),
+          executingUser: z.string(),
+          shouldReturnRows: z.number(),
+        })
+      ),
+    })
+  ),
 });
 
 export type CrossUserTestConfig = z.infer<typeof CrossUserTestConfigSchema>;
@@ -104,7 +116,7 @@ export class AccessControlTester {
       scenarioName: scenario.scenarioName,
       passed: true,
       operations: [],
-      summary: ''
+      summary: '',
     };
 
     for (const operation of scenario.testOperations) {
@@ -134,7 +146,7 @@ export class AccessControlTester {
         query: operation.query,
         expectedBlocked: operation.expectedBlocked,
         actuallyBlocked,
-        error
+        error,
       });
     }
 
@@ -142,11 +154,13 @@ export class AccessControlTester {
     return result;
   }
 
-  async testDataIsolation(): Promise<{
-    tableName: string;
-    isolationMaintained: boolean;
-    testResults: any[];
-  }[]> {
+  async testDataIsolation(): Promise<
+    {
+      tableName: string;
+      isolationMaintained: boolean;
+      testResults: any[];
+    }[]
+  > {
     const results = [];
 
     for (const isolationTest of this.config.isolationTests) {
@@ -170,11 +184,13 @@ export class AccessControlTester {
             description: test.description,
             expectedRows: test.shouldReturnRows,
             actualRows,
-            passed: testPassed
+            passed: testPassed,
           });
         } catch (error) {
           // If query fails due to access control, that might be expected
-          const isAccessDenied = this.isAccessDeniedError(error instanceof Error ? error.message : '');
+          const isAccessDenied = this.isAccessDeniedError(
+            error instanceof Error ? error.message : ''
+          );
           const testPassed = test.shouldReturnRows === 0 && isAccessDenied;
 
           if (!testPassed) {
@@ -186,7 +202,7 @@ export class AccessControlTester {
             expectedRows: test.shouldReturnRows,
             actualRows: isAccessDenied ? 0 : 'ERROR',
             passed: testPassed,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
         }
       }
@@ -197,22 +213,30 @@ export class AccessControlTester {
       results.push({
         tableName: isolationTest.tableName,
         isolationMaintained,
-        testResults
+        testResults,
       });
     }
 
     return results;
   }
 
-  async testBulkDataAccess(targetUserId: string, attackingUserId: string): Promise<{
+  async testBulkDataAccess(
+    targetUserId: string,
+    attackingUserId: string
+  ): Promise<{
     tablesTestedCount: number;
     unauthorizedAccessAttempts: number;
     successfulBreaches: number;
     blockedAttempts: number;
   }> {
-    const tables = ['encrypted_user_prefs', 'encrypted_cycle_data', 'healthcare_share', 'device_key'];
+    const tables = [
+      'encrypted_user_prefs',
+      'encrypted_cycle_data',
+      'healthcare_share',
+      'device_key',
+    ];
     const operations = ['SELECT', 'UPDATE', 'DELETE'];
-    
+
     let unauthorizedAccessAttempts = 0;
     let successfulBreaches = 0;
     let blockedAttempts = 0;
@@ -238,7 +262,7 @@ export class AccessControlTester {
 
         try {
           const result = await this.db.queryAsUser(query, attackingUserId);
-          
+
           // If SELECT returns data or UPDATE/DELETE affects rows, it's a breach
           if (operation === 'SELECT' && result.length > 0) {
             successfulBreaches++;
@@ -248,7 +272,9 @@ export class AccessControlTester {
             blockedAttempts++;
           }
         } catch (error) {
-          const isAccessDenied = this.isAccessDeniedError(error instanceof Error ? error.message : '');
+          const isAccessDenied = this.isAccessDeniedError(
+            error instanceof Error ? error.message : ''
+          );
           if (isAccessDenied) {
             blockedAttempts++;
           } else {
@@ -263,7 +289,7 @@ export class AccessControlTester {
       tablesTestedCount: tables.length,
       unauthorizedAccessAttempts,
       successfulBreaches,
-      blockedAttempts
+      blockedAttempts,
     };
   }
 
@@ -283,15 +309,15 @@ export class AccessControlTester {
       'SELECT DISTINCT user_id FROM encrypted_user_prefs',
       'SELECT DISTINCT user_id FROM encrypted_cycle_data',
       'SELECT DISTINCT user_id FROM healthcare_share',
-      'SELECT DISTINCT user_id FROM device_key'
+      'SELECT DISTINCT user_id FROM device_key',
     ];
 
     for (const query of discoveryQueries) {
       attemptedLateralMovements++;
-      
+
       try {
         const result = await this.db.queryAsUser(query, compromisedUserId);
-        
+
         if (result.length > 0) {
           successfulMovements++;
           // Collect discovered user IDs (this would be a security breach)
@@ -304,7 +330,9 @@ export class AccessControlTester {
           blockedMovements++;
         }
       } catch (error) {
-        const isAccessDenied = this.isAccessDeniedError(error instanceof Error ? error.message : '');
+        const isAccessDenied = this.isAccessDeniedError(
+          error instanceof Error ? error.message : ''
+        );
         if (isAccessDenied) {
           blockedMovements++;
         } else {
@@ -318,12 +346,12 @@ export class AccessControlTester {
       if (targetUserId !== compromisedUserId) {
         const accessAttempts = [
           `SELECT * FROM encrypted_cycle_data WHERE user_id = '${targetUserId}'`,
-          `SELECT * FROM encrypted_user_prefs WHERE user_id = '${targetUserId}'`
+          `SELECT * FROM encrypted_user_prefs WHERE user_id = '${targetUserId}'`,
         ];
 
         for (const attempt of accessAttempts) {
           attemptedLateralMovements++;
-          
+
           try {
             const result = await this.db.queryAsUser(attempt, compromisedUserId);
             if (result.length > 0) {
@@ -342,7 +370,7 @@ export class AccessControlTester {
       attemptedLateralMovements,
       successfulMovements,
       blockedMovements,
-      discoveredUsers
+      discoveredUsers,
     };
   }
 
@@ -369,7 +397,7 @@ export class AccessControlTester {
   private async cleanupTestData(isolationTest: DataIsolationTest): Promise<void> {
     const cleanupQueries = [
       `DELETE FROM ${isolationTest.tableName} WHERE user_id = '${isolationTest.userA}' AND (encrypted_data = 'test-user-a-data' OR encrypted_data LIKE 'test-%')`,
-      `DELETE FROM ${isolationTest.tableName} WHERE user_id = '${isolationTest.userB}' AND (encrypted_data = 'test-user-b-data' OR encrypted_data LIKE 'test-%')`
+      `DELETE FROM ${isolationTest.tableName} WHERE user_id = '${isolationTest.userB}' AND (encrypted_data = 'test-user-b-data' OR encrypted_data LIKE 'test-%')`,
     ];
 
     for (const query of cleanupQueries) {
@@ -389,7 +417,7 @@ export class AccessControlTester {
       'insufficient privilege',
       'row level security',
       'rls policy',
-      'policy violation'
+      'policy violation',
     ];
 
     const lowerError = errorMessage.toLowerCase();
@@ -406,7 +434,10 @@ export class AccessControlTester {
     } else {
       return `❌ ${failed}/${total} operations failed: ${result.operations
         .filter(op => op.actuallyBlocked !== op.expectedBlocked)
-        .map(op => `${op.operation} ${op.expectedBlocked ? 'should have been blocked' : 'should have succeeded'}`)
+        .map(
+          op =>
+            `${op.operation} ${op.expectedBlocked ? 'should have been blocked' : 'should have succeeded'}`
+        )
         .join(', ')}`;
     }
   }
@@ -414,7 +445,7 @@ export class AccessControlTester {
   generateReport(results: AccessControlTestResult[]): string {
     const passedCount = results.filter(r => r.passed).length;
     const totalCount = results.length;
-    
+
     let report = `\n🛡️ Cross-User Access Control Test Report\n`;
     report += `=========================================\n`;
     report += `Total Scenarios Tested: ${totalCount}\n`;
@@ -426,7 +457,7 @@ export class AccessControlTester {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
       report += `${status} ${result.scenarioName}\n`;
       report += `  ${result.summary}\n`;
-      
+
       if (!result.passed) {
         const failedOps = result.operations.filter(op => op.actuallyBlocked !== op.expectedBlocked);
         for (const op of failedOps) {
@@ -436,7 +467,7 @@ export class AccessControlTester {
           }
         }
       }
-      
+
       report += '\n';
     }
 
@@ -456,19 +487,20 @@ export const DEFAULT_ACCESS_CONTROL_CONFIG: CrossUserTestConfig = {
         {
           operation: 'SELECT',
           query: "SELECT * FROM encrypted_cycle_data WHERE user_id = 'test-user-b-uuid'",
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           operation: 'UPDATE',
-          query: "UPDATE encrypted_cycle_data SET encrypted_data = 'hacked' WHERE user_id = 'test-user-b-uuid'",
-          expectedBlocked: true
+          query:
+            "UPDATE encrypted_cycle_data SET encrypted_data = 'hacked' WHERE user_id = 'test-user-b-uuid'",
+          expectedBlocked: true,
         },
         {
           operation: 'DELETE',
           query: "DELETE FROM encrypted_cycle_data WHERE user_id = 'test-user-b-uuid'",
-          expectedBlocked: true
-        }
-      ]
+          expectedBlocked: true,
+        },
+      ],
     },
     {
       scenarioName: 'User B attempts to access User A preferences',
@@ -479,14 +511,15 @@ export const DEFAULT_ACCESS_CONTROL_CONFIG: CrossUserTestConfig = {
         {
           operation: 'SELECT',
           query: "SELECT * FROM encrypted_user_prefs WHERE user_id = 'test-user-a-uuid'",
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           operation: 'INSERT',
-          query: "INSERT INTO encrypted_user_prefs (user_id, encrypted_data) VALUES ('test-user-a-uuid', 'malicious')",
-          expectedBlocked: true
-        }
-      ]
+          query:
+            "INSERT INTO encrypted_user_prefs (user_id, encrypted_data) VALUES ('test-user-a-uuid', 'malicious')",
+          expectedBlocked: true,
+        },
+      ],
     },
     {
       scenarioName: 'Bulk data access attempt',
@@ -497,15 +530,15 @@ export const DEFAULT_ACCESS_CONTROL_CONFIG: CrossUserTestConfig = {
         {
           operation: 'SELECT',
           query: 'SELECT * FROM encrypted_cycle_data',
-          expectedBlocked: true
+          expectedBlocked: true,
         },
         {
           operation: 'SELECT',
           query: 'SELECT COUNT(*) FROM encrypted_cycle_data',
-          expectedBlocked: true
-        }
-      ]
-    }
+          expectedBlocked: true,
+        },
+      ],
+    },
   ],
   isolationTests: [
     {
@@ -515,35 +548,37 @@ export const DEFAULT_ACCESS_CONTROL_CONFIG: CrossUserTestConfig = {
       setupData: {
         userAData: [
           {
-            query: "INSERT INTO encrypted_cycle_data (user_id, encrypted_data, created_at) VALUES ('test-user-a-uuid', 'test-user-a-data', NOW())"
-          }
+            query:
+              "INSERT INTO encrypted_cycle_data (user_id, encrypted_data, created_at) VALUES ('test-user-a-uuid', 'test-user-a-data', NOW())",
+          },
         ],
         userBData: [
           {
-            query: "INSERT INTO encrypted_cycle_data (user_id, encrypted_data, created_at) VALUES ('test-user-b-uuid', 'test-user-b-data', NOW())"
-          }
-        ]
+            query:
+              "INSERT INTO encrypted_cycle_data (user_id, encrypted_data, created_at) VALUES ('test-user-b-uuid', 'test-user-b-data', NOW())",
+          },
+        ],
       },
       isolationTests: [
         {
           description: 'User A should only see their own data',
           query: 'SELECT * FROM encrypted_cycle_data',
           executingUser: 'test-user-a-uuid',
-          shouldReturnRows: 1
+          shouldReturnRows: 1,
         },
         {
           description: 'User B should only see their own data',
           query: 'SELECT * FROM encrypted_cycle_data',
           executingUser: 'test-user-b-uuid',
-          shouldReturnRows: 1
+          shouldReturnRows: 1,
         },
         {
           description: 'User A should not access User B data specifically',
           query: "SELECT * FROM encrypted_cycle_data WHERE user_id = 'test-user-b-uuid'",
           executingUser: 'test-user-a-uuid',
-          shouldReturnRows: 0
-        }
-      ]
-    }
-  ]
+          shouldReturnRows: 0,
+        },
+      ],
+    },
+  ],
 };

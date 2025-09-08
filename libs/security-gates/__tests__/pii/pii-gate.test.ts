@@ -36,15 +36,13 @@ vi.mock('../../src/pii/debug-filter', () => ({
 vi.mock('../../src/pii/memory-analyzer', () => ({
   MemoryAnalyzer: vi.fn().mockImplementation(() => ({
     validateConfig: vi.fn().mockReturnValue({ valid: true, errors: [] }),
-    analyzeMemory: vi
-      .fn()
-      .mockResolvedValue({
-        passed: true,
-        violations: [],
-        summary: {},
-        errors: [],
-        analysisMetadata: { timestamp: '', memorySize: 0, gcCollections: 0, heapUsed: 0 },
-      }),
+    analyzeMemory: vi.fn().mockResolvedValue({
+      passed: true,
+      violations: [],
+      summary: {},
+      errors: [],
+      analysisMetadata: { timestamp: '', memorySize: 0, gcCollections: 0, heapUsed: 0 },
+    }),
     generateReport: vi.fn().mockReturnValue('Mock report'),
   })),
 }));

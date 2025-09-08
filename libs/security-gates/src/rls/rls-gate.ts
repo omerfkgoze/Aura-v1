@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { SecurityGateResult, SecurityGate } from '../core/security-gate.interface';
 import { RLSTester, RLSTestConfig, DEFAULT_RLS_CONFIG } from './rls-tester';
-import { AccessControlTester, CrossUserTestConfig, DEFAULT_ACCESS_CONTROL_CONFIG } from './access-control-tester';
+import {
+  AccessControlTester,
+  CrossUserTestConfig,
+  DEFAULT_ACCESS_CONTROL_CONFIG,
+} from './access-control-tester';
 import { PrivilegeTester, PrivilegeTestConfig, DEFAULT_PRIVILEGE_CONFIG } from './privilege-tester';
 import { SessionTester, SessionTestConfig, DEFAULT_SESSION_CONFIG } from './session-tester';
 
@@ -62,13 +66,13 @@ const RLSGateConfigSchema = z.object({
     validateBeforeMigration: z.boolean(),
     validateAfterMigration: z.boolean(),
     requiredPolicies: z.array(z.string()),
-    blockedMigrationPatterns: z.array(z.string())
+    blockedMigrationPatterns: z.array(z.string()),
   }),
   performanceThresholds: z.object({
     maxTestDurationMs: z.number().positive(),
     maxPolicyValidationTime: z.number().positive(),
-    maxConcurrentTests: z.number().positive()
-  })
+    maxConcurrentTests: z.number().positive(),
+  }),
 });
 
 export class RLSGate implements SecurityGate {
@@ -92,7 +96,7 @@ export class RLSGate implements SecurityGate {
           'encrypted_cycle_data.cycle_data_rls_policy',
           'encrypted_user_prefs.user_prefs_rls_policy',
           'healthcare_share.healthcare_share_rls_policy',
-          'device_key.device_key_rls_policy'
+          'device_key.device_key_rls_policy',
         ],
         blockedMigrationPatterns: [
           'DROP POLICY',
@@ -100,15 +104,15 @@ export class RLSGate implements SecurityGate {
           'ALTER TABLE .* DISABLE ROW LEVEL SECURITY',
           'GRANT ALL PRIVILEGES',
           'CREATE USER .* SUPERUSER',
-          'ALTER USER .* SUPERUSER'
-        ]
+          'ALTER USER .* SUPERUSER',
+        ],
       },
       performanceThresholds: {
         maxTestDurationMs: 300000, // 5 minutes
         maxPolicyValidationTime: 30000, // 30 seconds
-        maxConcurrentTests: 5
+        maxConcurrentTests: 5,
       },
-      ...config
+      ...config,
     });
   }
 
@@ -120,7 +124,7 @@ export class RLSGate implements SecurityGate {
         timestamp: new Date(),
         results: [],
         summary: 'RLS Gate disabled - skipping validation',
-        details: 'RLS security gate is configured as disabled'
+        details: 'RLS security gate is configured as disabled',
       };
     }
 
@@ -147,8 +151,8 @@ export class RLSGate implements SecurityGate {
         metrics: {
           totalPolicies: rlsResults.length,
           passedPolicies: rlsResults.filter(r => r.passed).length,
-          failedPolicies: rlsResults.filter(r => !r.passed).length
-        }
+          failedPolicies: rlsResults.filter(r => !r.passed).length,
+        },
       });
 
       // 2. Cross-User Access Control Testing
@@ -169,8 +173,8 @@ export class RLSGate implements SecurityGate {
         metrics: {
           totalScenarios: accessResults.length,
           passedScenarios: accessResults.filter(r => r.passed).length,
-          failedScenarios: accessResults.filter(r => !r.passed).length
-        }
+          failedScenarios: accessResults.filter(r => !r.passed).length,
+        },
       });
 
       // 3. Data Isolation Testing
@@ -185,8 +189,8 @@ export class RLSGate implements SecurityGate {
         metrics: {
           totalTables: isolationResults.length,
           isolatedTables: isolationResults.filter(r => r.isolationMaintained).length,
-          compromisedTables: isolationResults.filter(r => !r.isolationMaintained).length
-        }
+          compromisedTables: isolationResults.filter(r => !r.isolationMaintained).length,
+        },
       });
 
       // 4. Privilege Escalation Testing
@@ -207,8 +211,8 @@ export class RLSGate implements SecurityGate {
         metrics: {
           totalAccounts: privilegeResults.length,
           secureAccounts: privilegeResults.filter(r => r.passed).length,
-          vulnerableAccounts: privilegeResults.filter(r => !r.passed).length
-        }
+          vulnerableAccounts: privilegeResults.filter(r => !r.passed).length,
+        },
       });
 
       // 5. Service Account Isolation
@@ -223,8 +227,8 @@ export class RLSGate implements SecurityGate {
         metrics: {
           totalServiceAccounts: serviceIsolationResults.length,
           isolatedAccounts: serviceIsolationResults.filter(r => r.isolated).length,
-          compromisedAccounts: serviceIsolationResults.filter(r => !r.isolated).length
-        }
+          compromisedAccounts: serviceIsolationResults.filter(r => !r.isolated).length,
+        },
       });
 
       // 6. Session Security Testing
@@ -247,8 +251,8 @@ export class RLSGate implements SecurityGate {
           passedTests: sessionAudit.passed,
           failedTests: sessionAudit.failed,
           criticalVulnerabilities: sessionAudit.criticalVulnerabilities.length,
-          warnings: sessionAudit.warnings.length
-        }
+          warnings: sessionAudit.warnings.length,
+        },
       });
 
       const duration = Date.now() - startTime;
@@ -264,13 +268,12 @@ export class RLSGate implements SecurityGate {
           testDuration: duration,
           totalComponents: results.length,
           passedComponents: results.filter(r => r.passed).length,
-          failedComponents: results.filter(r => !r.passed).length
-        }
+          failedComponents: results.filter(r => !r.passed).length,
+        },
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         gateName: this.name,
         passed: false,
@@ -280,8 +283,8 @@ export class RLSGate implements SecurityGate {
         details: `Gate execution failed after ${duration}ms`,
         metadata: {
           error: error instanceof Error ? error.message : 'Unknown error',
-          testDuration: duration
-        }
+          testDuration: duration,
+        },
       };
     }
   }
@@ -289,35 +292,37 @@ export class RLSGate implements SecurityGate {
   async validateMigration(migrationSql: string): Promise<RLSMigrationValidation> {
     // Pre-migration validation
     const preValidationResults = await this.runPreMigrationValidation();
-    
+
     // Analyze migration SQL for security implications
     const securityImpactAnalysis = await this.analyzeMigrationSecurity(migrationSql);
-    
+
     // Check for blocked patterns
     await this.validateMigrationPatterns(migrationSql);
-    
+
     // Run migration in transaction for validation
     await this.db.beginTransaction();
-    
+
     try {
       // Execute migration
       await this.db.query(migrationSql);
-      
+
       // Post-migration validation
       const postValidationResults = await this.runPostMigrationValidation();
-      
+
       // Rollback the test migration
       await this.db.rollbackTransaction();
-      
+
       return {
         migrationSql,
         preValidationResults,
         postValidationResults,
-        securityImpactAnalysis
+        securityImpactAnalysis,
       };
     } catch (error) {
       await this.db.rollbackTransaction();
-      throw new Error(`Migration validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Migration validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -350,17 +355,17 @@ export class RLSGate implements SecurityGate {
   }> {
     const rlsTester = new RLSTester(this.db, this.config.rlsConfig);
     const rlsResults = await rlsTester.testAllPolicies();
-    
+
     const accessTester = new AccessControlTester(this.db, this.config.accessControlConfig);
     const accessResults = await accessTester.testAllScenarios();
-    
+
     const privilegeTester = new PrivilegeTester(this.db, this.config.privilegeConfig);
     const privilegeResults = await privilegeTester.testServiceAccountIsolation();
-    
+
     return {
       rlsPoliciesValid: rlsResults.every(r => r.passed),
       accessControlSecure: accessResults.every(r => r.passed),
-      privilegesIsolated: privilegeResults.every(r => r.isolated)
+      privilegesIsolated: privilegeResults.every(r => r.isolated),
     };
   }
 
@@ -371,14 +376,14 @@ export class RLSGate implements SecurityGate {
   }> {
     // Re-run all validations after migration
     const validation = await this.validate();
-    
+
     // Check for specific policy integrity
     const requiredPoliciesExist = await this.verifyRequiredPolicies();
-    
+
     return {
       newPoliciesValid: validation.passed,
       existingPoliciesIntact: requiredPoliciesExist,
-      noSecurityRegression: validation.passed
+      noSecurityRegression: validation.passed,
     };
   }
 
@@ -392,7 +397,7 @@ export class RLSGate implements SecurityGate {
       tablesAffected: [] as string[],
       policiesModified: [] as string[],
       potentialVulnerabilities: [] as string[],
-      mitigationRequired: [] as string[]
+      mitigationRequired: [] as string[],
     };
 
     // Parse SQL for table operations
@@ -449,31 +454,31 @@ export class RLSGate implements SecurityGate {
   private async verifyRequiredPolicies(): Promise<boolean> {
     for (const policyPath of this.config.migrationValidation.requiredPolicies) {
       const [tableName, policyName] = policyPath.split('.');
-      
+
       const query = `
         SELECT COUNT(*) as count
         FROM pg_policy pol
         JOIN pg_class cls ON pol.polrelid = cls.oid
         WHERE cls.relname = $1 AND pol.polname = $2
       `;
-      
+
       const result = await this.db.query(query, [tableName, policyName]);
-      
+
       if (result.length === 0 || result[0].count === 0) {
         return false;
       }
     }
-    
+
     return true;
   }
 
   private formatIsolationResults(results: any[]): string {
     let report = '\n🏛️ Data Isolation Test Results:\n';
-    
+
     for (const result of results) {
       const status = result.isolationMaintained ? '✅ ISOLATED' : '🚨 COMPROMISED';
       report += `${status} ${result.tableName}\n`;
-      
+
       if (!result.isolationMaintained) {
         const failedTests = result.testResults.filter((t: any) => !t.passed);
         for (const test of failedTests) {
@@ -482,59 +487,61 @@ export class RLSGate implements SecurityGate {
         }
       }
     }
-    
+
     return report;
   }
 
   private formatServiceIsolationResults(results: any[]): string {
     let report = '\n🛡️ Service Account Isolation Results:\n';
-    
+
     for (const result of results) {
       const status = result.isolated ? '✅ ISOLATED' : '🚨 COMPROMISED';
       report += `${status} ${result.account}\n`;
-      
+
       if (result.violations.length > 0) {
         for (const violation of result.violations) {
           report += `    ⚠️ ${violation}\n`;
         }
       }
     }
-    
+
     return report;
   }
 
   private generateSummary(results: any[], passed: boolean, duration: number): string {
     const totalComponents = results.length;
     const passedComponents = results.filter(r => r.passed).length;
-    
+
     const status = passed ? '✅ SECURE' : '🚨 VULNERABILITIES DETECTED';
-    
-    return `${status} - RLS Gate validation completed in ${duration}ms. ` +
-           `${passedComponents}/${totalComponents} security components passed validation.`;
+
+    return (
+      `${status} - RLS Gate validation completed in ${duration}ms. ` +
+      `${passedComponents}/${totalComponents} security components passed validation.`
+    );
   }
 
   private generateDetailedReport(results: any[]): string {
     let report = '\n🔒 RLS & Access Control Security Gate Report\n';
     report += '==============================================\n\n';
-    
+
     for (const result of results) {
       const status = result.passed ? '✅ PASS' : '❌ FAIL';
       report += `${status} ${result.category}\n`;
-      
+
       if (result.metrics) {
         report += '  Metrics:\n';
         for (const [key, value] of Object.entries(result.metrics)) {
           report += `    ${key}: ${value}\n`;
         }
       }
-      
+
       if (result.details) {
         report += `${result.details}\n`;
       }
-      
+
       report += '\n';
     }
-    
+
     return report;
   }
 }
@@ -553,7 +560,7 @@ export const DEFAULT_RLS_GATE_CONFIG: RLSGateConfig = {
       'encrypted_cycle_data.cycle_data_rls_policy',
       'encrypted_user_prefs.user_prefs_rls_policy',
       'healthcare_share.healthcare_share_rls_policy',
-      'device_key.device_key_rls_policy'
+      'device_key.device_key_rls_policy',
     ],
     blockedMigrationPatterns: [
       'DROP POLICY',
@@ -563,12 +570,12 @@ export const DEFAULT_RLS_GATE_CONFIG: RLSGateConfig = {
       'CREATE USER .* SUPERUSER',
       'ALTER USER .* SUPERUSER',
       'SET ROLE postgres',
-      'RESET ROLE'
-    ]
+      'RESET ROLE',
+    ],
   },
   performanceThresholds: {
     maxTestDurationMs: 300000, // 5 minutes
     maxPolicyValidationTime: 30000, // 30 seconds
-    maxConcurrentTests: 5
-  }
+    maxConcurrentTests: 5,
+  },
 };
