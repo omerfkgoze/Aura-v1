@@ -465,9 +465,11 @@ jobs:
 
       - name: Log supply-chain audit trail
         run: |
-          node tools/security/audit-logger.js supply-chain-scan \
-            "Supply-chain security scan completed" \
-            "confusion:${{ needs.dependency-confusion-scan.result }},malicious:${{ needs.malicious-package-scan.result }},analysis:${{ needs.supply-chain-analysis.result }}"
+          node tools/security/audit-logger.js log info SUPPLY_CHAIN_SCAN COMPLETED '{
+            "dependency_confusion": "${{ needs.dependency-confusion-scan.result }}",
+            "malicious_packages": "${{ needs.malicious-package-scan.result }}",
+            "supply_chain_analysis": "${{ needs.supply-chain-analysis.result }}"
+          }'
 
       - name: Upload summary
         uses: actions/upload-artifact@v4

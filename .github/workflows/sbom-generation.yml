@@ -55,7 +55,7 @@ jobs:
           echo "Installing SBOM generation tools..."
 
           # Install CycloneDX tools for npm/pnpm
-          pnpm add -g @cyclonedx/bom@latest
+          npm install -g @cyclonedx/cyclonedx-bom@latest
 
           # Install cargo-cyclonedx for Rust dependencies
           cargo install cargo-cyclonedx
@@ -339,7 +339,7 @@ jobs:
         if: ${{ inputs.upload_artifacts }}
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-artifacts-${{ github.sha }}
+          name: sbom-artifacts
           path: |
             sbom-output/
           retention-days: 90
@@ -385,7 +385,7 @@ jobs:
       - name: Download SBOM artifacts
         uses: actions/download-artifact@v4
         with:
-          name: sbom-artifacts-${{ github.sha }}
+          name: sbom-artifacts
           path: sbom-output/
 
       - name: Install vulnerability scanners
