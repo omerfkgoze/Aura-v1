@@ -337,7 +337,7 @@ describe('TestingGate', () => {
       });
 
       // This should not be called due to fail-fast
-      const fuzzSpy = vi.spyOn(failFastGate as any, 'runFuzzTesting').mockResolvedValue({
+      vi.spyOn(failFastGate as any, 'runFuzzTesting').mockResolvedValue({
         suiteName: 'FuzzTesting',
         passed: true,
         duration: 2000,
@@ -431,10 +431,11 @@ describe('TestingGate', () => {
   describe('result processing', () => {
     it('should process suite results correctly', async () => {
       const mockResult: SecurityGateResult = {
-        gateName: 'TestingGate',
+        valid: true,
         passed: true,
-        timestamp: new Date(),
-        details: {
+        errors: [],
+        warnings: [],
+        metadata: {
           suiteResults: [],
           criticalIssuesFound: [],
         },
@@ -453,15 +454,16 @@ describe('TestingGate', () => {
       (testingGate as any).processSuiteResult(passingResult, mockResult);
 
       expect(mockResult.passed).toBe(true);
-      expect(mockResult.details.criticalIssuesFound).toHaveLength(0);
+      expect((mockResult.metadata as any).criticalIssuesFound).toHaveLength(0);
     });
 
     it('should handle failing suite results', async () => {
       const mockResult: SecurityGateResult = {
-        gateName: 'TestingGate',
+        valid: true,
         passed: true,
-        timestamp: new Date(),
-        details: {
+        errors: [],
+        warnings: [],
+        metadata: {
           suiteResults: [],
           criticalIssuesFound: [],
         },
@@ -480,9 +482,9 @@ describe('TestingGate', () => {
       (testingGate as any).processSuiteResult(failingResult, mockResult);
 
       expect(mockResult.passed).toBe(false);
-      expect(mockResult.details.criticalIssuesFound).toHaveLength(2);
-      expect(mockResult.details.criticalIssuesFound).toContain('Critical issue 1');
-      expect(mockResult.details.criticalIssuesFound).toContain('Critical issue 2');
+      expect((mockResult.metadata as any).criticalIssuesFound).toHaveLength(2);
+      expect((mockResult.metadata as any).criticalIssuesFound).toContain('Critical issue 1');
+      expect((mockResult.metadata as any).criticalIssuesFound).toContain('Critical issue 2');
     });
   });
 });

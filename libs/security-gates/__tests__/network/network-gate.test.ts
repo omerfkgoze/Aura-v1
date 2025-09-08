@@ -1,20 +1,14 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-  NetworkGate,
-  NetworkGateConfig,
-  NetworkAnalysisResult,
-} from '../../src/network/network-gate';
+import { NetworkGate, NetworkGateConfig } from '../../src/network/network-gate';
 import { PcapAnalyzer } from '../../src/network/pcap-analyzer';
 import { TlsInspector } from '../../src/network/tls-inspector';
 import { MetadataDetector } from '../../src/network/metadata-detector';
 
 describe('NetworkGate', () => {
   let networkGate: NetworkGate;
-  let mockConfig: NetworkGateConfig;
 
   beforeEach(() => {
     networkGate = new NetworkGate();
-    mockConfig = networkGate.createMockNetworkConfig();
     vi.clearAllMocks();
   });
 

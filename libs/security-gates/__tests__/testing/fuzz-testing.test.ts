@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
-import * as path from 'path';
 import { FuzzTestingSuite, createFuzzTester } from '../../src/testing/fuzz-testing';
 
 // Mock fs module
@@ -26,7 +25,7 @@ describe('FuzzTestingSuite', () => {
     // Mock fs operations
     mockFs.mkdirSync = vi.fn();
     mockFs.writeFileSync = vi.fn();
-    mockFs.readFileSync = vi.fn();
+    mockFs.readFileSync = vi.fn().mockReturnValue(Buffer.from('test data'));
     mockFs.readdirSync = vi.fn().mockReturnValue(['seed_0', 'seed_1']);
   });
 

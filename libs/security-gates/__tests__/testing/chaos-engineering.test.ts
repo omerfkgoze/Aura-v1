@@ -3,7 +3,6 @@ import {
   ChaosEngineeringSuite,
   createChaosEngineeringSuite,
   ChaosExperiment,
-  ChaosExperimentResult,
 } from '../../src/testing/chaos-engineering';
 
 describe('ChaosEngineeringSuite', () => {

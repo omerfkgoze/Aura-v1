@@ -347,9 +347,9 @@ export class SessionTester {
     try {
       // Simulate JWT token validation
       const query = 'SELECT auth.jwt_verify($1) as validation';
-      const result = await this.db.query(query, [token]);
+      const queryResult = await this.db.query(query, [token]);
 
-      if (result.length === 0) {
+      if (queryResult.length === 0) {
         return {
           token,
           isValid: false,
@@ -357,7 +357,7 @@ export class SessionTester {
         };
       }
 
-      const validation = result[0].validation;
+      const validation = queryResult[0].validation;
 
       if (validation === null) {
         return {
@@ -368,7 +368,7 @@ export class SessionTester {
       }
 
       // Parse validation result (this would be more complex in reality)
-      const result: TokenValidationResult = {
+      const validationResult: TokenValidationResult = {
         token,
         isValid: validation.valid === true,
         reason: validation.valid ? 'Valid token' : validation.reason || 'Invalid token',
@@ -376,10 +376,10 @@ export class SessionTester {
       };
 
       if (validation.exp) {
-        result.expiresAt = new Date(validation.exp * 1000);
+        validationResult.expiresAt = new Date(validation.exp * 1000);
       }
 
-      return result;
+      return validationResult;
     } catch (error) {
       return {
         token,
@@ -554,7 +554,7 @@ export class SessionTester {
 
       // Invalidate session
       const invalidateQuery = 'SELECT auth.invalidate_session($1) as result';
-      const result = await this.db.query(invalidateQuery, [sessionId]);
+      await this.db.query(invalidateQuery, [sessionId]);
 
       // Try to use invalidated session
       const useResult = await this.validateToken(sessionId);
@@ -578,7 +578,7 @@ export class SessionTester {
   private async testRoleBasedAccess(): Promise<{ enforced: boolean; details: string }> {
     try {
       // Test user with limited role accessing restricted resource
-      const accessResult = await this.db.queryAsUser(
+      await this.db.queryAsUser(
         'SELECT * FROM admin_only_table LIMIT 1',
         this.config.testUsers.validUser
       );
@@ -672,11 +672,11 @@ export class SessionTester {
         userAgent: 'Attacker-Client/1.0',
       });
 
-      const protected = originalResult.isValid && !hijackResult.isValid;
+      const isProtected = originalResult.isValid && !hijackResult.isValid;
 
       return {
-        protected,
-        details: protected
+        protected: isProtected,
+        details: isProtected
           ? 'Session hijacking protection active - context change blocked token'
           : 'Session hijacking vulnerability - token accepted from different context',
       };
@@ -697,11 +697,11 @@ export class SessionTester {
       // Simulate request with valid CSRF token
       const validTokenResult = await this.simulateStateChangingRequest(true);
 
-      const protected = !noTokenResult.success && validTokenResult.success;
+      const isProtected = !noTokenResult.success && validTokenResult.success;
 
       return {
-        protected,
-        details: protected
+        protected: isProtected,
+        details: isProtected
           ? 'CSRF protection active - requests without token blocked'
           : 'CSRF vulnerability - requests without token allowed',
       };
@@ -720,11 +720,11 @@ export class SessionTester {
       await this.authenticateUser(this.config.testUsers.validUser, 'valid_password');
       const postAuthSessionId = await this.getSessionId();
 
-      const protected = preAuthSessionId !== postAuthSessionId;
+      const isProtected = preAuthSessionId !== postAuthSessionId;
 
       return {
-        protected,
-        details: protected
+        protected: isProtected,
+        details: isProtected
           ? 'Session fixation protection active - session ID changed on auth'
           : 'Session fixation vulnerability - session ID unchanged on auth',
       };

@@ -55,7 +55,7 @@ export class PropertyTestingSuite {
       {
         numRuns: this.config.runs,
         maxSkipsPerRun: 100,
-        seed: this.config.seed ?? undefined,
+        ...(this.config.seed !== undefined && { seed: this.config.seed }),
         timeout: this.config.timeout,
         verbose: 2,
         examples: [],
@@ -234,7 +234,7 @@ export class PropertyTestingSuite {
           ),
         }),
         predicate: queryData => {
-          const { userId, requestedUserId, tableName } = queryData;
+          const { userId, requestedUserId } = queryData;
 
           // Property: User can only access their own data
           if (userId !== requestedUserId) {

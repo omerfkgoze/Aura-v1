@@ -35,7 +35,7 @@ describe('TlsInspector', () => {
 
       expect(result.passed).toBe(false);
       expect(result.details.certificatePinned).toBe(false);
-      expect(result.violations.some(v => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(true);
+      expect(result.violations.some((v: any) => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(true);
     });
 
     it('should handle connection timeout gracefully', async () => {
@@ -51,7 +51,6 @@ describe('TlsInspector', () => {
       const mockInspector = new TlsInspector();
 
       // Create a spy to return an almost-expired certificate
-      const originalAnalyze = (mockInspector as any).analyzeTlsConnection;
       vi.spyOn(mockInspector as any, 'analyzeTlsConnection').mockImplementation(async () => {
         const now = new Date();
         const expiringSoon = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000); // 15 days from now
@@ -79,8 +78,8 @@ describe('TlsInspector', () => {
 
       const result = await mockInspector.inspectTlsConnection('expiring.example.com', 443);
 
-      expect(result.violations.some(v => v.type === 'CERTIFICATE_EXPIRED')).toBe(true);
-      expect(result.violations.some(v => v.severity === 'MEDIUM')).toBe(true);
+      expect(result.violations.some((v: any) => v.type === 'CERTIFICATE_EXPIRED')).toBe(true);
+      expect(result.violations.some((v: any) => v.severity === 'MEDIUM')).toBe(true);
     });
   });
 
@@ -180,8 +179,8 @@ describe('TlsInspector', () => {
       const result = await mockInspector.inspectTlsConnection('weak.example.com', 443);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some(v => v.type === 'WEAK_CIPHER')).toBe(true);
-      expect(result.violations.some(v => v.severity === 'HIGH')).toBe(true);
+      expect(result.violations.some((v: any) => v.type === 'WEAK_CIPHER')).toBe(true);
+      expect(result.violations.some((v: any) => v.severity === 'HIGH')).toBe(true);
     });
 
     it('should detect insecure TLS versions', async () => {
@@ -199,8 +198,8 @@ describe('TlsInspector', () => {
       const result = await mockInspector.inspectTlsConnection('oldtls.example.com', 443);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some(v => v.type === 'WEAK_TLS_VERSION')).toBe(true);
-      expect(result.violations.some(v => v.severity === 'HIGH')).toBe(true);
+      expect(result.violations.some((v: any) => v.type === 'WEAK_TLS_VERSION')).toBe(true);
+      expect(result.violations.some((v: any) => v.severity === 'HIGH')).toBe(true);
     });
   });
 
@@ -325,11 +324,14 @@ describe('TlsInspector', () => {
     it('should prioritize high-severity violations', async () => {
       const result = await inspector.inspectTlsConnection('insecure.example.com', 443);
 
-      const highSeverityViolations = result.violations.filter(v => v.severity === 'HIGH');
-      const mediumSeverityViolations = result.violations.filter(v => v.severity === 'MEDIUM');
+      const mediumSeverityViolations = result.violations.filter(
+        (v: any) => v.severity === 'MEDIUM'
+      );
 
       // Certificate not pinned should be medium severity
-      expect(mediumSeverityViolations.some(v => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(true);
+      expect(mediumSeverityViolations.some((v: any) => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(
+        true
+      );
     });
   });
 

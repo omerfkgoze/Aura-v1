@@ -172,11 +172,11 @@ describe('PIIPreventionGate', () => {
       const recommendations = (gate as any).generateRecommendations(mockResults);
 
       expect(recommendations.length).toBeGreaterThan(0);
-      expect(recommendations.some(r => r.includes('Log Analysis'))).toBe(true);
-      expect(recommendations.some(r => r.includes('Health Data'))).toBe(true);
-      expect(recommendations.some(r => r.includes('Error Handling'))).toBe(true);
-      expect(recommendations.some(r => r.includes('Debug Information'))).toBe(true);
-      expect(recommendations.some(r => r.includes('Crypto Material'))).toBe(true);
+      expect(recommendations.some((r: string) => r.includes('Log Analysis'))).toBe(true);
+      expect(recommendations.some((r: string) => r.includes('Health Data'))).toBe(true);
+      expect(recommendations.some((r: string) => r.includes('Error Handling'))).toBe(true);
+      expect(recommendations.some((r: string) => r.includes('Debug Information'))).toBe(true);
+      expect(recommendations.some((r: string) => r.includes('Crypto Material'))).toBe(true);
     });
 
     it('should generate success recommendations when no violations', () => {
@@ -189,7 +189,9 @@ describe('PIIPreventionGate', () => {
 
       const recommendations = (gate as any).generateRecommendations(mockResults);
 
-      expect(recommendations.some(r => r.includes('All validation checks passed'))).toBe(true);
+      expect(recommendations.some((r: string) => r.includes('All validation checks passed'))).toBe(
+        true
+      );
     });
   });
 
@@ -268,7 +270,16 @@ describe('PIIPreventionGate', () => {
         results: {
           logAnalysis: {
             passed: false,
-            violations: [{}],
+            violations: [
+              {
+                pattern: { healthDataRelated: true, type: 'test-pattern' } as any,
+                match: 'test-match',
+                redactedMatch: 'test-redacted',
+                context: 'test-context',
+                location: { file: 'test.log', line: 1 },
+                severity: 'critical' as const,
+              },
+            ],
             summary: {
               totalLogs: 1,
               violationsFound: 1,

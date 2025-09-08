@@ -40,6 +40,7 @@ export class GateRunner {
     if (!gate) {
       return {
         valid: false,
+        passed: false,
         errors: [`Security gate '${gateName}' not found`],
         warnings: [],
       };
@@ -162,6 +163,7 @@ export class GateRunner {
     } catch (error) {
       return {
         valid: false,
+        passed: false,
         errors: [error instanceof Error ? error.message : 'Unknown error'],
         warnings: [],
         metadata: { gateName: gate.name, timestamp: context.timestamp },
@@ -204,6 +206,7 @@ export class GateRunner {
 
     return {
       valid: false,
+      passed: false,
       errors: [lastError?.message || 'Gate execution failed after retries'],
       warnings: [],
       metadata: {

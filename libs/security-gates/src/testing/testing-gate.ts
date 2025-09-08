@@ -152,6 +152,22 @@ export class TestingGate implements SecurityGate {
   }
 
   /**
+   * Validate method for backward compatibility with tests
+   */
+  async validate(): Promise<any> {
+    const result = await this.execute();
+    return {
+      gateName: this.name,
+      passed: result.passed,
+      timestamp: new Date(),
+      details: result.metadata || {},
+      executionTime: result.executionTime,
+      errors: result.errors,
+      warnings: result.warnings,
+    };
+  }
+
+  /**
    * Get gate configuration
    */
   getConfig(): Record<string, unknown> {

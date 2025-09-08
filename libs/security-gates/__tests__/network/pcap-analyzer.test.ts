@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
-import { PcapAnalyzer, PcapPacket, NetworkTrafficViolation } from '../../src/network/pcap-analyzer';
+import { PcapAnalyzer, PcapPacket } from '../../src/network/pcap-analyzer';
 
 // Mock fs module
 vi.mock('fs', () => ({
@@ -85,8 +85,8 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzePcapFile('/path/to/health.pcap');
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some(v => v.type === 'PLAINTEXT_HEALTH_DATA')).toBe(true);
-      expect(result.violations.some(v => v.severity === 'HIGH')).toBe(true);
+      expect(result.violations.some((v: any) => v.type === 'PLAINTEXT_HEALTH_DATA')).toBe(true);
+      expect(result.violations.some((v: any) => v.severity === 'HIGH')).toBe(true);
     });
 
     it('should handle file read errors gracefully', async () => {
@@ -186,7 +186,7 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzeNetworkTrafficInMemory(healthPackets);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some(v => v.type === 'PLAINTEXT_HEALTH_DATA')).toBe(true);
+      expect(result.violations.some((v: any) => v.type === 'PLAINTEXT_HEALTH_DATA')).toBe(true);
     });
   });
 
@@ -231,7 +231,7 @@ describe('PcapAnalyzer', () => {
 
       expect(result.details.encryptedPackets).toBe(0);
       expect(result.details.encryptedPayloadsOnly).toBe(false);
-      expect(result.violations.some(v => v.type === 'UNENCRYPTED_PAYLOAD')).toBe(true);
+      expect(result.violations.some((v: any) => v.type === 'UNENCRYPTED_PAYLOAD')).toBe(true);
     });
   });
 
@@ -248,12 +248,12 @@ describe('PcapAnalyzer', () => {
 
       expect(result.violations.length).toBeGreaterThan(0);
 
-      const violationTypes = result.violations.map(v => v.type);
+      const violationTypes = result.violations.map((v: any) => v.type);
       expect(violationTypes).toContain('PLAINTEXT_HEALTH_DATA');
       expect(violationTypes).toContain('UNENCRYPTED_PAYLOAD');
       expect(violationTypes).toContain('PII_IN_HEADERS');
 
-      const severities = result.violations.map(v => v.severity);
+      const severities = result.violations.map((v: any) => v.severity);
       expect(severities).toContain('HIGH');
       expect(severities).toContain('MEDIUM');
     });
@@ -267,7 +267,7 @@ describe('PcapAnalyzer', () => {
 
       const result = await analyzer.analyzeNetworkTrafficInMemory(suspiciousPackets);
 
-      expect(result.violations.some(v => v.type === 'SUSPICIOUS_METADATA')).toBe(true);
+      expect(result.violations.some((v: any) => v.type === 'SUSPICIOUS_METADATA')).toBe(true);
     });
   });
 

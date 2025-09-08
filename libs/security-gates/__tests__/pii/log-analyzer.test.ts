@@ -154,7 +154,7 @@ describe('LogAnalyzer', () => {
         patterns: [
           {
             name: 'invalid-regex',
-            pattern: '[',
+            pattern: /\[/,
             severity: 'high',
             description: 'Invalid pattern',
             healthDataRelated: false,

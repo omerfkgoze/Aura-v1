@@ -78,12 +78,13 @@ const RLSGateConfigSchema = z.object({
 export class RLSGate implements SecurityGate {
   readonly name = 'RLS and Access Control Gate';
   readonly description = 'Comprehensive RLS policy testing and access control validation';
+  readonly version = '1.0.0';
   private config: RLSGateConfig;
   private db: DatabaseConnection;
 
   constructor(db: DatabaseConnection, config: Partial<RLSGateConfig> = {}) {
     this.db = db;
-    this.config = RLSGateConfigSchema.parse({
+    const defaultConfig = {
       enabled: true,
       rlsConfig: DEFAULT_RLS_CONFIG,
       accessControlConfig: DEFAULT_ACCESS_CONTROL_CONFIG,
@@ -113,18 +114,53 @@ export class RLSGate implements SecurityGate {
         maxConcurrentTests: 5,
       },
       ...config,
-    });
+    };
+
+    this.config = RLSGateConfigSchema.parse(defaultConfig) as RLSGateConfig;
+  }
+
+  async execute(_input: unknown): Promise<SecurityGateResult> {
+    return this.validate();
+  }
+
+  getConfig(): Record<string, unknown> {
+    return this.config as unknown as Record<string, unknown>;
+  }
+
+  validateConfig(config: Record<string, unknown>): SecurityGateResult {
+    try {
+      RLSGateConfigSchema.parse(config);
+      return {
+        valid: true,
+        passed: true,
+        errors: [],
+        warnings: [],
+        details: 'RLS Gate configuration is valid',
+      };
+    } catch (error) {
+      return {
+        valid: false,
+        passed: false,
+        errors: [error instanceof Error ? error.message : 'Invalid configuration'],
+        warnings: [],
+        details: 'RLS Gate configuration validation failed',
+      };
+    }
   }
 
   async validate(): Promise<SecurityGateResult> {
     if (!this.config.enabled) {
       return {
-        gateName: this.name,
+        valid: true,
         passed: true,
-        timestamp: new Date(),
-        results: [],
-        summary: 'RLS Gate disabled - skipping validation',
+        errors: [],
+        warnings: ['RLS Gate is disabled'],
         details: 'RLS security gate is configured as disabled',
+        metadata: {
+          gateName: this.name,
+          timestamp: new Date(),
+          summary: 'RLS Gate disabled - skipping validation',
+        },
       };
     }
 
@@ -258,13 +294,17 @@ export class RLSGate implements SecurityGate {
       const duration = Date.now() - startTime;
 
       return {
-        gateName: this.name,
+        valid: overallPassed,
         passed: overallPassed,
-        timestamp: new Date(),
-        results,
-        summary: this.generateSummary(results, overallPassed, duration),
+        errors: results.filter(r => !r.passed).map(r => `${r.category}: ${r.details}`),
+        warnings: results.filter(r => r.passed).map(r => `${r.category}: passed`),
         details: this.generateDetailedReport(results),
+        executionTime: duration,
         metadata: {
+          gateName: this.name,
+          timestamp: new Date(),
+          summary: this.generateSummary(results, overallPassed, duration),
+          results,
           testDuration: duration,
           totalComponents: results.length,
           passedComponents: results.filter(r => r.passed).length,
@@ -275,13 +315,16 @@ export class RLSGate implements SecurityGate {
       const duration = Date.now() - startTime;
 
       return {
-        gateName: this.name,
+        valid: false,
         passed: false,
-        timestamp: new Date(),
-        results: [],
-        summary: `RLS Gate failed with error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
+        warnings: [],
         details: `Gate execution failed after ${duration}ms`,
+        executionTime: duration,
         metadata: {
+          gateName: this.name,
+          timestamp: new Date(),
+          summary: `RLS Gate failed with error: ${error instanceof Error ? error.message : 'Unknown error'}`,
           error: error instanceof Error ? error.message : 'Unknown error',
           testDuration: duration,
         },
