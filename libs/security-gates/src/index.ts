@@ -9,5 +9,18 @@ export * from './crypto/kdf-validator';
 export * from './crypto/algorithm-validator';
 export * from './crypto/crypto-gate';
 
+// Network analysis
+export * from './network/pcap-analyzer';
+export * from './network/tls-inspector';
+export * from './network/metadata-detector';
+export * from './network/network-gate';
+
+// Advanced testing frameworks
+export * from './testing/property-testing';
+export * from './testing/fuzz-testing';
+export * from './testing/chaos-engineering';
+export * from './testing/load-testing';
+export * from './testing/testing-gate';
+
 // CI/CD integration
 export * from './ci/github-actions';

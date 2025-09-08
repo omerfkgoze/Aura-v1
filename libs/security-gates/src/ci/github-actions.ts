@@ -1,5 +1,7 @@
 import { GateRunner, GateRunnerConfig } from '../core/gate-runner';
 import { CryptoGate } from '../crypto/crypto-gate';
+import { NetworkGate } from '../network/network-gate';
+import { TestingGate, createTestingGate } from '../testing/testing-gate';
 import {
   SecurityGate,
   SecurityGateResult,
@@ -11,6 +13,17 @@ export interface CIGateConfig extends GateRunnerConfig {
   generateReport?: boolean;
   reportPath?: string;
   slackWebhook?: string;
+  // Advanced testing options
+  enableAdvancedTesting?: boolean;
+  enablePropertyTesting?: boolean;
+  enableFuzzTesting?: boolean;
+  enableChaosEngineering?: boolean;
+  enableLoadTesting?: boolean;
+  maxTestingTime?: number; // minutes
+  // Network analysis options
+  enableNetworkAnalysis?: boolean;
+  pcapFile?: string;
+  networkAnalysisTimeout?: number;
 }
 
 export class GitHubActionsCrypto implements SecurityGate {
@@ -82,6 +95,16 @@ export class CIGateRunner {
       generateReport: true,
       reportPath: './security-gate-report.md',
       environment: (process.env.NODE_ENV as any) || 'development',
+      // Advanced testing defaults
+      enableAdvancedTesting: true,
+      enablePropertyTesting: true,
+      enableFuzzTesting: true,
+      enableChaosEngineering: false, // Disabled by default for CI
+      enableLoadTesting: false, // Disabled by default for CI
+      maxTestingTime: 15, // 15 minutes max
+      // Network analysis defaults
+      enableNetworkAnalysis: false,
+      networkAnalysisTimeout: 300, // 5 minutes
       ...config,
     };
 
@@ -104,8 +127,33 @@ export class CIGateRunner {
       timingAttackCheck: true,
       quantumResistanceCheck: false,
     });
-
     this.runner.registerGate(cryptoGate);
+
+    // Register network analysis gate if enabled
+    if (this.config.enableNetworkAnalysis) {
+      const networkGate = new NetworkGate({
+        pcapAnalysisEnabled: true,
+        tlsInspectionEnabled: true,
+        metadataDetectionEnabled: true,
+        timeout: this.config.networkAnalysisTimeout! * 1000,
+      });
+      this.runner.registerGate(networkGate);
+    }
+
+    // Register advanced testing gate if enabled
+    if (this.config.enableAdvancedTesting) {
+      const testingGate = createTestingGate({
+        enablePropertyTesting: this.config.enablePropertyTesting!,
+        enableFuzzTesting: this.config.enableFuzzTesting!,
+        enableChaosEngineering: this.config.enableChaosEngineering!,
+        enableLoadTesting: this.config.enableLoadTesting!,
+        maxTestingTime: this.config.maxTestingTime!,
+        parallelExecution: true,
+        failFast: this.config.exitOnFailure!,
+        outputDirectory: './ci-testing-results',
+      });
+      this.runner.registerGate(testingGate);
+    }
   }
 
   async runCryptoValidation(envelopesPath: string): Promise<void> {
