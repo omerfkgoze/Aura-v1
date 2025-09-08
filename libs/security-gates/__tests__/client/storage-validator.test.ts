@@ -11,6 +11,7 @@ import StorageValidator from '../../src/client/storage-validator';
 // Mock localStorage and sessionStorage
 const mockStorage = () => {
   let store: Record<string, string> = {};
+  let _length: number = 0;
 
   return {
     getItem: vi.fn((key: string) => store[key] || null),
@@ -25,7 +26,10 @@ const mockStorage = () => {
     }),
     key: vi.fn((index: number) => Object.keys(store)[index] || null),
     get length() {
-      return Object.keys(store).length;
+      return _length > 0 ? _length : Object.keys(store).length;
+    },
+    set length(value: number) {
+      _length = value;
     },
   };
 };

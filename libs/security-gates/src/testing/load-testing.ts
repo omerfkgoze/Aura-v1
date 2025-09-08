@@ -137,7 +137,6 @@ export interface ConstraintResult {
 
 export class LoadTestingSuite extends EventEmitter {
   private scenarios: LoadTestScenario[] = [];
-  private isRunning = false;
   private currentMetrics: LoadTestMetrics = this.initializeMetrics();
 
   constructor() {
@@ -162,7 +161,6 @@ export class LoadTestingSuite extends EventEmitter {
     }
 
     console.log(`Starting load test scenario: ${scenario.name}`);
-    this.isRunning = true;
     this.currentMetrics = this.initializeMetrics();
 
     const startTime = Date.now();
@@ -195,9 +193,8 @@ export class LoadTestingSuite extends EventEmitter {
       result.metrics = { ...this.currentMetrics };
     } catch (error) {
       result.passed = false;
-      console.error(`Load test scenario ${scenario.name} failed:`, error.message);
+      console.error(`Load test scenario ${scenario.name} failed:`, (error as Error).message);
     } finally {
-      this.isRunning = false;
       result.duration = Date.now() - startTime;
     }
 
@@ -233,7 +230,6 @@ export class LoadTestingSuite extends EventEmitter {
 
     // Calculate test phases
     const steadyStateTime = duration - rampUpTime - rampDownTime;
-    const totalPhaseTime = duration * 1000; // Convert to milliseconds
 
     // Ramp-up phase
     console.log(`Ramp-up phase: ${rampUpTime}s`);
@@ -259,7 +255,7 @@ export class LoadTestingSuite extends EventEmitter {
    */
   private async executePhase(
     scenario: LoadTestScenario,
-    phase: string,
+    _phase: string,
     duration: number,
     targetUsers: number,
     targetRps: number
@@ -330,7 +326,7 @@ export class LoadTestingSuite extends EventEmitter {
       }
     } catch (error) {
       this.updateMetrics(0, false);
-      console.error(`Request failed for ${target.name}:`, error.message);
+      console.error(`Request failed for ${target.name}:`, (error as Error).message);
     }
   }
 
@@ -359,7 +355,7 @@ export class LoadTestingSuite extends EventEmitter {
               },
               {
                 name: 'valid-crypto-envelope',
-                validate: (req, res) => res && res.envelope && res.envelope.version,
+                validate: (_req, res) => res && res.envelope && res.envelope.version,
                 expected: true,
               },
             ],
@@ -404,12 +400,12 @@ export class LoadTestingSuite extends EventEmitter {
             securityValidations: [
               {
                 name: 'rate-limiting-enforced',
-                validate: (req, res) => res.rateLimited !== undefined,
+                validate: (_req, res) => res.rateLimited !== undefined,
                 expected: true,
               },
               {
                 name: 'session-validation',
-                validate: (req, res) => res.sessionValid !== undefined,
+                validate: (_req, res) => res.sessionValid !== undefined,
                 expected: true,
               },
             ],
@@ -465,7 +461,7 @@ export class LoadTestingSuite extends EventEmitter {
               },
               {
                 name: 'query-parameterized',
-                validate: (req, res) => !res.rawQuery || !res.rawQuery.includes("'"),
+                validate: (_req, res) => !res.rawQuery || !res.rawQuery.includes("'"),
                 expected: true,
               },
             ],
@@ -503,7 +499,7 @@ export class LoadTestingSuite extends EventEmitter {
   /**
    * Mock target functions
    */
-  private mockCryptoEncrypt = async (payload: any): Promise<any> => {
+  private mockCryptoEncrypt = async (_payload: any): Promise<any> => {
     await this.sleep(Math.random() * 100); // Simulate crypto processing time
     return {
       encrypted: true,

@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -171,18 +170,19 @@ export class FuzzTestingSuite {
         }
       } catch (error) {
         testCount++;
+        const err = error as Error;
 
         // Check if error indicates security issue
-        if (this.isSecurityError(error, target.securityErrorTypes)) {
+        if (this.isSecurityError(err, target.securityErrorTypes)) {
           crashCount++;
           const crashPath = path.join(targetOutputDir, `crash_${crashCount}`);
           const errorInfo = {
-            error: error.message,
-            stack: error.stack,
+            error: err.message,
+            stack: err.stack,
             timestamp: new Date().toISOString(),
           };
           fs.writeFileSync(crashPath + '.error', JSON.stringify(errorInfo, null, 2));
-          console.warn(`Security error in ${target.name}: ${error.message}`);
+          console.warn(`Security error in ${target.name}: ${err.message}`);
         }
       }
 
@@ -209,7 +209,7 @@ export class FuzzTestingSuite {
       this.validateCryptoEnvelope(envelope);
       return { valid: true, envelope };
     } catch (error) {
-      return { valid: false, error: error.message };
+      return { valid: false, error: (error as Error).message };
     }
   };
 
@@ -227,7 +227,7 @@ export class FuzzTestingSuite {
       const packet = this.parseNetworkPacket(input);
       return { valid: true, packet };
     } catch (error) {
-      return { valid: false, error: error.message };
+      return { valid: false, error: (error as Error).message };
     }
   };
 
@@ -240,7 +240,7 @@ export class FuzzTestingSuite {
       const allowed = this.evaluateRLSPolicy(policyData);
       return { allowed, policy: policyData };
     } catch (error) {
-      return { allowed: false, error: error.message };
+      return { allowed: false, error: (error as Error).message };
     }
   };
 

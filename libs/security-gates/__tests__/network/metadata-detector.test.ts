@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-  MetadataDetector,
-  RequestMetadata,
-  MetadataPattern,
-  MetadataViolation,
-} from '../../src/network/metadata-detector';
+import { MetadataDetector, RequestMetadata } from '../../src/network/metadata-detector';
 
 describe('MetadataDetector', () => {
   let detector: MetadataDetector;
@@ -44,7 +39,7 @@ describe('MetadataDetector', () => {
       expect(result.details.timingPatternsDetected).toBe(true);
       expect(
         result.details.patterns.some(
-          p => p.type === 'TIMING' && p.description.includes('Regular polling pattern')
+          (p: any) => p.type === 'TIMING' && p.description.includes('Regular polling pattern')
         )
       ).toBe(true);
     });
@@ -82,7 +77,7 @@ describe('MetadataDetector', () => {
       expect(result.details.timingPatternsDetected).toBe(true);
       expect(
         result.details.patterns.some(
-          p =>
+          (p: any) =>
             p.type === 'TIMING' &&
             p.severity === 'HIGH' &&
             p.description.includes('Timing differences')
@@ -111,7 +106,7 @@ describe('MetadataDetector', () => {
       expect(result.details.sizePatternsDetected).toBe(true);
       expect(
         result.details.patterns.some(
-          p => p.type === 'SIZE' && p.description.includes('Consistent response sizes')
+          (p: any) => p.type === 'SIZE' && p.description.includes('Consistent response sizes')
         )
       ).toBe(true);
     });
@@ -140,9 +135,9 @@ describe('MetadataDetector', () => {
       const result = await detector.analyzeMetadata(requests);
 
       expect(result.details.headerLeakageDetected).toBe(true);
-      expect(result.details.patterns.some(p => p.type === 'HEADER' && p.severity === 'HIGH')).toBe(
-        true
-      );
+      expect(
+        result.details.patterns.some((p: any) => p.type === 'HEADER' && p.severity === 'HIGH')
+      ).toBe(true);
     });
 
     it('should detect tracking parameters in headers', async () => {
@@ -162,7 +157,7 @@ describe('MetadataDetector', () => {
       expect(result.details.headerLeakageDetected).toBe(true);
       expect(
         result.details.patterns.some(
-          p => p.type === 'HEADER' && p.description.includes('Tracking pattern')
+          (p: any) => p.type === 'HEADER' && p.description.includes('Tracking pattern')
         )
       ).toBe(true);
     });
@@ -267,7 +262,7 @@ describe('MetadataDetector', () => {
 
       expect(
         result.details.patterns.some(
-          p =>
+          (p: any) =>
             p.type === 'SEQUENCE' &&
             p.description.includes('Sequential access to sensitive endpoints')
         )
@@ -285,7 +280,7 @@ describe('MetadataDetector', () => {
 
       expect(
         result.details.patterns.some(
-          p => p.type === 'FINGERPRINT' && p.description.includes('fingerprinting')
+          (p: any) => p.type === 'FINGERPRINT' && p.description.includes('fingerprinting')
         )
       ).toBe(true);
     });
@@ -308,7 +303,7 @@ describe('MetadataDetector', () => {
 
       expect(
         result.details.patterns.some(
-          p =>
+          (p: any) =>
             p.type === 'FINGERPRINT' &&
             p.severity === 'HIGH' &&
             p.description.includes('canvas fingerprinting')
@@ -331,7 +326,7 @@ describe('MetadataDetector', () => {
 
       expect(
         result.details.patterns.some(
-          p => p.type === 'FINGERPRINT' && p.description.includes('Consistent User-Agent')
+          (p: any) => p.type === 'FINGERPRINT' && p.description.includes('Consistent User-Agent')
         )
       ).toBe(true);
     });
@@ -349,7 +344,7 @@ describe('MetadataDetector', () => {
 
       expect(result.details.trackingSignalsFound.length).toBeGreaterThan(0);
       expect(
-        result.details.trackingSignalsFound.some(signal => signal.includes('utm_source'))
+        result.details.trackingSignalsFound.some((signal: any) => signal.includes('utm_source'))
       ).toBe(true);
     });
 
@@ -390,12 +385,14 @@ describe('MetadataDetector', () => {
 
       const result = await detector.analyzeMetadata(requests);
 
-      const violationTypes = result.violations.map(v => v.type);
+      const violationTypes = result.violations.map((v: any) => v.type);
       expect(violationTypes).toContain('TIMING_LEAK');
       expect(violationTypes).toContain('HEADER_LEAK');
 
       // Check that each violation has a recommendation
-      expect(result.violations.every(v => v.description && v.description.length > 0)).toBe(true);
+      expect(result.violations.every((v: any) => v.description && v.description.length > 0)).toBe(
+        true
+      );
     });
 
     it('should provide appropriate recommendations for violations', async () => {

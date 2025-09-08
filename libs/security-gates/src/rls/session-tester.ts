@@ -368,13 +368,18 @@ export class SessionTester {
       }
 
       // Parse validation result (this would be more complex in reality)
-      return {
+      const result: TokenValidationResult = {
         token,
         isValid: validation.valid === true,
         reason: validation.valid ? 'Valid token' : validation.reason || 'Invalid token',
         claims: validation.claims,
-        expiresAt: validation.exp ? new Date(validation.exp * 1000) : undefined,
       };
+
+      if (validation.exp) {
+        result.expiresAt = new Date(validation.exp * 1000);
+      }
+
+      return result;
     } catch (error) {
       return {
         token,

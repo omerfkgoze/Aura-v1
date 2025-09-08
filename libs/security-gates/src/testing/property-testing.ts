@@ -1,5 +1,4 @@
 import * as fc from 'fast-check';
-import { z } from 'zod';
 
 /**
  * Property-based testing framework for crypto operations and data handling
@@ -44,7 +43,7 @@ export class PropertyTestingSuite {
    * Run a security property test
    */
   async testSecurityProperty<T>(property: SecurityProperty<T>): Promise<void> {
-    const { name, generator, predicate, precondition } = property;
+    const { generator, predicate, precondition } = property;
 
     return fc.assert(
       fc.property(generator, data => {
@@ -56,7 +55,7 @@ export class PropertyTestingSuite {
       {
         numRuns: this.config.runs,
         maxSkipsPerRun: 100,
-        seed: this.config.seed,
+        seed: this.config.seed ?? undefined,
         timeout: this.config.timeout,
         verbose: 2,
         examples: [],

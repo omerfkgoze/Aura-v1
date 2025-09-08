@@ -84,7 +84,6 @@ export interface ChaosMetrics {
 
 export class ChaosEngineeringSuite extends EventEmitter {
   private experiments: ChaosExperiment[] = [];
-  private activeExperiment?: ChaosExperiment;
   private metrics: ChaosMetrics = {
     averageResponseTime: 0,
     errorRate: 0,
@@ -114,7 +113,6 @@ export class ChaosEngineeringSuite extends EventEmitter {
     }
 
     console.log(`Starting chaos experiment: ${experiment.name}`);
-    this.activeExperiment = experiment;
 
     const startTime = Date.now();
     const result: ChaosExperimentResult = {
@@ -154,9 +152,8 @@ export class ChaosEngineeringSuite extends EventEmitter {
       result.metrics = { ...this.metrics };
     } catch (error) {
       result.success = false;
-      result.failures.push(error.message);
+      result.failures.push((error as Error).message);
     } finally {
-      this.activeExperiment = undefined;
       result.duration = Date.now() - startTime;
     }
 
@@ -390,7 +387,7 @@ export class ChaosEngineeringSuite extends EventEmitter {
 
   private async injectMemoryFailure(failure: FailureInjection): Promise<void> {
     // Mock memory pressure
-    const memoryPressure = failure.parameters.memoryPressureMB || 100;
+    const memoryPressure = failure.parameters['memoryPressureMB'] || 100;
     this.emit('memory-pressure', { memoryMB: memoryPressure });
   }
 
@@ -435,7 +432,7 @@ export class ChaosEngineeringSuite extends EventEmitter {
         expected: behaviorCheck.expectedResult,
         actual: false,
         duration: Date.now() - startTime,
-        error: error.message,
+        error: (error as Error).message,
       };
     }
   }
