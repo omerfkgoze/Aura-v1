@@ -3,6 +3,7 @@ import { CryptoGate } from '../crypto/crypto-gate';
 import { NetworkGate } from '../network/network-gate';
 import { TestingGate, createTestingGate } from '../testing/testing-gate';
 import { PIIPreventionGate, validatePIIPrevention } from '../pii/pii-gate';
+import ClientSecurityGate from '../client/client-gate';
 import {
   SecurityGate,
   SecurityGateResult,
@@ -30,6 +31,10 @@ export interface CIGateConfig extends GateRunnerConfig {
   logPaths?: string[];
   errorSamples?: string[];
   piiFailOnCritical?: boolean;
+  // Client-side security options
+  enableClientSideSecurity?: boolean;
+  clientBuildMode?: 'development' | 'staging' | 'production';
+  clientFailOnHighRisk?: boolean;
 }
 
 export class GitHubActionsCrypto implements SecurityGate {
@@ -111,6 +116,10 @@ export class CIGateRunner {
       // Network analysis defaults
       enableNetworkAnalysis: false,
       networkAnalysisTimeout: 300, // 5 minutes
+      // Client-side security defaults
+      enableClientSideSecurity: true,
+      clientBuildMode: 'development',
+      clientFailOnHighRisk: true,
       ...config,
     };
 
@@ -159,6 +168,17 @@ export class CIGateRunner {
         outputDirectory: './ci-testing-results',
       });
       this.runner.registerGate(testingGate);
+    }
+
+    // Register client-side security gate if enabled
+    if (this.config.enableClientSideSecurity) {
+      const clientGate = new ClientSecurityGate({
+        buildMode: this.config.clientBuildMode!,
+        failOnHighRisk: this.config.clientFailOnHighRisk!,
+        maxRiskScore: this.config.clientBuildMode === 'production' ? 0 : 100,
+        minComplianceRate: this.config.clientBuildMode === 'production' ? 100 : 90,
+      });
+      this.runner.registerGate(clientGate);
     }
   }
 

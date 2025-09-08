@@ -36,5 +36,12 @@ export * from './rls/privilege-tester';
 export * from './rls/session-tester';
 export * from './rls/rls-gate';
 
+// Client-side security validation framework
+export * from './client/ssr-validator';
+export * from './client/storage-validator';
+export * from './client/xss-tester';
+export * from './client/crypto-validator';
+export * from './client/client-gate';
+
 // CI/CD integration
 export * from './ci/github-actions';
