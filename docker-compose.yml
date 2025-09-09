@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL database for local development
+  # PostgreSQL database for local development (matches Supabase production config)
   postgres:
     image: postgres:15-alpine
     container_name: aura-postgres-dev
@@ -9,13 +9,17 @@ services:
     environment:
       POSTGRES_DB: aura_dev
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: postgres_dev_password
       POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8'
+      # Match Supabase extensions
+      POSTGRES_MULTIPLE_EXTENSIONS: 'uuid-ossp,pgcrypto,pgjwt'
     ports:
-      - '54322:5432'
+      - '54322:5432' # Matches Supabase local port
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d
+      - ./db/migrations/production:/docker-entrypoint-initdb.d/migrations
+      - ./scripts/db:/docker-entrypoint-initdb.d/scripts
     networks:
       - aura-dev
     healthcheck:
@@ -23,6 +27,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    command: >
+      postgres
+      -c max_connections=100
+      -c shared_preload_libraries=pg_stat_statements
+      -c log_statement=all
+      -c log_min_duration_statement=1000
+      -c ssl=on
+      -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+      -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
 
   # Redis for caching (optional, with fallback to memory)
   redis:
