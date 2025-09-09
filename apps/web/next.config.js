@@ -38,10 +38,9 @@ const nextConfig = {
     return config;
   },
 
-  // Experimental features to fix Html import issue
+  // Next.js 15 compatible configuration
   experimental: {
-    appDir: true,
-    esmExternals: 'loose',
+    // Removed esmExternals as it's deprecated in Next.js 15
   },
 };
 
