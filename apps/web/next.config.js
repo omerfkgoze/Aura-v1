@@ -5,7 +5,7 @@ const nextConfig = {
   poweredByHeader: false,
 
   // Static export for better compatibility
-  // output: 'export', // Temporarily disabled due to Html import issue
+  output: 'export',
   trailingSlash: true,
   images: {
     unoptimized: true,
