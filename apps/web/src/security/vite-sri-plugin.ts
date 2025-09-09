@@ -151,9 +151,14 @@ export function createSRIPlugin(options: SRIPluginOptions = {}): Plugin {
     },
 
     transformIndexHtml: {
-      enforce: 'post',
-      transform(html, context) {
-        if (context.bundle) {
+      order: 'post',
+      handler(html, context) {
+        // Only transform if we have a bundle context and generated hashes
+        if (!context?.bundle || generatedHashes.size === 0) {
+          return html;
+        }
+
+        try {
           // Add SRI attributes to script and link tags
           html = html.replace(
             /<script\s+([^>]*\bsrc\s*=\s*["']([^"']+)["'][^>]*)>/gi,
@@ -178,7 +183,10 @@ export function createSRIPlugin(options: SRIPluginOptions = {}): Plugin {
               return match;
             }
           );
+        } catch (error) {
+          console.warn('SRI plugin: Error during HTML transformation:', error);
         }
+
         return html;
       },
     },

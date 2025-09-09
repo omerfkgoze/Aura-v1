@@ -38,7 +38,11 @@ vi.mock('next/server', () => {
 });
 
 // Set test environment variables
-process.env['NODE_ENV'] = 'test';
+Object.defineProperty(process.env, 'NODE_ENV', {
+  value: 'test',
+  writable: true,
+  configurable: true,
+});
 process.env['CORS_ORIGIN'] = 'http://localhost:3000,http://localhost:19006';
 
 // Mock console methods to avoid noise in tests
