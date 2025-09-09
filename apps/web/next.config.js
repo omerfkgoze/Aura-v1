@@ -3,7 +3,7 @@ const nextConfig = {
   // Basic Next.js configuration
   reactStrictMode: true,
   poweredByHeader: false,
-  
+
   // Static export for better compatibility
   output: 'export',
   trailingSlash: true,
@@ -22,19 +22,19 @@ const nextConfig = {
   },
 
   // Webpack configuration to ignore problematic files
-  webpack: (config, { isServer }) => {
+  webpack: config => {
     // Ignore Vite-specific files during Next.js build
     config.module.rules.push({
       test: /vite-sri-plugin\.ts$/,
       loader: 'ignore-loader',
     });
-    
+
     // Ignore main.tsx and other Vite entry files
     config.resolve.alias = {
       ...config.resolve.alias,
       'ignored-vite-files': false,
     };
-    
+
     return config;
   },
 };
