@@ -264,6 +264,9 @@ export async function getBuildInfo(): Promise<Record<string, unknown>> {
   return JSON.parse(buildInfo) as Record<string, unknown>;
 }
 
+// Export integration interfaces and utilities
+export * from './integration';
+
 // Default export for easier imports
 export default {
   initializeCrypto,

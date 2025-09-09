@@ -7,3 +7,5 @@ dist/
 pkg/
 *.wasm
 *_bg.js
+libs/crypto-core/scripts/check-integrity.js
+libs/crypto-core/scripts/generate-docs.js

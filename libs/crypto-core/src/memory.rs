@@ -414,7 +414,7 @@ mod tests {
 
     #[test]
     fn test_memory_manager() {
-        let mut manager = MemoryManager::new();
+        let manager = MemoryManager::new();
         let stats = manager.get_stats();
         assert!(stats.contains("encryption_buffers"));
         assert!(stats.contains("temp_buffers"));

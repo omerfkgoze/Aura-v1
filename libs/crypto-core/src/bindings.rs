@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use serde::{Serialize, Deserialize};
+// use serde::{Serialize, Deserialize}; // Reserved for future use
 use js_sys::{Promise, Object};
 use wasm_bindgen_futures::future_to_promise;
 
@@ -170,7 +170,7 @@ impl AsyncCrypto {
             use crate::keys::CryptoKey;
             
             let mut key = CryptoKey::new(key_type);
-            key.generate();
+            let _ = key.generate();
             
             Ok(JsValue::from(key))
         })

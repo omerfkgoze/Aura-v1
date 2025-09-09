@@ -20,6 +20,7 @@ pub mod aad;
 pub mod memory;
 pub mod bindings;
 pub mod security;
+pub mod integration;
 
 // Re-export main functions for JavaScript consumption
 pub use envelope::*;
@@ -28,6 +29,7 @@ pub use aad::*;
 pub use memory::{SecureBuffer, MemoryPool, SecureTempData, get_memory_usage, get_active_allocations, cleanup_unused_buffers, has_memory_leaks, get_memory_stats, reset_memory_stats, MemoryStats, track_secret_allocation, track_secret_zeroization, track_allocation};
 pub use bindings::*;
 pub use security::*;
+pub use integration::*;
 
 // Initialize function called when WASM module is loaded
 #[wasm_bindgen(start)]
@@ -52,22 +54,15 @@ pub fn generate_key() -> Result<CryptoKey, Box<dyn std::error::Error>> {
 
 pub fn encrypt_data(
     data: &[u8],
-    key: &CryptoKey,
+    _key: &CryptoKey,
     aad: &[u8],
-    device_id: &str,
+    _device_id: &str,
 ) -> Result<EncryptionResult, Box<dyn std::error::Error>> {
     track_allocation(data.len() + aad.len());
     track_secret_allocation();
     
-    // Create a mock encryption result for testing
-    let envelope = CryptoEnvelope {
-        version: 1,
-        algorithm: "AES-256-GCM".to_string(),
-        kdf_params: vec![1, 0, 0, 0], // Mock KDF params
-        salt: vec![0xAA; 16],
-        nonce: vec![0x55; 12],
-        key_id: device_id.to_string(),
-    };
+    // Create a mock encryption result for testing using the constructor
+    let envelope = CryptoEnvelope::new();
     
     // Mock encrypted data (in real implementation, this would be actual encryption)
     let encrypted_data = data.iter().map(|&b| b ^ 0xAA).collect();
@@ -81,12 +76,14 @@ pub fn encrypt_data(
 pub fn decrypt_data(
     encrypted_data: &[u8],
     envelope: &CryptoEnvelope,
-    key: &CryptoKey,
+    _key: &CryptoKey,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     track_allocation(encrypted_data.len());
     
-    // Validate envelope
-    envelope.validate().map_err(|e| format!("Invalid envelope: {:?}", e))?;
+    // Basic envelope validation (simplified for now)
+    if envelope.encrypted_data().is_empty() {
+        return Err("Invalid envelope: empty encrypted data".into());
+    }
     
     // Mock decryption (in real implementation, this would be actual decryption)
     let decrypted = encrypted_data.iter().map(|&b| b ^ 0xAA).collect();

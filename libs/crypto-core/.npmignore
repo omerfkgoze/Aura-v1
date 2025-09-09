@@ -1,0 +1,57 @@
+# Source files
+src/
+tests/
+benches/
+fuzz/
+target/
+scripts/
+
+# Development files
+*.md
+!README.md
+Cargo.lock
+.gitignore
+.eslintrc*
+.prettierrc*
+tsconfig*.json
+vitest*.config.ts
+vitest.setup.ts
+
+# Build artifacts (keep only pkg/)
+pkg-web/
+pkg-node/
+build-report.json
+bundle-size-report.json
+integrity-manifest.json
+
+# Development dependencies
+node_modules/
+.nx/
+.cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+.tmp/

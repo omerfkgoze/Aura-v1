@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use zeroize::Zeroize;
+// use zeroize::Zeroize; // Reserved for future use
 
 // Import console.log for debugging
 #[wasm_bindgen]
@@ -32,7 +32,7 @@ pub fn constant_time_compare(a: &[u8], b: &[u8]) -> bool {
     }
     
     // Constant time check if result is zero
-    ((result as u16).wrapping_sub(1) >> 8) == 1
+    result == 0
 }
 
 /// Secure random number generator using platform entropy
@@ -337,13 +337,8 @@ impl PlatformEntropy {
             .unwrap_or(0.0);
         entropy.extend_from_slice(&performance_now.to_bits().to_le_bytes());
         
-        // Memory usage entropy (if available)
-        // Memory information is not available in WASM context
-        // This would be available in Node.js context but not in browsers
-        if false { // Disabled for WASM compatibility
-            entropy.extend_from_slice(&memory.used_js_heap_size().to_le_bytes());
-            entropy.extend_from_slice(&memory.total_js_heap_size().to_le_bytes());
-        }
+        // Memory usage entropy would be available in Node.js context
+        // but is not accessible in WASM/browser context for security reasons
         
         // Add some randomness from thread_rng as well
         let mut rng = rand::thread_rng();
@@ -369,7 +364,7 @@ impl PlatformEntropy {
         }
         
         // Count unique bytes
-        let unique_bytes = counts.iter().filter(|&&count| count > 0).count();
+        let _unique_bytes = counts.iter().filter(|&&count| count > 0).count();
         
         // Calculate Shannon entropy approximation
         let length = data.len() as f64;
@@ -430,6 +425,7 @@ mod tests {
         assert_eq!(SideChannelProtection::conditional_select(false, 0xFF, 0x00), 0x00);
     }
 
+    #[cfg(target_arch = "wasm32")]
     #[test]
     fn test_audit_trail() {
         let mut audit = AuditTrail::new(5);
@@ -440,6 +436,7 @@ mod tests {
         assert_eq!(audit.get_operation_count("encrypt"), 1);
     }
 
+    #[cfg(target_arch = "wasm32")]
     #[test]
     fn test_platform_entropy() {
         let entropy = PlatformEntropy::collect_entropy();

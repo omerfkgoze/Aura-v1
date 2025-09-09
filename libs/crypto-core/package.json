@@ -1,12 +1,19 @@
 {
   "name": "@aura/crypto-core",
   "version": "0.1.0",
-  "description": "Rust/WASM cryptographic core for Aura app",
+  "description": "Rust/WASM cryptographic core with memory hygiene and TypeScript integration for privacy-focused applications",
   "main": "pkg/crypto_core.js",
   "module": "pkg/crypto_core.js",
   "types": "pkg/crypto_core.d.ts",
   "files": [
-    "pkg/"
+    "pkg/",
+    "pkg-web/",
+    "pkg-node/",
+    "src/integrity.ts",
+    "src/integrity.d.ts",
+    "src/integrity.js",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "wasm-pack build --target bundler --out-dir pkg",
@@ -14,7 +21,15 @@
     "build:nodejs": "wasm-pack build --target nodejs --out-dir pkg-node",
     "build:all": "npm run build && npm run build:web && npm run build:nodejs",
     "build:dev": "wasm-pack build --dev --target bundler --out-dir pkg",
-    "build:release": "wasm-pack build --release --target bundler --out-dir pkg && wasm-opt -O3 pkg/crypto_core_bg.wasm -o pkg/crypto_core_bg.wasm",
+    "build:release": "npm run build:release:bundler && npm run build:release:web && npm run build:release:nodejs",
+    "build:release:bundler": "wasm-pack build --release --target bundler --out-dir pkg && npm run optimize:bundler",
+    "build:release:web": "wasm-pack build --release --target web --out-dir pkg-web && npm run optimize:web",
+    "build:release:nodejs": "wasm-pack build --release --target nodejs --out-dir pkg-node && npm run optimize:nodejs",
+    "optimize:bundler": "wasm-opt -O3 pkg/crypto_core_bg.wasm -o pkg/crypto_core_bg.wasm",
+    "optimize:web": "wasm-opt -O3 pkg-web/crypto_core_bg.wasm -o pkg-web/crypto_core_bg.wasm",
+    "optimize:nodejs": "wasm-opt -O3 pkg-node/crypto_core_bg.wasm -o pkg-node/crypto_core_bg.wasm",
+    "build:ci": "npm run clean && npm run build:release && npm run validate:build",
+    "validate:build": "node scripts/validate-build.js",
     "test": "wasm-pack test --headless --firefox",
     "test:chrome": "wasm-pack test --headless --chrome",
     "test:node": "wasm-pack test --node",
@@ -32,7 +47,18 @@
     "test:fuzz": "cd fuzz && cargo fuzz run encrypt_decrypt -- -max_total_time=60",
     "test:fuzz:all": "cd fuzz && cargo fuzz run encrypt_decrypt -- -max_total_time=30 && cargo fuzz run envelope_parsing -- -max_total_time=30 && cargo fuzz run key_operations -- -max_total_time=30 && cargo fuzz run aad_validation -- -max_total_time=30",
     "test:security": "npm run test:fuzz:all && npm run test:memory && npm run test:regression",
-    "clean": "rm -rf pkg pkg-web pkg-node target"
+    "clean": "rm -rf pkg pkg-web pkg-node target",
+    "prepare:npm": "npm run build:release && npm run docs:generate && npm run audit:prepare",
+    "docs:generate": "node scripts/generate-docs.js",
+    "audit:prepare": "node scripts/prepare-security-audit.js",
+    "size:check": "node scripts/check-bundle-size.js",
+    "integrity:check": "node scripts/check-integrity.js",
+    "release": "node scripts/release-manager.js",
+    "release:patch": "node scripts/release-manager.js patch",
+    "release:minor": "node scripts/release-manager.js minor",
+    "release:major": "node scripts/release-manager.js major",
+    "release:prerelease": "node scripts/release-manager.js prerelease",
+    "version:check": "echo $npm_package_version"
   },
   "repository": {
     "type": "git",
@@ -50,9 +76,43 @@
   "author": "Aura Team",
   "license": "MIT",
   "devDependencies": {
-    "wasm-pack": "^0.13.0"
+    "wasm-pack": "^0.13.0",
+    "@types/node": "^20.0.0",
+    "semver": "^7.6.0"
   },
   "peerDependencies": {
-    "@types/node": "*"
+    "@types/node": ">=18.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "import": "./pkg/crypto_core.js",
+      "require": "./pkg/crypto_core.js",
+      "types": "./pkg/crypto_core.d.ts"
+    },
+    "./web": {
+      "import": "./pkg-web/crypto_core.js",
+      "types": "./pkg-web/crypto_core.d.ts"
+    },
+    "./node": {
+      "import": "./pkg-node/crypto_core.js",
+      "require": "./pkg-node/crypto_core.js",
+      "types": "./pkg-node/crypto_core.d.ts"
+    },
+    "./integrity": {
+      "import": "./src/integrity.js",
+      "types": "./src/integrity.d.ts"
+    }
+  },
+  "sideEffects": false,
+  "browser": {
+    "crypto": false
   }
 }

@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-09-09T14:49:20.939Z",
+  "version": "0.1.0",
+  "files": [
+    "docs/security-audit-checklist.md",
+    "docs/threat-model.md",
+    "docs/security-audit-report.html",
+    "security-audit-report.json",
+    "coverage/rust/tarpaulin-report.html",
+    "docs/api-reference.md",
+    "README.md"
+  ],
+  "status": "PASS",
+  "summary": {
+    "overall_status": "PASS",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "medium_issues": 0,
+    "low_issues": 0
+  }
+}

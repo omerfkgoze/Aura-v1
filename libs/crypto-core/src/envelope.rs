@@ -3,7 +3,7 @@ use zeroize::Zeroize;
 
 // Crypto envelope version for compatibility
 #[wasm_bindgen]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnvelopeVersion {
     V1 = 1,
     V2 = 2,
@@ -11,7 +11,7 @@ pub enum EnvelopeVersion {
 
 // Algorithm identifier for crypto operations
 #[wasm_bindgen]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CryptoAlgorithm {
     AES256GCM = 1,
     ChaCha20Poly1305 = 2,
@@ -19,6 +19,7 @@ pub enum CryptoAlgorithm {
 
 // KDF parameters for key derivation
 #[wasm_bindgen]
+#[derive(Debug, Clone)]
 pub struct KDFParams {
     algorithm: String,
     iterations: u32,
@@ -28,6 +29,7 @@ pub struct KDFParams {
 
 // Crypto envelope for secure data handling with complete metadata
 #[wasm_bindgen]
+#[derive(Debug, Clone)]
 pub struct CryptoEnvelope {
     version: EnvelopeVersion,
     algorithm: CryptoAlgorithm,
@@ -408,7 +410,7 @@ fn base64_decode(encoded: &str) -> Result<Vec<u8>, JsValue> {
     while i + 3 < cleaned.len() {
         let chars: Vec<char> = cleaned.chars().skip(i).take(4).collect();
         let values: Result<Vec<usize>, _> = chars.iter()
-            .map(|c| char_map.get(c).ok_or("Invalid base64 character"))
+            .map(|c| char_map.get(c).copied().ok_or("Invalid base64 character"))
             .collect();
         
         let values = values.map_err(|e| JsValue::from_str(e))?;
@@ -426,7 +428,7 @@ fn base64_decode(encoded: &str) -> Result<Vec<u8>, JsValue> {
         let remaining: Vec<char> = cleaned.chars().skip(i).collect();
         if remaining.len() >= 2 {
             let values: Result<Vec<usize>, _> = remaining.iter()
-                .map(|c| char_map.get(c).ok_or("Invalid base64 character"))
+                .map(|c| char_map.get(c).copied().ok_or("Invalid base64 character"))
                 .collect();
             
             let values = values.map_err(|e| JsValue::from_str(e))?;

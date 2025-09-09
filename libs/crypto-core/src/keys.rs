@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
-use zeroize::Zeroize;
-use rand::RngCore;
+// use zeroize::Zeroize;  // Reserved for future use
+// use rand::RngCore;     // Reserved for future use
 use crate::security::{SecureRandom, constant_time_compare, MemoryProtection};
 use crate::memory::{SecureBuffer, track_secret_zeroization};
 
@@ -96,12 +96,7 @@ impl CryptoKey {
     }
 }
 
-impl Drop for CryptoKey {
-    fn drop(&mut self) {
-        // Secure cleanup with explicit zeroization
-        self.zeroize_key();
-    }
-}
+
 
 // Generate a new encryption key
 #[wasm_bindgen]

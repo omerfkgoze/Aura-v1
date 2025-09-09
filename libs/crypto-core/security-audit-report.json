@@ -1,0 +1,98 @@
+{
+  "timestamp": "2025-09-09T14:49:20.938Z",
+  "version": "0.1.0",
+  "summary": {
+    "overall_status": "PASS",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "medium_issues": 0,
+    "low_issues": 0
+  },
+  "coverage": null,
+  "vulnerabilities": {
+    "cargo_audit": {
+      "passed": true,
+      "vulnerabilities": 0,
+      "warnings": 0
+    },
+    "npm_audit": {
+      "passed": true,
+      "vulnerabilities": 0
+    },
+    "dependencies": {
+      "rust": [
+        {
+          "name": "wasm-bindgen",
+          "version": "0.2",
+          "source": "crates.io"
+        },
+        {
+          "name": "zeroize",
+          "version": "1.5",
+          "source": "crates.io"
+        },
+        {
+          "name": "sha2",
+          "version": "0.10",
+          "source": "crates.io"
+        },
+        {
+          "name": "hmac",
+          "version": "0.12",
+          "source": "crates.io"
+        },
+        {
+          "name": "aes-gcm",
+          "version": "0.10",
+          "source": "crates.io"
+        },
+        {
+          "name": "wasm-bindgen-futures",
+          "version": "0.4",
+          "source": "crates.io"
+        },
+        {
+          "name": "js-sys",
+          "version": "0.3",
+          "source": "crates.io"
+        },
+        {
+          "name": "argon2",
+          "version": "0.5",
+          "source": "crates.io"
+        },
+        {
+          "name": "serde_json",
+          "version": "1.0",
+          "source": "crates.io"
+        },
+        {
+          "name": "once_cell",
+          "version": "1.19",
+          "source": "crates.io"
+        }
+      ],
+      "npm": [
+        {
+          "name": "wasm-pack",
+          "version": "^0.13.0",
+          "type": "dev",
+          "source": "npm"
+        },
+        {
+          "name": "@types/node",
+          "version": "^20.0.0",
+          "type": "dev",
+          "source": "npm"
+        },
+        {
+          "name": "@types/node",
+          "version": ">=18.0.0",
+          "type": "peer",
+          "source": "npm"
+        }
+      ]
+    }
+  },
+  "recommendations": []
+}

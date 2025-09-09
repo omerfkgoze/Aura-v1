@@ -5,3 +5,5 @@ dist/
 *.generated.ts
 package-lock.json
 pnpm-lock.yaml
+libs/crypto-core/scripts/check-integrity.js
+libs/crypto-core/scripts/generate-docs.js
