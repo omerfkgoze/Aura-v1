@@ -18,7 +18,8 @@ export class MobileCertificatePinning {
   private secureStorage: any; // Platform-specific secure storage
 
   constructor() {
-    this.initializeSecureStorage();
+    // Don't initialize in constructor to avoid blocking test imports
+    this.secureStorage = null;
   }
 
   /**
@@ -83,6 +84,11 @@ export class MobileCertificatePinning {
     certificate: string,
     platform: 'ios' | 'android' | 'web'
   ): Promise<CertificateValidationResult> {
+    // Initialize storage if not already done
+    if (!this.secureStorage) {
+      await this.initializeSecureStorage();
+    }
+
     const result = certificatePinningManager.validateCertificate(hostname, certificate, {
       platform,
     });
@@ -116,6 +122,11 @@ export class MobileCertificatePinning {
     platform: string;
   } | null> {
     try {
+      // Initialize storage if not already done
+      if (!this.secureStorage) {
+        await this.initializeSecureStorage();
+      }
+
       const cacheKey = `${hostname}_cert_hash`;
       const cacheData = await this.secureStorage.getItem(cacheKey);
 
@@ -135,6 +146,11 @@ export class MobileCertificatePinning {
    */
   public async clearCertificateCache(hostname?: string): Promise<void> {
     try {
+      // Initialize storage if not already done
+      if (!this.secureStorage) {
+        await this.initializeSecureStorage();
+      }
+
       if (hostname) {
         const cacheKey = `${hostname}_cert_hash`;
         await this.secureStorage.removeItem(cacheKey);

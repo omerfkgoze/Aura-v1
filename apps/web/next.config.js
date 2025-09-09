@@ -5,7 +5,7 @@ const nextConfig = {
   poweredByHeader: false,
 
   // Static export for better compatibility
-  output: 'export',
+  // output: 'export', // Temporarily disabled due to Html import issue
   trailingSlash: true,
   images: {
     unoptimized: true,
@@ -36,6 +36,12 @@ const nextConfig = {
     };
 
     return config;
+  },
+
+  // Experimental features to fix Html import issue
+  experimental: {
+    appDir: true,
+    esmExternals: 'loose',
   },
 };
 

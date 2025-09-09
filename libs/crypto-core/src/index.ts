@@ -59,7 +59,7 @@ export async function initializeCrypto(): Promise<ModuleIntegrity> {
     initPromise = (async () => {
       try {
         // Initialize WASM module
-        await init_wasm();
+        await init_wasm;
 
         // Perform integrity verification
         const integrity = wasm.init_crypto_core_with_verification();

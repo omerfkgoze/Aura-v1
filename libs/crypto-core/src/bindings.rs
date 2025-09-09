@@ -342,12 +342,12 @@ pub fn get_build_info() -> String {
     )
 }
 
-/// Memory management across language boundaries
+/// WASM memory utilities wrapper
 #[wasm_bindgen]
-pub struct MemoryManager;
+pub struct WasmMemoryUtils;
 
 #[wasm_bindgen]
-impl MemoryManager {
+impl WasmMemoryUtils {
     /// Get current WASM memory statistics
     #[wasm_bindgen]
     pub fn get_memory_stats() -> Object {

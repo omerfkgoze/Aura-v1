@@ -1,7 +1,7 @@
 // TypeScript integration patterns for future development
 // This module provides TypeScript interfaces and utilities for cross-story integration
 
-import type { CryptoCore } from './index';
+import type { AsyncCryptoCore } from './index';
 
 // Device-specific key management integration (Story 1.4 dependency)
 export interface DeviceKeyManagementIntegration {
@@ -370,16 +370,16 @@ export interface IntegrationStatus {
 }
 
 // Factory function to create integration instance
-export function createCryptoCoreIntegration(cryptoCore: CryptoCore): CryptoCoreIntegration {
+export function createCryptoCoreIntegration(cryptoCore: AsyncCryptoCore): CryptoCoreIntegration {
   return new CryptoCoreIntegrationImpl(cryptoCore);
 }
 
 // Implementation class (placeholder for future development)
 class CryptoCoreIntegrationImpl implements CryptoCoreIntegration {
-  private cryptoCore: CryptoCore;
+  private cryptoCore: AsyncCryptoCore;
   private integrationStatus: IntegrationStatus;
 
-  constructor(cryptoCore: CryptoCore) {
+  constructor(cryptoCore: AsyncCryptoCore) {
     this.cryptoCore = cryptoCore;
     this.integrationStatus = {
       deviceKeyManagement: false,

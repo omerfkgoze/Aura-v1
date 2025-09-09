@@ -366,7 +366,7 @@ pub fn deserialize_envelope(json_str: &str) -> Result<CryptoEnvelope, JsValue> {
 // Base64 encoding helper
 fn base64_encode(data: &[u8]) -> String {
     // Simple base64 implementation for WASM
-    use std::collections::HashMap;
+
     
     const CHARS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let chars: Vec<char> = CHARS.chars().collect();

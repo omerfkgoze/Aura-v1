@@ -93,22 +93,22 @@
   },
   "exports": {
     ".": {
+      "types": "./pkg/crypto_core.d.ts",
       "import": "./pkg/crypto_core.js",
-      "require": "./pkg/crypto_core.js",
-      "types": "./pkg/crypto_core.d.ts"
+      "require": "./pkg/crypto_core.js"
     },
     "./web": {
-      "import": "./pkg-web/crypto_core.js",
-      "types": "./pkg-web/crypto_core.d.ts"
+      "types": "./pkg-web/crypto_core.d.ts",
+      "import": "./pkg-web/crypto_core.js"
     },
     "./node": {
+      "types": "./pkg-node/crypto_core.d.ts",
       "import": "./pkg-node/crypto_core.js",
-      "require": "./pkg-node/crypto_core.js",
-      "types": "./pkg-node/crypto_core.d.ts"
+      "require": "./pkg-node/crypto_core.js"
     },
     "./integrity": {
-      "import": "./src/integrity.js",
-      "types": "./src/integrity.d.ts"
+      "types": "./src/integrity.d.ts",
+      "import": "./src/integrity.js"
     }
   },
   "sideEffects": false,
