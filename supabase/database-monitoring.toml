@@ -1,0 +1,46 @@
+# Supabase Database Monitoring and Alerting Configuration
+# This file defines monitoring settings for production database
+
+[monitoring]
+# Database performance monitoring
+enabled = true
+# Query performance threshold in milliseconds
+slow_query_threshold_ms = 1000
+# Connection pool monitoring
+connection_pool_alerting = true
+# Database size monitoring
+size_alerting = true
+
+[alerts]
+# Connection pool alerts
+max_connections_threshold = 80
+# Query performance alerts
+slow_query_alert_enabled = true
+# Database size alerts (percentage of allocated storage)
+size_threshold_percentage = 85
+
+[backup]
+# Automated backup configuration
+enabled = true
+# Backup frequency (daily/weekly)
+frequency = "daily"
+# Backup retention period in days
+retention_days = 30
+# Point-in-time recovery retention
+pitr_retention_hours = 168
+
+[ssl]
+# SSL/TLS enforcement
+enforce_ssl = true
+# Minimum TLS version
+min_tls_version = "1.2"
+# SSL certificate validation
+strict_ssl_validation = true
+
+[security]
+# Connection security
+ip_allowlist_enabled = false
+# Query logging for security audit
+security_query_logging = true
+# Failed connection attempt monitoring
+failed_connection_monitoring = true

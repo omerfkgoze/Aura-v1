@@ -14,6 +14,9 @@ schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 # The maximum number of rows returns from a table or view. Limits payload size.
 max_rows = 1000
+# Connection pooling configuration for expected load
+# Max connections to database (for connection pooling)
+max_connections = 100
 
 [db]
 # Port to use for the local database URL.
@@ -22,6 +25,10 @@ port = 54322
 shadow_port = 54320
 # The database major version to use. This has to be the same as your remote database's.
 major_version = 15
+# SSL/TLS enforcement for all connections
+ssl_enforced = true
+# Point-in-time recovery backup retention (hours)
+backup_retention_hours = 168
 
 [studio]
 # Port to use for Supabase Studio.
