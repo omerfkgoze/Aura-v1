@@ -1,11 +1,15 @@
 use wasm_bindgen::prelude::*;
+use crate::security::{constant_time_compare, SideChannelProtection, AuditTrail};
+use sha2::{Sha256, Digest};
 
-// Additional Authenticated Data (AAD) validation logic
+// Additional Authenticated Data (AAD) validation logic with security hardening
 #[wasm_bindgen]
 pub struct AADValidator {
     context: String,
     user_id: Option<String>,
     timestamp: Option<u64>,
+    audit_trail: AuditTrail,
+    hash_cache: Option<Vec<u8>>,
 }
 
 #[wasm_bindgen]
@@ -17,6 +21,8 @@ impl AADValidator {
             context,
             user_id: None,
             timestamp: None,
+            audit_trail: AuditTrail::new(100),
+            hash_cache: None,
         }
     }
 
@@ -30,13 +36,16 @@ impl AADValidator {
         self.timestamp = Some(timestamp);
     }
 
-    // Generate AAD for cryptographic operations
+    // Generate AAD for cryptographic operations with security hardening
     #[wasm_bindgen]
     #[must_use]
-    pub fn generate_aad(&self) -> Vec<u8> {
+    pub fn generate_aad(&mut self) -> Vec<u8> {
+        // Add timing noise to prevent side-channel attacks
+        SideChannelProtection::add_timing_noise();
+        
         let mut aad = Vec::new();
         
-        // Add context
+        // Add context with constant-time operations
         aad.extend_from_slice(self.context.as_bytes());
         aad.push(0); // Separator
         
@@ -51,15 +60,44 @@ impl AADValidator {
             aad.extend_from_slice(&timestamp.to_le_bytes());
         }
         
+        // Compute and cache hash for integrity
+        let mut hasher = Sha256::new();
+        hasher.update(&aad);
+        self.hash_cache = Some(hasher.finalize().to_vec());
+        
+        // Log operation for audit
+        self.audit_trail.log_operation("aad_generation", "SHA256");
+        
         aad
     }
 
-    // Validate AAD matches expected format
+    // Validate AAD matches expected format using constant-time comparison
     #[wasm_bindgen]
     #[must_use]
-    pub fn validate_aad(&self, provided_aad: &[u8]) -> bool {
+    pub fn validate_aad(&mut self, provided_aad: &[u8]) -> bool {
         let expected_aad = self.generate_aad();
-        provided_aad == expected_aad
+        
+        // Use constant-time comparison to prevent timing attacks
+        let is_valid = constant_time_compare(provided_aad, &expected_aad);
+        
+        // Log validation attempt
+        self.audit_trail.log_operation("aad_validation", "constant_time_compare");
+        
+        is_valid
+    }
+    
+    // Get cached hash for integrity verification
+    #[wasm_bindgen(getter)]
+    #[must_use]
+    pub fn cached_hash(&self) -> Option<Vec<u8>> {
+        self.hash_cache.clone()
+    }
+    
+    // Clear sensitive cache data
+    #[wasm_bindgen]
+    pub fn clear_cache(&mut self) {
+        self.hash_cache = None;
+        self.audit_trail.clear();
     }
 
     #[wasm_bindgen(getter)]

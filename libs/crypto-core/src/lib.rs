@@ -17,11 +17,17 @@ macro_rules! console_log {
 pub mod envelope;
 pub mod keys;
 pub mod aad;
+pub mod memory;
+pub mod bindings;
+pub mod security;
 
 // Re-export main functions for JavaScript consumption
 pub use envelope::*;
 pub use keys::*;
 pub use aad::*;
+pub use memory::*;
+pub use bindings::*;
+pub use security::*;
 
 // Initialize function called when WASM module is loaded
 #[wasm_bindgen(start)]
