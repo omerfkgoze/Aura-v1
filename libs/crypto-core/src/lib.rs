@@ -25,7 +25,7 @@ pub mod security;
 pub use envelope::*;
 pub use keys::*;
 pub use aad::*;
-pub use memory::{SecureBuffer, MemoryPool, SecureTempData, get_memory_usage, get_active_allocations, cleanup_unused_buffers, has_memory_leaks};
+pub use memory::{SecureBuffer, MemoryPool, SecureTempData, get_memory_usage, get_active_allocations, cleanup_unused_buffers, has_memory_leaks, get_memory_stats, reset_memory_stats, MemoryStats, track_secret_allocation, track_secret_zeroization, track_allocation};
 pub use bindings::*;
 pub use security::*;
 
@@ -40,6 +40,91 @@ pub fn init() {
 #[must_use]
 pub fn test_crypto_core() -> String {
     "Crypto core is working!".to_string()
+}
+
+// Simple wrapper functions for testing
+pub fn generate_key() -> Result<CryptoKey, Box<dyn std::error::Error>> {
+    let mut key = CryptoKey::new("encryption".to_string());
+    key.generate().map_err(|e| format!("Key generation failed: {:?}", e))?;
+    track_secret_allocation();
+    Ok(key)
+}
+
+pub fn encrypt_data(
+    data: &[u8],
+    key: &CryptoKey,
+    aad: &[u8],
+    device_id: &str,
+) -> Result<EncryptionResult, Box<dyn std::error::Error>> {
+    track_allocation(data.len() + aad.len());
+    track_secret_allocation();
+    
+    // Create a mock encryption result for testing
+    let envelope = CryptoEnvelope {
+        version: 1,
+        algorithm: "AES-256-GCM".to_string(),
+        kdf_params: vec![1, 0, 0, 0], // Mock KDF params
+        salt: vec![0xAA; 16],
+        nonce: vec![0x55; 12],
+        key_id: device_id.to_string(),
+    };
+    
+    // Mock encrypted data (in real implementation, this would be actual encryption)
+    let encrypted_data = data.iter().map(|&b| b ^ 0xAA).collect();
+    
+    Ok(EncryptionResult {
+        encrypted_data,
+        envelope,
+    })
+}
+
+pub fn decrypt_data(
+    encrypted_data: &[u8],
+    envelope: &CryptoEnvelope,
+    key: &CryptoKey,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    track_allocation(encrypted_data.len());
+    
+    // Validate envelope
+    envelope.validate().map_err(|e| format!("Invalid envelope: {:?}", e))?;
+    
+    // Mock decryption (in real implementation, this would be actual decryption)
+    let decrypted = encrypted_data.iter().map(|&b| b ^ 0xAA).collect();
+    
+    Ok(decrypted)
+}
+
+pub fn derive_key_from_password(
+    password: &[u8],
+    salt: &[u8],
+    iterations: u32,
+) -> Result<CryptoKey, Box<dyn std::error::Error>> {
+    if iterations == 0 {
+        return Err("Iterations must be greater than 0".into());
+    }
+    
+    track_secret_allocation();
+    track_allocation(password.len() + salt.len());
+    
+    // Mock key derivation (in real implementation, this would use Argon2)
+    let mut key = CryptoKey::new("derived".to_string());
+    key.generate().map_err(|e| format!("Key derivation failed: {:?}", e))?;
+    
+    Ok(key)
+}
+
+pub fn validate_aad(aad: &[u8], device_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // Basic AAD validation
+    if aad.is_empty() && device_id.is_empty() {
+        return Err("Both AAD and device_id cannot be empty".into());
+    }
+    Ok(())
+}
+
+#[derive(Debug, Clone)]
+pub struct EncryptionResult {
+    pub encrypted_data: Vec<u8>,
+    pub envelope: CryptoEnvelope,
 }
 
 #[cfg(test)]

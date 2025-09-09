@@ -27,7 +27,11 @@
     "test:all": "npm run test:cross-platform && npm run test:mobile",
     "test:property": "cargo test --test property_based",
     "test:benchmark": "cargo bench",
-    "test:memory": "cargo test --features=memory-tracking",
+    "test:memory": "cargo test --test memory_leak_tests",
+    "test:regression": "cargo test --test regression_tests",
+    "test:fuzz": "cd fuzz && cargo fuzz run encrypt_decrypt -- -max_total_time=60",
+    "test:fuzz:all": "cd fuzz && cargo fuzz run encrypt_decrypt -- -max_total_time=30 && cargo fuzz run envelope_parsing -- -max_total_time=30 && cargo fuzz run key_operations -- -max_total_time=30 && cargo fuzz run aad_validation -- -max_total_time=30",
+    "test:security": "npm run test:fuzz:all && npm run test:memory && npm run test:regression",
     "clean": "rm -rf pkg pkg-web pkg-node target"
   },
   "repository": {

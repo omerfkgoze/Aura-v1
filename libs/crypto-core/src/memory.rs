@@ -2,6 +2,56 @@ use wasm_bindgen::prelude::*;
 use zeroize::Zeroize;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+/// Global memory statistics for leak detection
+static SECRETS_ALLOCATED: AtomicUsize = AtomicUsize::new(0);
+static SECRETS_ZEROIZED: AtomicUsize = AtomicUsize::new(0);
+static TOTAL_ALLOCATED: AtomicUsize = AtomicUsize::new(0);
+static OPERATIONS_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+/// Memory statistics structure for tests
+#[derive(Debug, Clone)]
+pub struct MemoryStats {
+    pub secrets_allocated: usize,
+    pub secrets_zeroized: usize,
+    pub total_allocated: usize,
+    pub operations_count: usize,
+}
+
+/// Get current memory statistics
+pub fn get_memory_stats() -> MemoryStats {
+    MemoryStats {
+        secrets_allocated: SECRETS_ALLOCATED.load(Ordering::Relaxed),
+        secrets_zeroized: SECRETS_ZEROIZED.load(Ordering::Relaxed),
+        total_allocated: TOTAL_ALLOCATED.load(Ordering::Relaxed),
+        operations_count: OPERATIONS_COUNT.load(Ordering::Relaxed),
+    }
+}
+
+/// Reset memory statistics (for testing)
+pub fn reset_memory_stats() {
+    SECRETS_ALLOCATED.store(0, Ordering::Relaxed);
+    SECRETS_ZEROIZED.store(0, Ordering::Relaxed);
+    TOTAL_ALLOCATED.store(0, Ordering::Relaxed);
+    OPERATIONS_COUNT.store(0, Ordering::Relaxed);
+}
+
+/// Track secret allocation
+pub fn track_secret_allocation() {
+    SECRETS_ALLOCATED.fetch_add(1, Ordering::Relaxed);
+    OPERATIONS_COUNT.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Track secret zeroization
+pub fn track_secret_zeroization() {
+    SECRETS_ZEROIZED.fetch_add(1, Ordering::Relaxed);
+}
+
+/// Track memory allocation
+pub fn track_allocation(size: usize) {
+    TOTAL_ALLOCATED.fetch_add(size, Ordering::Relaxed);
+}
 
 /// Global memory statistics tracking
 static MEMORY_STATS: once_cell::sync::Lazy<Arc<Mutex<MemoryStatistics>>> =

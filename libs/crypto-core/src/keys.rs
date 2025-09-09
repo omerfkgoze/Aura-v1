@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 use zeroize::Zeroize;
 use rand::RngCore;
 use crate::security::{SecureRandom, constant_time_compare, MemoryProtection};
-use crate::memory::SecureBuffer;
+use crate::memory::{SecureBuffer, track_secret_zeroization};
 
 // Key management for cryptographic operations with security hardening
 #[wasm_bindgen]
@@ -117,4 +117,12 @@ pub fn generate_signing_key() -> Result<CryptoKey, JsValue> {
     let mut key = CryptoKey::new("signing".to_string());
     key.generate()?;
     Ok(key)
+}
+
+// Implement Drop trait for automatic cleanup tracking
+impl Drop for CryptoKey {
+    fn drop(&mut self) {
+        self.zeroize_key();
+        track_secret_zeroization();
+    }
 }
