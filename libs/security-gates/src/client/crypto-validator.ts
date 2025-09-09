@@ -125,7 +125,7 @@ export class CryptoValidator {
   constructor(config: Partial<CryptoValidationConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     // Use config parameter to prevent unused variable warning
-    console.debug('Crypto validator initialized with config', this.config);
+    void this.config; // ESLint: prevent unused variable warning
   }
 
   /**
