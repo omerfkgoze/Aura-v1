@@ -1,8 +1,8 @@
 {
   "version": 2,
   "name": "aura-app",
-  "buildCommand": "pnpm install --no-frozen-lockfile && cd apps/web && pnpm build",
-  "outputDirectory": "apps/web/.next",
+  "buildCommand": "cd apps/web && pnpm build",
+  "outputDirectory": "apps/web/out",
   "installCommand": "pnpm install --no-frozen-lockfile",
 
   "env": {
