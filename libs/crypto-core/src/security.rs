@@ -1,5 +1,17 @@
 use wasm_bindgen::prelude::*;
 use zeroize::Zeroize;
+
+// Import console.log for debugging
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+// Define a macro for easier logging
+macro_rules! console_log {
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+}
 use rand::RngCore;
 
 /// Security hardening and attack mitigation module
@@ -326,9 +338,9 @@ impl PlatformEntropy {
         entropy.extend_from_slice(&performance_now.to_bits().to_le_bytes());
         
         // Memory usage entropy (if available)
-        if let Some(memory) = web_sys::window()
-            .and_then(|win| win.performance())
-            .and_then(|perf| perf.memory()) {
+        // Memory information is not available in WASM context
+        // This would be available in Node.js context but not in browsers
+        if false { // Disabled for WASM compatibility
             entropy.extend_from_slice(&memory.used_js_heap_size().to_le_bytes());
             entropy.extend_from_slice(&memory.total_js_heap_size().to_le_bytes());
         }

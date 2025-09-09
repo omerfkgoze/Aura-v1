@@ -25,7 +25,7 @@ pub mod security;
 pub use envelope::*;
 pub use keys::*;
 pub use aad::*;
-pub use memory::*;
+pub use memory::{SecureBuffer, MemoryPool, SecureTempData, get_memory_usage, get_active_allocations, cleanup_unused_buffers, has_memory_leaks};
 pub use bindings::*;
 pub use security::*;
 

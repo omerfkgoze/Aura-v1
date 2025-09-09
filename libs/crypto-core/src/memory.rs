@@ -1,5 +1,75 @@
 use wasm_bindgen::prelude::*;
 use zeroize::Zeroize;
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
+
+/// Global memory statistics tracking
+static MEMORY_STATS: once_cell::sync::Lazy<Arc<Mutex<MemoryStatistics>>> =
+    once_cell::sync::Lazy::new(|| {
+        Arc::new(Mutex::new(MemoryStatistics::new()))
+    });
+
+/// Memory statistics structure
+#[derive(Debug, Clone)]
+struct MemoryStatistics {
+    active_allocations: usize,
+    total_heap_usage: usize,
+    buffer_allocations: HashMap<String, usize>,
+}
+
+impl MemoryStatistics {
+    fn new() -> Self {
+        MemoryStatistics {
+            active_allocations: 0,
+            total_heap_usage: 0,
+            buffer_allocations: HashMap::new(),
+        }
+    }
+
+    fn increment_allocation(&mut self, size: usize, buffer_type: &str) {
+        self.active_allocations += 1;
+        self.total_heap_usage += size;
+        *self.buffer_allocations.entry(buffer_type.to_string()).or_insert(0) += 1;
+    }
+
+    fn decrement_allocation(&mut self, size: usize, buffer_type: &str) {
+        if self.active_allocations > 0 {
+            self.active_allocations -= 1;
+        }
+        if self.total_heap_usage >= size {
+            self.total_heap_usage -= size;
+        }
+        if let Some(count) = self.buffer_allocations.get_mut(buffer_type) {
+            if *count > 0 {
+                *count -= 1;
+            }
+        }
+    }
+}
+
+/// Get current memory usage
+pub fn get_memory_usage() -> usize {
+    MEMORY_STATS.lock().unwrap().total_heap_usage
+}
+
+/// Get active allocations count
+pub fn get_active_allocations() -> usize {
+    MEMORY_STATS.lock().unwrap().active_allocations
+}
+
+/// Cleanup unused buffers
+pub fn cleanup_unused_buffers() {
+    // Force garbage collection by triggering cleanup
+    if let Ok(mut stats) = MEMORY_STATS.lock() {
+        stats.buffer_allocations.clear();
+    }
+}
+
+/// Check for memory leaks
+pub fn has_memory_leaks() -> bool {
+    let stats = MEMORY_STATS.lock().unwrap();
+    stats.active_allocations > 100 || stats.total_heap_usage > 1024 * 1024 // 1MB threshold
+}
 
 /// Secure memory management utilities for cryptographic operations
 /// Provides memory hygiene with automatic secret zeroization
@@ -12,6 +82,11 @@ impl SecureBuffer {
     /// Create a new secure buffer with specified capacity
     #[must_use]
     pub fn new(capacity: usize) -> Self {
+        // Track allocation in global statistics
+        if let Ok(mut stats) = MEMORY_STATS.lock() {
+            stats.increment_allocation(capacity, "SecureBuffer");
+        }
+        
         SecureBuffer {
             data: vec![0u8; capacity],
             is_active: true,
@@ -21,6 +96,13 @@ impl SecureBuffer {
     /// Create secure buffer from existing data
     #[must_use]
     pub fn from_bytes(data: Vec<u8>) -> Self {
+        let capacity = data.len();
+        
+        // Track allocation in global statistics
+        if let Ok(mut stats) = MEMORY_STATS.lock() {
+            stats.increment_allocation(capacity, "SecureBuffer");
+        }
+        
         SecureBuffer {
             data,
             is_active: true,
@@ -74,6 +156,11 @@ impl SecureBuffer {
 
 impl Drop for SecureBuffer {
     fn drop(&mut self) {
+        // Track deallocation in global statistics
+        if let Ok(mut stats) = MEMORY_STATS.lock() {
+            stats.decrement_allocation(self.data.len(), "SecureBuffer");
+        }
+        
         self.zeroize_buffer();
     }
 }

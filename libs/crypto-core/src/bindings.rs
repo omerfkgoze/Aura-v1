@@ -1,4 +1,19 @@
 use wasm_bindgen::prelude::*;
+use serde::{Serialize, Deserialize};
+use js_sys::{Promise, Object};
+use wasm_bindgen_futures::future_to_promise;
+
+// Import console.log for debugging
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+// Define a macro for easier logging
+macro_rules! console_log {
+    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+}
 
 /// WASM binding exports for JavaScript/TypeScript integration
 /// This module handles the interface between Rust and JavaScript
@@ -115,6 +130,69 @@ impl AsyncCryptoOperation {
     #[must_use]
     pub fn is_complete(&self) -> bool {
         self.status == "complete" || self.status == "error"
+    }
+}
+
+/// Async crypto operations with Promise support
+#[wasm_bindgen]
+pub struct AsyncCrypto;
+
+#[wasm_bindgen]
+impl AsyncCrypto {
+    /// Async envelope creation returning a Promise
+    #[wasm_bindgen]
+    pub fn create_envelope_async(
+        encrypted_data: &[u8],
+        nonce: &[u8], 
+        tag: &[u8]
+    ) -> Promise {
+        let encrypted_data = encrypted_data.to_vec();
+        let nonce = nonce.to_vec();
+        let tag = tag.to_vec();
+        
+        future_to_promise(async move {
+            use crate::envelope::CryptoEnvelope;
+            
+            // Simulate async work with proper memory management
+            let mut envelope = CryptoEnvelope::new();
+            envelope.set_encrypted_data(encrypted_data);
+            envelope.set_nonce(nonce);
+            envelope.set_tag(tag);
+            
+            Ok(JsValue::from(envelope))
+        })
+    }
+
+    /// Async key generation returning a Promise
+    #[wasm_bindgen]
+    pub fn generate_key_async(key_type: String) -> Promise {
+        future_to_promise(async move {
+            use crate::keys::CryptoKey;
+            
+            let mut key = CryptoKey::new(key_type);
+            key.generate();
+            
+            Ok(JsValue::from(key))
+        })
+    }
+
+    /// Async AAD generation returning a Promise
+    #[wasm_bindgen]
+    pub fn create_aad_async(context: String, user_id: String, timestamp: String) -> Promise {
+        future_to_promise(async move {
+            use crate::aad::AADValidator;
+            
+            let mut validator = AADValidator::new(context);
+            validator.set_user_id(user_id);
+            
+            // Parse timestamp safely
+            let timestamp = timestamp.parse::<u64>()
+                .map_err(|e| JsValue::from_str(&format!("Invalid timestamp: {}", e)))?;
+            validator.set_timestamp(timestamp);
+            
+            let aad = validator.generate_aad();
+            Ok(JsValue::from(js_sys::Uint8Array::from(&aad[..])))
+        })
     }
 }
 
@@ -262,6 +340,102 @@ pub fn get_build_info() -> String {
         "{{\"version\":\"{}\",\"build_target\":\"wasm32-unknown-unknown\",\"optimization\":\"release\"}}",
         env!("CARGO_PKG_VERSION")
     )
+}
+
+/// Memory management across language boundaries
+#[wasm_bindgen]
+pub struct MemoryManager;
+
+#[wasm_bindgen]
+impl MemoryManager {
+    /// Get current WASM memory statistics
+    #[wasm_bindgen]
+    pub fn get_memory_stats() -> Object {
+        use crate::memory::{get_memory_usage, get_active_allocations};
+        
+        let obj = Object::new();
+        js_sys::Reflect::set(
+            &obj,
+            &JsValue::from_str("heap_size"),
+            &JsValue::from_f64(get_memory_usage() as f64)
+        ).expect("Failed to set heap_size");
+        
+        js_sys::Reflect::set(
+            &obj,
+            &JsValue::from_str("active_allocations"),
+            &JsValue::from_f64(get_active_allocations() as f64)
+        ).expect("Failed to set active_allocations");
+        
+        obj
+    }
+    
+    /// Force garbage collection of WASM memory
+    #[wasm_bindgen]
+    pub fn cleanup_memory() {
+        use crate::memory::cleanup_unused_buffers;
+        cleanup_unused_buffers();
+    }
+    
+    /// Check for memory leaks
+    #[wasm_bindgen]
+    pub fn detect_leaks() -> bool {
+        use crate::memory::has_memory_leaks;
+        has_memory_leaks()
+    }
+}
+
+/// TypeScript type definition generator
+#[wasm_bindgen]
+pub struct TypeDefinitions;
+
+#[wasm_bindgen]
+impl TypeDefinitions {
+    /// Generate comprehensive TypeScript definitions
+    #[wasm_bindgen]
+    pub fn generate_type_definitions() -> String {
+        r#"
+// Generated TypeScript definitions for crypto-core
+export interface CryptoEnvelopeData {
+  version: number;
+  algorithm: string;
+  kdf_params: KDFParams;
+  salt: Uint8Array;
+  nonce: Uint8Array;
+  key_id: string;
+  encrypted_data: Uint8Array;
+  tag: Uint8Array;
+}
+
+export interface KDFParams {
+  algorithm: 'argon2id';
+  memory_cost: number;
+  time_cost: number;
+  parallelism: number;
+}
+
+export interface CryptoOperationResult<T> {
+  success: boolean;
+  data?: T;
+  error?: CryptoError;
+}
+
+export interface MemoryStats {
+  heap_size: number;
+  active_allocations: number;
+  has_leaks: boolean;
+}
+
+export declare class AsyncCryptoCore {
+  static create(): Promise<AsyncCryptoCore>;
+  createEnvelope(data: Uint8Array, nonce: Uint8Array, tag: Uint8Array): Promise<CryptoEnvelope>;
+  generateEncryptionKey(): Promise<CryptoKey>;
+  generateSigningKey(): Promise<CryptoKey>;
+  createCycleDataAAD(userId: string, timestamp: bigint): Promise<Uint8Array>;
+  createHealthcareShareAAD(userId: string, shareToken: string): Promise<Uint8Array>;
+  runHealthCheck(): Promise<HealthCheck>;
+}
+        "#.to_string()
+    }
 }
 
 #[cfg(test)]
