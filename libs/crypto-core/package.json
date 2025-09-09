@@ -17,6 +17,17 @@
     "build:release": "wasm-pack build --release --target bundler --out-dir pkg && wasm-opt -O3 pkg/crypto_core_bg.wasm -o pkg/crypto_core_bg.wasm",
     "test": "wasm-pack test --headless --firefox",
     "test:chrome": "wasm-pack test --headless --chrome",
+    "test:node": "wasm-pack test --node",
+    "test:web": "npm run build:web && npm run test:web:run",
+    "test:web:run": "vitest run --config vitest.web.config.ts",
+    "test:mobile": "npm run test:ios && npm run test:android",
+    "test:ios": "cd ../../../ && nx test mobile-ios --testPathPattern=crypto",
+    "test:android": "cd ../../../ && nx test mobile-android --testPathPattern=crypto",
+    "test:cross-platform": "npm run test && npm run test:chrome && npm run test:node && npm run test:web",
+    "test:all": "npm run test:cross-platform && npm run test:mobile",
+    "test:property": "cargo test --test property_based",
+    "test:benchmark": "cargo bench",
+    "test:memory": "cargo test --features=memory-tracking",
     "clean": "rm -rf pkg pkg-web pkg-node target"
   },
   "repository": {

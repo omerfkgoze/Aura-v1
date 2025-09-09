@@ -33,6 +33,16 @@ features = [
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
+proptest = "1.0"
+quickcheck = "1.0"
+quickcheck_macros = "1.0"
+criterion = { version = "0.5", features = ["html_reports"] }
+bytes = "1.0"
+tokio = { version = "1.0", features = ["rt", "macros"] }
+
+[[bench]]
+name = "crypto_benchmarks"
+harness = false
 
 [features]
 default = []
