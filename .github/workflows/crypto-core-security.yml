@@ -13,7 +13,7 @@ on:
       intensive_scan:
         description: 'Run intensive security scan (longer duration)'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 env:
