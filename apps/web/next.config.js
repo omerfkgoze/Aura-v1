@@ -31,8 +31,8 @@ const nextConfig = {
     ];
   },
 
-  // Build output configuration
-  distDir: '../../dist/apps/web',
+  // Build output configuration (disabled for compatibility)
+  // distDir: '../../dist/apps/web',
 
   // Skip TypeScript build-time type checking (we do it separately)
   typescript: {
@@ -49,7 +49,7 @@ const nextConfig = {
 
   // Experimental features for better performance
   experimental: {
-    optimizeCss: true,
+    // Removed optimizeCss as it causes critters issues
     gzipSize: true,
   },
 
@@ -65,11 +65,11 @@ const nextConfig = {
       };
     }
 
-    // Exclude problematic SRI plugin from build
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      './src/security/vite-sri-plugin': false,
-    };
+    // Exclude Vite-specific files that are not compatible with Next.js
+    config.module.rules.push({
+      test: /vite-sri-plugin\.ts$/,
+      loader: 'null-loader',
+    });
 
     return config;
   },

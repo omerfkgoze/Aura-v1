@@ -2,13 +2,14 @@
   "name": "web",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "sourceRoot": "apps/web/src",
+  "sourceRoot": "apps/web",
   "targets": {
     "build": {
-      "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/web"],
       "options": {
-        "outputPath": "dist/apps/web"
+        "command": "next build",
+        "cwd": "apps/web"
       }
     },
     "dev": {
