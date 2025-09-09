@@ -136,7 +136,9 @@ describe('MetadataDetector', () => {
 
       expect((result.metadata as any).headerLeakageDetected).toBe(true);
       expect(
-        (result.metadata as any).patterns.some((p: any) => p.type === 'HEADER' && p.severity === 'HIGH')
+        (result.metadata as any).patterns.some(
+          (p: any) => p.type === 'HEADER' && p.severity === 'HIGH'
+        )
       ).toBe(true);
     });
 
@@ -344,7 +346,9 @@ describe('MetadataDetector', () => {
 
       expect((result.metadata as any).trackingSignalsFound.length).toBeGreaterThan(0);
       expect(
-        (result.metadata as any).trackingSignalsFound.some((signal: any) => signal.includes('utm_source'))
+        (result.metadata as any).trackingSignalsFound.some((signal: any) =>
+          signal.includes('utm_source')
+        )
       ).toBe(true);
     });
 
@@ -390,9 +394,9 @@ describe('MetadataDetector', () => {
       expect(errorTypes).toContain('HEADER_LEAK');
 
       // Check that each error/warning has a recommendation
-      expect([...result.errors, ...result.warnings].every((v: any) => v.message && v.message.length > 0)).toBe(
-        true
-      );
+      expect(
+        [...result.errors, ...result.warnings].every((v: any) => v.message && v.message.length > 0)
+      ).toBe(true);
     });
 
     it('should provide appropriate recommendations for violations', async () => {

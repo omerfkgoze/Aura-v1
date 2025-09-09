@@ -22,15 +22,15 @@ const APPROVED_ALGORITHMS = [
 
 // Deprecated/insecure algorithms that should never be used
 // const DEPRECATED_ALGORITHMS = [ // Currently unused
-    // 'MD5',
-  // 'SHA1',
-  // 'RC4',
-  // 'DES',
-  // '3DES',
-  // 'AES-ECB',
-  // 'AES-CBC', // Without proper HMAC
-  // 'RSA-PKCS1', // Without OAEP
-  // 'DSA',
+// 'MD5',
+// 'SHA1',
+// 'RC4',
+// 'DES',
+// '3DES',
+// 'AES-ECB',
+// 'AES-CBC', // Without proper HMAC
+// 'RSA-PKCS1', // Without OAEP
+// 'DSA',
 // ] as const;
 
 // Minimum security parameters

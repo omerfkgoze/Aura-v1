@@ -72,7 +72,10 @@ export class NetworkGate implements SecurityGate {
       passed: errors.length === 0,
       errors,
       warnings,
-      details: errors.length > 0 ? 'Network gate configuration validation failed' : 'Configuration is valid',
+      details:
+        errors.length > 0
+          ? 'Network gate configuration validation failed'
+          : 'Configuration is valid',
     };
   }
 
@@ -169,7 +172,7 @@ export class NetworkGate implements SecurityGate {
 
       const errors: string[] = [];
       const warnings: string[] = [];
-      
+
       allViolations.forEach((v: any) => {
         if (v.severity === 'HIGH') {
           errors.push(v.description || v.type);
@@ -177,7 +180,7 @@ export class NetworkGate implements SecurityGate {
           warnings.push(v.description || v.type);
         }
       });
-      
+
       return {
         valid: overallPassed,
         passed: overallPassed,
@@ -192,7 +195,9 @@ export class NetworkGate implements SecurityGate {
       return {
         valid: false,
         passed: false,
-        errors: [`Network security gate execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `Network security gate execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
         warnings: [],
         details: 'Network security gate execution failed due to an error',
         metadata: {
@@ -204,9 +209,7 @@ export class NetworkGate implements SecurityGate {
     }
   }
 
-  async executePcapAnalysisForFiles(
-    filePaths: string[]
-  ): Promise<SecurityGateResult> {
+  async executePcapAnalysisForFiles(filePaths: string[]): Promise<SecurityGateResult> {
     try {
       const results: PcapAnalysisResult[] = [];
       const violations: any[] = [];
@@ -234,7 +237,7 @@ export class NetworkGate implements SecurityGate {
 
       const errors: string[] = [];
       const warnings: string[] = [];
-      
+
       violations.forEach((v: any) => {
         if (v.severity === 'HIGH') {
           errors.push(v.description || v.type);
@@ -242,7 +245,7 @@ export class NetworkGate implements SecurityGate {
           warnings.push(v.description || v.type);
         }
       });
-      
+
       return {
         valid: overallPassed,
         passed: overallPassed,
@@ -257,7 +260,9 @@ export class NetworkGate implements SecurityGate {
       return {
         valid: false,
         passed: false,
-        errors: [`PCAP analysis execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `PCAP analysis execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
         warnings: [],
         details: 'PCAP analysis execution failed due to an error',
         metadata: [] as unknown as Record<string, unknown>,
@@ -298,7 +303,7 @@ export class NetworkGate implements SecurityGate {
 
       const errors: string[] = [];
       const warnings: string[] = [];
-      
+
       violations.forEach((v: any) => {
         if (v.severity === 'HIGH') {
           errors.push(v.description || v.type);
@@ -306,7 +311,7 @@ export class NetworkGate implements SecurityGate {
           warnings.push(v.description || v.type);
         }
       });
-      
+
       return {
         valid: overallPassed,
         passed: overallPassed,
@@ -321,7 +326,9 @@ export class NetworkGate implements SecurityGate {
       return {
         valid: false,
         passed: false,
-        errors: [`TLS inspection execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `TLS inspection execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
         warnings: [],
         details: 'TLS inspection execution failed due to an error',
         metadata: [] as unknown as Record<string, unknown>,
@@ -339,7 +346,9 @@ export class NetworkGate implements SecurityGate {
       return {
         valid: false,
         passed: false,
-        errors: [`Metadata analysis execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `Metadata analysis execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
         warnings: [],
         details: 'Metadata analysis execution failed due to an error',
         metadata: {
@@ -354,9 +363,7 @@ export class NetworkGate implements SecurityGate {
     }
   }
 
-  private async executePcapAnalysis(
-    filePaths: string[]
-  ): Promise<SecurityGateResult> {
+  private async executePcapAnalysis(filePaths: string[]): Promise<SecurityGateResult> {
     if (filePaths.length === 0) {
       return {
         valid: true,
@@ -400,9 +407,7 @@ export class NetworkGate implements SecurityGate {
     return results;
   }
 
-  private aggregatePcapResults(
-    results: SecurityGateResult[]
-  ): SecurityGateResult {
+  private aggregatePcapResults(results: SecurityGateResult[]): SecurityGateResult {
     if (results.length === 0) {
       return {
         valid: true,
@@ -422,7 +427,9 @@ export class NetworkGate implements SecurityGate {
 
     const allErrors = results.flatMap(r => r.errors || []);
     const allWarnings = results.flatMap(r => r.warnings || []);
-    const allDetails = results.map(r => r.metadata as unknown as PcapAnalysisResult).filter(Boolean);
+    const allDetails = results
+      .map(r => r.metadata as unknown as PcapAnalysisResult)
+      .filter(Boolean);
 
     const aggregatedDetails: PcapAnalysisResult = {
       encryptedPayloadsOnly: allDetails.every(d => d.encryptedPayloadsOnly),
@@ -433,7 +440,7 @@ export class NetworkGate implements SecurityGate {
     };
 
     const overallPassed = results.every(r => r.passed);
-    
+
     return {
       valid: overallPassed,
       passed: overallPassed,

@@ -87,7 +87,7 @@ export class TlsInspector {
 
       const errors: string[] = [];
       const warnings: string[] = [];
-      
+
       violations.forEach(v => {
         if (v.severity === 'HIGH') {
           errors.push(v.description);
@@ -95,7 +95,7 @@ export class TlsInspector {
           warnings.push(v.description);
         }
       });
-      
+
       return {
         valid: passed,
         passed,
@@ -110,7 +110,10 @@ export class TlsInspector {
       return {
         valid: false,
         passed: false,
-        errors: [`TLS inspection failed for ${hostname}:${port}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'Failed to establish TLS connection'],
+        errors: [
+          `TLS inspection failed for ${hostname}:${port}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          'Failed to establish TLS connection',
+        ],
         warnings: [],
         details: 'TLS inspection failed due to connection error',
         metadata: {
@@ -125,9 +128,7 @@ export class TlsInspector {
     }
   }
 
-  async inspectCertificateFile(
-    certificatePath: string
-  ): Promise<SecurityGateResult> {
+  async inspectCertificateFile(certificatePath: string): Promise<SecurityGateResult> {
     try {
       const certificateDetails = await this.parseCertificateFile(certificatePath);
       const violations = await this.validateCertificate(certificateDetails);
@@ -136,7 +137,7 @@ export class TlsInspector {
 
       const errors: string[] = [];
       const warnings: string[] = [];
-      
+
       violations.forEach(v => {
         if (v.severity === 'HIGH') {
           errors.push(v.description);
@@ -144,7 +145,7 @@ export class TlsInspector {
           warnings.push(v.description);
         }
       });
-      
+
       return {
         valid: passed,
         passed,
@@ -166,7 +167,10 @@ export class TlsInspector {
       return {
         valid: false,
         passed: false,
-        errors: [`Certificate inspection failed for ${certificatePath}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'Failed to parse certificate file'],
+        errors: [
+          `Certificate inspection failed for ${certificatePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          'Failed to parse certificate file',
+        ],
         warnings: [],
         details: 'Certificate inspection failed due to parsing error',
         metadata: {

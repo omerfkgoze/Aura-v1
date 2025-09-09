@@ -75,7 +75,7 @@ export class PcapAnalyzer {
             suspiciousPackets: [],
             totalPackets: 0,
             encryptedPackets: 0,
-          }
+          },
         };
       }
 
@@ -88,7 +88,7 @@ export class PcapAnalyzer {
 
       const errors: string[] = [];
       const warnings: string[] = [];
-      
+
       violations.forEach(v => {
         if (v.severity === 'HIGH') {
           errors.push(v.description);
@@ -96,7 +96,7 @@ export class PcapAnalyzer {
           warnings.push(v.description);
         }
       });
-      
+
       return {
         valid: passed,
         passed,
@@ -111,7 +111,9 @@ export class PcapAnalyzer {
       return {
         valid: false,
         passed: false,
-        errors: [`PCAP analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `PCAP analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
         warnings: [],
         details: 'PCAP analysis failed due to an error',
         metadata: {
@@ -125,9 +127,7 @@ export class PcapAnalyzer {
     }
   }
 
-  async analyzeNetworkTrafficInMemory(
-    packets: PcapPacket[]
-  ): Promise<SecurityGateResult> {
+  async analyzeNetworkTrafficInMemory(packets: PcapPacket[]): Promise<SecurityGateResult> {
     try {
       const analysis = await this.analyzePackets(packets);
       const violations = await this.identifyViolations(packets);
@@ -137,7 +137,7 @@ export class PcapAnalyzer {
 
       const errors: string[] = [];
       const warnings: string[] = [];
-      
+
       violations.forEach(v => {
         if (v.severity === 'HIGH') {
           errors.push(v.description);
@@ -145,7 +145,7 @@ export class PcapAnalyzer {
           warnings.push(v.description);
         }
       });
-      
+
       return {
         valid: passed,
         passed,
@@ -160,7 +160,9 @@ export class PcapAnalyzer {
       return {
         valid: false,
         passed: false,
-        errors: [`Network traffic analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `Network traffic analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
         warnings: [],
         details: 'Network traffic analysis failed due to an error',
         metadata: {

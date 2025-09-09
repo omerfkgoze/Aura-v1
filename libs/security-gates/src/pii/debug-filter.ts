@@ -288,7 +288,7 @@ export class DebugFilter {
           try {
             const matchedFiles = glob.sync(pattern);
             const fileArray = Array.isArray(matchedFiles) ? matchedFiles : [matchedFiles];
-            
+
             for (const file of fileArray) {
               const filePath = String(file);
               // Skip excluded paths

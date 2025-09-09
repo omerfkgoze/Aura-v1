@@ -40,7 +40,7 @@ describe('NetworkGate', () => {
 
       expect(result.passed).toBe(true);
       expect(result.details).toContain('Network security gate passed');
-      expect((result.metadata as any)).toBeDefined();
+      expect(result.metadata as any).toBeDefined();
       expect((result.metadata as any).totalViolations).toBeGreaterThanOrEqual(0);
     });
 
@@ -119,7 +119,7 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.execute(config);
 
-      expect((result.metadata as any)).toBeDefined();
+      expect(result.metadata as any).toBeDefined();
       expect((result.metadata as any).tlsResults).toBeDefined();
       expect((result.metadata as any).metadataResults).toBeDefined();
       expect((result.metadata as any).overallRiskScore).toBeGreaterThanOrEqual(0);
@@ -133,7 +133,7 @@ describe('NetworkGate', () => {
 
       expect(result.passed).toBe(true);
       expect(result.details).toContain('0 files');
-      expect((result.metadata as any)).toEqual([]);
+      expect(result.metadata as any).toEqual([]);
     });
 
     it('should aggregate results from multiple PCAP files', async () => {
@@ -143,7 +143,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.executePcapAnalysisForFiles(filePaths);
 
       expect(result.details).toContain('2 files');
-      expect((result.metadata as any)).toBeInstanceOf(Array);
+      expect(result.metadata as any).toBeInstanceOf(Array);
     });
 
     it('should handle PCAP analysis errors gracefully', async () => {
@@ -160,7 +160,7 @@ describe('NetworkGate', () => {
 
       expect(result.passed).toBe(true);
       expect(result.details).toContain('0 endpoints');
-      expect((result.metadata as any)).toEqual([]);
+      expect(result.metadata as any).toEqual([]);
     });
 
     it('should inspect multiple TLS endpoints', async () => {
@@ -209,7 +209,7 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.executeMetadataAnalysisForRequests(requests);
 
-      expect((result.metadata as any)).toBeDefined();
+      expect(result.metadata as any).toBeDefined();
       expect((result.metadata as any).riskScore).toBeGreaterThanOrEqual(0);
       expect((result.metadata as any).patterns).toBeDefined();
     });
@@ -242,7 +242,7 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.executeMetadataAnalysisForRequests(requests, 60000); // 1-minute windows
 
-      expect((result.metadata as any)).toBeDefined();
+      expect(result.metadata as any).toBeDefined();
       expect((result.metadata as any).patterns).toBeDefined();
     });
   });
@@ -409,7 +409,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       // Should complete despite individual component failures
-      expect((result.metadata as any)).toBeDefined();
+      expect(result.metadata as any).toBeDefined();
       expect(result.details).toContain('Network security gate failed');
     });
   });
@@ -449,7 +449,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.executeMetadataAnalysisForRequests(manyRequests);
       const duration = Date.now() - startTime;
 
-      expect((result.metadata as any)).toBeDefined();
+      expect(result.metadata as any).toBeDefined();
       expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
     });
   });

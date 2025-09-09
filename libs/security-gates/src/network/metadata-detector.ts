@@ -71,9 +71,7 @@ export class MetadataDetector {
     /\/api\/contraception/i,
   ];
 
-  async analyzeMetadata(
-    requests: RequestMetadata[]
-  ): Promise<SecurityGateResult> {
+  async analyzeMetadata(requests: RequestMetadata[]): Promise<SecurityGateResult> {
     try {
       if (requests.length === 0) {
         return {
@@ -89,7 +87,7 @@ export class MetadataDetector {
             trackingSignalsFound: [],
             riskScore: 0,
             patterns: [],
-          }
+          },
         };
       }
 
@@ -107,7 +105,7 @@ export class MetadataDetector {
 
       const errors: string[] = [];
       const warnings: string[] = [];
-      
+
       violations.forEach(v => {
         if (v.severity === 'HIGH') {
           errors.push(v.description);
@@ -115,7 +113,7 @@ export class MetadataDetector {
           warnings.push(v.description);
         }
       });
-      
+
       return {
         valid: passed,
         passed,
@@ -137,7 +135,9 @@ export class MetadataDetector {
       return {
         valid: false,
         passed: false,
-        errors: [`Metadata analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `Metadata analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
         warnings: [],
         details: 'Metadata analysis failed due to an error',
         metadata: {
@@ -185,7 +185,7 @@ export class MetadataDetector {
 
     const errors: string[] = [];
     const warnings: string[] = [];
-    
+
     violations.forEach(v => {
       if (v.severity === 'HIGH') {
         errors.push(v.description);
@@ -193,7 +193,7 @@ export class MetadataDetector {
         warnings.push(v.description);
       }
     });
-    
+
     return {
       valid: passed,
       passed,

@@ -110,7 +110,10 @@ export class ClientSecurityGate implements SecurityGate {
     const warnings: string[] = [];
 
     // Validate required properties
-    if (config['buildMode'] && !['development', 'staging', 'production'].includes(config['buildMode'] as string)) {
+    if (
+      config['buildMode'] &&
+      !['development', 'staging', 'production'].includes(config['buildMode'] as string)
+    ) {
       errors.push('Invalid buildMode. Must be one of: development, staging, production');
     }
 
@@ -118,7 +121,10 @@ export class ClientSecurityGate implements SecurityGate {
       errors.push('maxRiskScore must be a non-negative number');
     }
 
-    if (typeof config['minComplianceRate'] === 'number' && ((config['minComplianceRate'] as number) < 0 || (config['minComplianceRate'] as number) > 100)) {
+    if (
+      typeof config['minComplianceRate'] === 'number' &&
+      ((config['minComplianceRate'] as number) < 0 || (config['minComplianceRate'] as number) > 100)
+    ) {
       errors.push('minComplianceRate must be between 0 and 100');
     }
 
@@ -232,20 +238,20 @@ export class ClientSecurityGate implements SecurityGate {
       );
 
       const validationResults = await this.ssrValidator.validatePages(testPages);
-      
+
       // Combine all page results into a single SSRValidationResult
       const allViolations: any[] = [];
       let totalRiskScore = 0;
       const allRecommendations: string[] = [];
       let isOverallValid = true;
-      
+
       for (const [, result] of validationResults) {
         if (!result.isValid) isOverallValid = false;
         allViolations.push(...result.violations);
         totalRiskScore += result.riskScore;
         allRecommendations.push(...result.recommendations);
       }
-      
+
       return {
         isValid: isOverallValid,
         violations: allViolations,

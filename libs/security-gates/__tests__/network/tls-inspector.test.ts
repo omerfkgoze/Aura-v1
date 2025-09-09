@@ -306,10 +306,7 @@ describe('TlsInspector', () => {
         vulnerabilities: [],
       };
 
-      const errors = await (inspector as any).identifyTlsViolations(
-        mockResult,
-        'bad.example.com'
-      );
+      const errors = await (inspector as any).identifyTlsViolations(mockResult, 'bad.example.com');
 
       expect(errors.length).toBeGreaterThan(0);
       expect(errors.every((v: TlsViolation) => v.recommendation.length > 0)).toBe(true);
@@ -324,14 +321,10 @@ describe('TlsInspector', () => {
     it('should prioritize high-severity violations', async () => {
       const result = await inspector.inspectTlsConnection('insecure.example.com', 443);
 
-      const mediumSeverityErrors = result.errors.filter(
-        (v: any) => v.severity === 'MEDIUM'
-      );
+      const mediumSeverityErrors = result.errors.filter((v: any) => v.severity === 'MEDIUM');
 
       // Certificate not pinned should be medium severity
-      expect(mediumSeverityErrors.some((v: any) => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(
-        true
-      );
+      expect(mediumSeverityErrors.some((v: any) => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(true);
     });
   });
 
