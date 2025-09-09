@@ -1,5 +1,5 @@
 import { SecurityGate, SecurityGateResult } from '../core/security-gate.interface';
-import { PcapAnalyzer, PcapAnalysisResult, PcapPacket } from './pcap-analyzer';
+import { PcapAnalyzer, PcapAnalysisResult /*, PcapPacket */ } from './pcap-analyzer';
 import { TlsInspector, TlsInspectionResult } from './tls-inspector';
 import { MetadataDetector, MetadataAnalysisResult, RequestMetadata } from './metadata-detector';
 
@@ -15,15 +15,19 @@ export interface NetworkGateConfig {
 }
 
 export interface NetworkAnalysisResult {
-  pcapResults?: PcapAnalysisResult;
+  pcapResults?: PcapAnalysisResult | undefined;
   tlsResults?: TlsInspectionResult[];
-  metadataResults?: MetadataAnalysisResult;
+  metadataResults?: MetadataAnalysisResult | undefined;
   overallRiskScore: number;
   totalViolations: number;
   highSeverityViolations: number;
 }
 
 export class NetworkGate implements SecurityGate {
+  name = 'Network Security Gate';
+  description = 'Network traffic analysis and security validation';
+  version = '1.0.0';
+
   private readonly pcapAnalyzer: PcapAnalyzer;
   private readonly tlsInspector: TlsInspector;
   private readonly metadataDetector: MetadataDetector;
@@ -34,7 +38,46 @@ export class NetworkGate implements SecurityGate {
     this.metadataDetector = new MetadataDetector();
   }
 
-  async execute(config: NetworkGateConfig): Promise<SecurityGateResult<NetworkAnalysisResult>> {
+  getConfig(): Record<string, unknown> {
+    return {
+      enablePcapAnalysis: true,
+      enableTlsInspection: true,
+      enableMetadataDetection: true,
+      pcapFilePaths: [],
+      tlsEndpoints: [],
+      metadataTimeWindow: 3600000,
+      failOnHighSeverity: true,
+      maxRiskScore: 100,
+    };
+  }
+
+  validateConfig(config: Record<string, unknown>): SecurityGateResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (Array.isArray(config['pcapFilePaths'])) {
+      (config['pcapFilePaths'] as unknown[]).forEach((path, index) => {
+        if (typeof path !== 'string') {
+          errors.push(`pcapFilePaths[${index}] must be a string`);
+        }
+      });
+    }
+
+    if (typeof config['maxRiskScore'] === 'number' && (config['maxRiskScore'] as number) < 0) {
+      errors.push('maxRiskScore must be a non-negative number');
+    }
+
+    return {
+      valid: errors.length === 0,
+      passed: errors.length === 0,
+      errors,
+      warnings,
+      details: errors.length > 0 ? 'Network gate configuration validation failed' : 'Configuration is valid',
+    };
+  }
+
+  async execute(input: unknown): Promise<SecurityGateResult> {
+    const config = input as NetworkGateConfig;
     try {
       const results: NetworkAnalysisResult = {
         overallRiskScore: 0,
@@ -48,22 +91,26 @@ export class NetworkGate implements SecurityGate {
       // Execute PCAP analysis if enabled
       if (config.enablePcapAnalysis) {
         const pcapResults = await this.executePcapAnalysis(config.pcapFilePaths);
-        results.pcapResults = pcapResults.details;
+        results.pcapResults = pcapResults.metadata as PcapAnalysisResult | undefined;
 
         if (!pcapResults.passed) {
           overallPassed = false;
         }
 
-        if (pcapResults.violations) {
-          allViolations.push(...pcapResults.violations);
-        }
+        // Add errors and warnings to violations list
+        pcapResults.errors.forEach(error => {
+          allViolations.push({ type: 'ERROR', severity: 'HIGH', description: error });
+        });
+        pcapResults.warnings.forEach(warning => {
+          allViolations.push({ type: 'WARNING', severity: 'MEDIUM', description: warning });
+        });
       }
 
       // Execute TLS inspection if enabled
       if (config.enableTlsInspection) {
         const tlsResults = await this.executeTlsInspection(config.tlsEndpoints);
         results.tlsResults = tlsResults
-          .map(r => r.details)
+          .map(r => r.metadata as TlsInspectionResult | undefined)
           .filter(Boolean) as TlsInspectionResult[];
 
         const failedTlsInspections = tlsResults.filter(r => !r.passed);
@@ -72,9 +119,13 @@ export class NetworkGate implements SecurityGate {
         }
 
         for (const tlsResult of tlsResults) {
-          if (tlsResult.violations) {
-            allViolations.push(...tlsResult.violations);
-          }
+          // Add errors and warnings to violations list
+          tlsResult.errors.forEach(error => {
+            allViolations.push({ type: 'ERROR', severity: 'HIGH', description: error });
+          });
+          tlsResult.warnings.forEach(warning => {
+            allViolations.push({ type: 'WARNING', severity: 'MEDIUM', description: warning });
+          });
         }
       }
 
@@ -88,15 +139,19 @@ export class NetworkGate implements SecurityGate {
           config.metadataTimeWindow
         );
 
-        results.metadataResults = metadataResult.details;
+        results.metadataResults = metadataResult.metadata as MetadataAnalysisResult | undefined;
 
         if (!metadataResult.passed) {
           overallPassed = false;
         }
 
-        if (metadataResult.violations) {
-          allViolations.push(...metadataResult.violations);
-        }
+        // Add errors and warnings to violations list
+        metadataResult.errors.forEach(error => {
+          allViolations.push({ type: 'ERROR', severity: 'HIGH', description: error });
+        });
+        metadataResult.warnings.forEach(warning => {
+          allViolations.push({ type: 'WARNING', severity: 'MEDIUM', description: warning });
+        });
       }
 
       // Calculate overall metrics
@@ -112,31 +167,46 @@ export class NetworkGate implements SecurityGate {
         overallPassed = false;
       }
 
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      allViolations.forEach((v: any) => {
+        if (v.severity === 'HIGH') {
+          errors.push(v.description || v.type);
+        } else {
+          warnings.push(v.description || v.type);
+        }
+      });
+      
       return {
+        valid: overallPassed,
         passed: overallPassed,
-        message: overallPassed
+        errors,
+        warnings,
+        details: overallPassed
           ? `Network security gate passed - ${results.totalViolations} total violations, risk score: ${results.overallRiskScore}`
           : `Network security gate failed - ${results.highSeverityViolations} high severity violations, risk score: ${results.overallRiskScore}`,
-        details: results,
-        violations: allViolations,
+        metadata: results as unknown as Record<string, unknown>,
       };
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `Network security gate execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: {
+        errors: [`Network security gate execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        warnings: [],
+        details: 'Network security gate execution failed due to an error',
+        metadata: {
           overallRiskScore: 100,
           totalViolations: 0,
           highSeverityViolations: 0,
-        },
-        violations: [],
+        } as unknown as Record<string, unknown>,
       };
     }
   }
 
   async executePcapAnalysisForFiles(
     filePaths: string[]
-  ): Promise<SecurityGateResult<PcapAnalysisResult[]>> {
+  ): Promise<SecurityGateResult> {
     try {
       const results: PcapAnalysisResult[] = [];
       const violations: any[] = [];
@@ -145,40 +215,59 @@ export class NetworkGate implements SecurityGate {
       for (const filePath of filePaths) {
         const result = await this.pcapAnalyzer.analyzePcapFile(filePath);
 
-        if (result.details) {
-          results.push(result.details);
+        if (result.metadata) {
+          results.push(result.metadata as unknown as PcapAnalysisResult);
         }
 
         if (!result.passed) {
           overallPassed = false;
         }
 
-        if (result.violations) {
-          violations.push(...result.violations);
-        }
+        // Add errors and warnings to violations list
+        result.errors.forEach(error => {
+          violations.push({ type: 'ERROR', severity: 'HIGH', description: error });
+        });
+        result.warnings.forEach(warning => {
+          violations.push({ type: 'WARNING', severity: 'MEDIUM', description: warning });
+        });
       }
 
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      violations.forEach((v: any) => {
+        if (v.severity === 'HIGH') {
+          errors.push(v.description || v.type);
+        } else {
+          warnings.push(v.description || v.type);
+        }
+      });
+      
       return {
+        valid: overallPassed,
         passed: overallPassed,
-        message: overallPassed
+        errors,
+        warnings,
+        details: overallPassed
           ? `PCAP analysis passed for ${filePaths.length} files`
           : `PCAP analysis failed for ${filePaths.length} files`,
-        details: results,
-        violations,
+        metadata: { results } as unknown as Record<string, unknown>,
       };
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `PCAP analysis execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: [],
-        violations: [],
+        errors: [`PCAP analysis execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        warnings: [],
+        details: 'PCAP analysis execution failed due to an error',
+        metadata: [] as unknown as Record<string, unknown>,
       };
     }
   }
 
   async executeTlsInspectionForEndpoints(
     endpoints: Array<{ hostname: string; port: number }>
-  ): Promise<SecurityGateResult<TlsInspectionResult[]>> {
+  ): Promise<SecurityGateResult> {
     try {
       const results: TlsInspectionResult[] = [];
       const violations: any[] = [];
@@ -190,33 +279,52 @@ export class NetworkGate implements SecurityGate {
           endpoint.port
         );
 
-        if (result.details) {
-          results.push(result.details);
+        if (result.metadata) {
+          results.push(result.metadata as unknown as TlsInspectionResult);
         }
 
         if (!result.passed) {
           overallPassed = false;
         }
 
-        if (result.violations) {
-          violations.push(...result.violations);
-        }
+        // Add errors and warnings to violations list
+        result.errors.forEach(error => {
+          violations.push({ type: 'ERROR', severity: 'HIGH', description: error });
+        });
+        result.warnings.forEach(warning => {
+          violations.push({ type: 'WARNING', severity: 'MEDIUM', description: warning });
+        });
       }
 
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      violations.forEach((v: any) => {
+        if (v.severity === 'HIGH') {
+          errors.push(v.description || v.type);
+        } else {
+          warnings.push(v.description || v.type);
+        }
+      });
+      
       return {
+        valid: overallPassed,
         passed: overallPassed,
-        message: overallPassed
+        errors,
+        warnings,
+        details: overallPassed
           ? `TLS inspection passed for ${endpoints.length} endpoints`
           : `TLS inspection failed for ${endpoints.length} endpoints`,
-        details: results,
-        violations,
+        metadata: { results } as unknown as Record<string, unknown>,
       };
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `TLS inspection execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: [],
-        violations: [],
+        errors: [`TLS inspection execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        warnings: [],
+        details: 'TLS inspection execution failed due to an error',
+        metadata: [] as unknown as Record<string, unknown>,
       };
     }
   }
@@ -224,14 +332,17 @@ export class NetworkGate implements SecurityGate {
   async executeMetadataAnalysisForRequests(
     requests: RequestMetadata[],
     timeWindow: number = 60000
-  ): Promise<SecurityGateResult<MetadataAnalysisResult>> {
+  ): Promise<SecurityGateResult> {
     try {
       return await this.metadataDetector.analyzeRequestBatch(requests, timeWindow);
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `Metadata analysis execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: {
+        errors: [`Metadata analysis execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        warnings: [],
+        details: 'Metadata analysis execution failed due to an error',
+        metadata: {
           timingPatternsDetected: true,
           sizePatternsDetected: true,
           headerLeakageDetected: true,
@@ -239,31 +350,32 @@ export class NetworkGate implements SecurityGate {
           riskScore: 100,
           patterns: [],
         },
-        violations: [],
       };
     }
   }
 
   private async executePcapAnalysis(
     filePaths: string[]
-  ): Promise<SecurityGateResult<PcapAnalysisResult>> {
+  ): Promise<SecurityGateResult> {
     if (filePaths.length === 0) {
       return {
+        valid: true,
         passed: true,
-        message: 'No PCAP files to analyze',
-        details: {
+        errors: [],
+        warnings: [],
+        details: 'No PCAP files to analyze',
+        metadata: {
           encryptedPayloadsOnly: true,
           piiExposureDetected: false,
           suspiciousPackets: [],
           totalPackets: 0,
           encryptedPackets: 0,
         },
-        violations: [],
       };
     }
 
     // For multiple files, analyze each and aggregate results
-    const allResults: SecurityGateResult<PcapAnalysisResult>[] = [];
+    const allResults: SecurityGateResult[] = [];
 
     for (const filePath of filePaths) {
       const result = await this.pcapAnalyzer.analyzePcapFile(filePath);
@@ -277,8 +389,8 @@ export class NetworkGate implements SecurityGate {
 
   private async executeTlsInspection(
     endpoints: Array<{ hostname: string; port: number }>
-  ): Promise<SecurityGateResult<TlsInspectionResult>[]> {
-    const results: SecurityGateResult<TlsInspectionResult>[] = [];
+  ): Promise<SecurityGateResult[]> {
+    const results: SecurityGateResult[] = [];
 
     for (const endpoint of endpoints) {
       const result = await this.tlsInspector.inspectTlsConnection(endpoint.hostname, endpoint.port);
@@ -289,25 +401,28 @@ export class NetworkGate implements SecurityGate {
   }
 
   private aggregatePcapResults(
-    results: SecurityGateResult<PcapAnalysisResult>[]
-  ): SecurityGateResult<PcapAnalysisResult> {
+    results: SecurityGateResult[]
+  ): SecurityGateResult {
     if (results.length === 0) {
       return {
+        valid: true,
         passed: true,
-        message: 'No results to aggregate',
-        details: {
+        errors: [],
+        warnings: [],
+        details: 'No results to aggregate',
+        metadata: {
           encryptedPayloadsOnly: true,
           piiExposureDetected: false,
           suspiciousPackets: [],
           totalPackets: 0,
           encryptedPackets: 0,
         },
-        violations: [],
       };
     }
 
-    const allViolations = results.flatMap(r => r.violations || []);
-    const allDetails = results.map(r => r.details).filter(Boolean) as PcapAnalysisResult[];
+    const allErrors = results.flatMap(r => r.errors || []);
+    const allWarnings = results.flatMap(r => r.warnings || []);
+    const allDetails = results.map(r => r.metadata as unknown as PcapAnalysisResult).filter(Boolean);
 
     const aggregatedDetails: PcapAnalysisResult = {
       encryptedPayloadsOnly: allDetails.every(d => d.encryptedPayloadsOnly),
@@ -318,14 +433,16 @@ export class NetworkGate implements SecurityGate {
     };
 
     const overallPassed = results.every(r => r.passed);
-
+    
     return {
+      valid: overallPassed,
       passed: overallPassed,
-      message: overallPassed
+      errors: allErrors,
+      warnings: allWarnings,
+      details: overallPassed
         ? `Aggregated PCAP analysis passed for ${results.length} files`
         : `Aggregated PCAP analysis failed for ${results.length} files`,
-      details: aggregatedDetails,
-      violations: allViolations,
+      metadata: aggregatedDetails as unknown as Record<string, unknown>,
     };
   }
 

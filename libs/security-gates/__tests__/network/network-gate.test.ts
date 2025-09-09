@@ -39,9 +39,9 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       expect(result.passed).toBe(true);
-      expect(result.message).toContain('Network security gate passed');
-      expect(result.details).toBeDefined();
-      expect(result.details.totalViolations).toBeGreaterThanOrEqual(0);
+      expect(result.details).toContain('Network security gate passed');
+      expect((result.metadata as any)).toBeDefined();
+      expect((result.metadata as any).totalViolations).toBeGreaterThanOrEqual(0);
     });
 
     it('should fail when high severity violations are found and failOnHighSeverity is true', async () => {
@@ -59,8 +59,8 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('Network security gate failed');
-      expect(result.details.highSeverityViolations).toBeGreaterThanOrEqual(0);
+      expect(result.details).toContain('Network security gate failed');
+      expect((result.metadata as any).highSeverityViolations).toBeGreaterThanOrEqual(0);
     });
 
     it('should fail when risk score exceeds maximum threshold', async () => {
@@ -81,7 +81,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       expect(result.passed).toBe(false);
-      expect(result.details.overallRiskScore).toBeGreaterThan(10);
+      expect((result.metadata as any).overallRiskScore).toBeGreaterThan(10);
     });
 
     it('should handle execution errors gracefully', async () => {
@@ -99,7 +99,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('Network security gate failed');
+      expect(result.details).toContain('Network security gate failed');
     });
 
     it('should aggregate results from multiple analysis types', async () => {
@@ -119,11 +119,11 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.execute(config);
 
-      expect(result.details).toBeDefined();
-      expect(result.details.tlsResults).toBeDefined();
-      expect(result.details.metadataResults).toBeDefined();
-      expect(result.details.overallRiskScore).toBeGreaterThanOrEqual(0);
-      expect(result.details.totalViolations).toBeGreaterThanOrEqual(0);
+      expect((result.metadata as any)).toBeDefined();
+      expect((result.metadata as any).tlsResults).toBeDefined();
+      expect((result.metadata as any).metadataResults).toBeDefined();
+      expect((result.metadata as any).overallRiskScore).toBeGreaterThanOrEqual(0);
+      expect((result.metadata as any).totalViolations).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -132,8 +132,8 @@ describe('NetworkGate', () => {
       const result = await networkGate.executePcapAnalysisForFiles([]);
 
       expect(result.passed).toBe(true);
-      expect(result.message).toContain('0 files');
-      expect(result.details).toEqual([]);
+      expect(result.details).toContain('0 files');
+      expect((result.metadata as any)).toEqual([]);
     });
 
     it('should aggregate results from multiple PCAP files', async () => {
@@ -142,15 +142,15 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.executePcapAnalysisForFiles(filePaths);
 
-      expect(result.message).toContain('2 files');
-      expect(result.details).toBeInstanceOf(Array);
+      expect(result.details).toContain('2 files');
+      expect((result.metadata as any)).toBeInstanceOf(Array);
     });
 
     it('should handle PCAP analysis errors gracefully', async () => {
       const result = await networkGate.executePcapAnalysisForFiles(['/invalid/path.pcap']);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.length).toBeGreaterThanOrEqual(0);
+      expect(result.errors.length).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -159,8 +159,8 @@ describe('NetworkGate', () => {
       const result = await networkGate.executeTlsInspectionForEndpoints([]);
 
       expect(result.passed).toBe(true);
-      expect(result.message).toContain('0 endpoints');
-      expect(result.details).toEqual([]);
+      expect(result.details).toContain('0 endpoints');
+      expect((result.metadata as any)).toEqual([]);
     });
 
     it('should inspect multiple TLS endpoints', async () => {
@@ -171,8 +171,8 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.executeTlsInspectionForEndpoints(endpoints);
 
-      expect(result.message).toContain('2 endpoints');
-      expect(result.details.length).toBe(2);
+      expect(result.details).toContain('2 endpoints');
+      expect((result.metadata as any).length).toBe(2);
     });
 
     it('should aggregate violations from multiple endpoints', async () => {
@@ -190,7 +190,7 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.executeTlsInspectionForEndpoints(endpoints);
 
-      expect(result.violations.length).toBeGreaterThan(0);
+      expect(result.errors.length).toBeGreaterThan(0);
     });
   });
 
@@ -209,9 +209,9 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.executeMetadataAnalysisForRequests(requests);
 
-      expect(result.details).toBeDefined();
-      expect(result.details.riskScore).toBeGreaterThanOrEqual(0);
-      expect(result.details.patterns).toBeDefined();
+      expect((result.metadata as any)).toBeDefined();
+      expect((result.metadata as any).riskScore).toBeGreaterThanOrEqual(0);
+      expect((result.metadata as any).patterns).toBeDefined();
     });
 
     it('should handle metadata analysis errors gracefully', async () => {
@@ -219,8 +219,8 @@ describe('NetworkGate', () => {
       const result = await networkGate.executeMetadataAnalysisForRequests(null as any);
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('Metadata analysis execution failed');
-      expect(result.details.riskScore).toBe(100);
+      expect(result.details).toContain('Metadata analysis execution failed');
+      expect((result.metadata as any).riskScore).toBe(100);
     });
 
     it('should apply custom time windows', async () => {
@@ -242,8 +242,8 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.executeMetadataAnalysisForRequests(requests, 60000); // 1-minute windows
 
-      expect(result.details).toBeDefined();
-      expect(result.details.patterns).toBeDefined();
+      expect((result.metadata as any)).toBeDefined();
+      expect((result.metadata as any).patterns).toBeDefined();
     });
   });
 
@@ -266,7 +266,7 @@ describe('NetworkGate', () => {
 
       const result = await networkGate.execute(config);
 
-      expect(result.details.overallRiskScore).toBeGreaterThan(0);
+      expect((result.metadata as any).overallRiskScore).toBeGreaterThan(0);
     });
 
     it('should calculate lower risk scores for secure configurations', async () => {
@@ -291,7 +291,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       // Should have some violations (not pinned) but lower overall risk
-      expect(result.details.overallRiskScore).toBeLessThan(50);
+      expect((result.metadata as any).overallRiskScore).toBeLessThan(50);
     });
   });
 
@@ -311,8 +311,8 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       expect(result.passed).toBe(true);
-      expect(result.details.totalViolations).toBe(0);
-      expect(result.details.overallRiskScore).toBe(0);
+      expect((result.metadata as any).totalViolations).toBe(0);
+      expect((result.metadata as any).overallRiskScore).toBe(0);
     });
 
     it('should validate mock configuration creation', () => {
@@ -353,11 +353,11 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       // Should have results from both TLS inspection and metadata detection
-      expect(result.details.tlsResults).toBeDefined();
-      expect(result.details.metadataResults).toBeDefined();
+      expect((result.metadata as any).tlsResults).toBeDefined();
+      expect((result.metadata as any).metadataResults).toBeDefined();
 
       // Overall risk score should be calculated from both components
-      expect(result.details.overallRiskScore).toBeGreaterThanOrEqual(0);
+      expect((result.metadata as any).overallRiskScore).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -372,7 +372,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(malformedConfig);
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('execution failed');
+      expect(result.details).toContain('execution failed');
     });
 
     it('should handle network connectivity issues', async () => {
@@ -390,8 +390,8 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       // Should handle connection failures gracefully
-      expect(result.details.tlsResults).toBeDefined();
-      expect(result.violations.length).toBeGreaterThanOrEqual(0);
+      expect((result.metadata as any).tlsResults).toBeDefined();
+      expect(result.errors.length).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle partial analysis failures', async () => {
@@ -409,8 +409,8 @@ describe('NetworkGate', () => {
       const result = await networkGate.execute(config);
 
       // Should complete despite individual component failures
-      expect(result.details).toBeDefined();
-      expect(result.message).toContain('Network security gate failed');
+      expect((result.metadata as any)).toBeDefined();
+      expect(result.details).toContain('Network security gate failed');
     });
   });
 
@@ -425,7 +425,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.executeTlsInspectionForEndpoints(manyEndpoints);
       const duration = Date.now() - startTime;
 
-      expect(result.details.length).toBe(10);
+      expect((result.metadata as any).length).toBe(10);
       expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
     });
 
@@ -449,7 +449,7 @@ describe('NetworkGate', () => {
       const result = await networkGate.executeMetadataAnalysisForRequests(manyRequests);
       const duration = Date.now() - startTime;
 
-      expect(result.details).toBeDefined();
+      expect((result.metadata as any)).toBeDefined();
       expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
     });
   });

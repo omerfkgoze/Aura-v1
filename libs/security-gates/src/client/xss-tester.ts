@@ -8,7 +8,7 @@
  * Implements AC 6 subtask 3: Comprehensive XSS and injection attack prevention testing
  */
 
-import { z } from 'zod';
+// import { z } from 'zod'; // Currently unused
 
 // Common XSS attack vectors
 const XSS_PAYLOADS = [
@@ -526,7 +526,7 @@ export class XSSTester {
 
     const formData = new FormData(form);
 
-    for (const [fieldName, value] of formData.entries()) {
+    for (const [fieldName, _value] of formData.entries()) {
       for (const payload of this.allPayloads.slice(0, 5)) {
         testedPayloads++;
 

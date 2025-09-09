@@ -73,21 +73,23 @@ export class MetadataDetector {
 
   async analyzeMetadata(
     requests: RequestMetadata[]
-  ): Promise<SecurityGateResult<MetadataAnalysisResult>> {
+  ): Promise<SecurityGateResult> {
     try {
       if (requests.length === 0) {
         return {
+          valid: true,
           passed: true,
-          message: 'No requests to analyze',
-          details: {
+          errors: [],
+          warnings: [],
+          details: 'No requests to analyze',
+          metadata: {
             timingPatternsDetected: false,
             sizePatternsDetected: false,
             headerLeakageDetected: false,
             trackingSignalsFound: [],
             riskScore: 0,
             patterns: [],
-          },
-          violations: [],
+          }
         };
       }
 
@@ -103,12 +105,26 @@ export class MetadataDetector {
       const highRiskViolations = violations.filter(v => v.severity === 'HIGH');
       const passed = highRiskViolations.length === 0 && riskScore < 70;
 
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      violations.forEach(v => {
+        if (v.severity === 'HIGH') {
+          errors.push(v.description);
+        } else {
+          warnings.push(v.description);
+        }
+      });
+      
       return {
+        valid: passed,
         passed,
-        message: passed
+        errors,
+        warnings,
+        details: passed
           ? 'Metadata analysis passed - no significant leakage patterns detected'
           : `Metadata analysis failed - ${violations.length} violations found with risk score ${riskScore}`,
-        details: {
+        metadata: {
           timingPatternsDetected,
           sizePatternsDetected,
           headerLeakageDetected,
@@ -116,18 +132,15 @@ export class MetadataDetector {
           riskScore,
           patterns,
         },
-        violations: violations.map(v => ({
-          type: v.type,
-          severity: v.severity,
-          description: v.description,
-          location: `Pattern: ${v.pattern.type}`,
-        })),
       };
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `Metadata analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: {
+        errors: [`Metadata analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        warnings: [],
+        details: 'Metadata analysis failed due to an error',
+        metadata: {
           timingPatternsDetected: true,
           sizePatternsDetected: true,
           headerLeakageDetected: true,
@@ -135,7 +148,6 @@ export class MetadataDetector {
           riskScore: 100,
           patterns: [],
         },
-        violations: [],
       };
     }
   }
@@ -143,16 +155,16 @@ export class MetadataDetector {
   async analyzeRequestBatch(
     requests: RequestMetadata[],
     timeWindow: number = 60000 // 1 minute
-  ): Promise<SecurityGateResult<MetadataAnalysisResult>> {
+  ): Promise<SecurityGateResult> {
     // Group requests by time windows for pattern analysis
     const timeGroups = this.groupRequestsByTime(requests, timeWindow);
     const allPatterns: MetadataPattern[] = [];
-    const allViolations: MetadataViolation[] = [];
+    // const allViolations: MetadataViolation[] = []; // Currently unused
 
     for (const group of timeGroups) {
       const result = await this.analyzeMetadata(group);
-      if (result.details) {
-        allPatterns.push(...result.details.patterns);
+      if (result.metadata) {
+        allPatterns.push(...(result.metadata as any).patterns);
       }
     }
 
@@ -171,12 +183,26 @@ export class MetadataDetector {
     const highRiskViolations = violations.filter(v => v.severity === 'HIGH');
     const passed = highRiskViolations.length === 0 && riskScore < 70;
 
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    violations.forEach(v => {
+      if (v.severity === 'HIGH') {
+        errors.push(v.description);
+      } else {
+        warnings.push(v.description);
+      }
+    });
+    
     return {
+      valid: passed,
       passed,
-      message: passed
+      errors,
+      warnings,
+      details: passed
         ? 'Batch metadata analysis passed'
         : `Batch metadata analysis failed - ${violations.length} violations found`,
-      details: {
+      metadata: {
         timingPatternsDetected,
         sizePatternsDetected,
         headerLeakageDetected,
@@ -184,12 +210,6 @@ export class MetadataDetector {
         riskScore,
         patterns: allPatterns,
       },
-      violations: violations.map(v => ({
-        type: v.type,
-        severity: v.severity,
-        description: v.description,
-        location: `Pattern: ${v.pattern.type}`,
-      })),
     };
   }
 
@@ -500,7 +520,7 @@ export class MetadataDetector {
     return patterns;
   }
 
-  private detectCrossWindowPatterns(timeGroups: RequestMetadata[][]): Promise<MetadataPattern[]> {
+  private detectCrossWindowPatterns(_timeGroups: RequestMetadata[][]): Promise<MetadataPattern[]> {
     return Promise.resolve([]);
     // Cross-window pattern detection would be implemented here
     // This is a placeholder for more complex temporal analysis

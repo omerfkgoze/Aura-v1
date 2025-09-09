@@ -59,21 +59,23 @@ export class PcapAnalyzer {
     'authorization',
   ];
 
-  async analyzePcapFile(filePath: string): Promise<SecurityGateResult<PcapAnalysisResult>> {
+  async analyzePcapFile(filePath: string): Promise<SecurityGateResult> {
     try {
       const fileExists = await this.fileExists(filePath);
       if (!fileExists) {
         return {
+          valid: false,
           passed: false,
-          message: `PCAP file not found: ${filePath}`,
-          details: {
+          errors: [`PCAP file not found: ${filePath}`],
+          warnings: [],
+          details: 'PCAP analysis failed - file not found',
+          metadata: {
             encryptedPayloadsOnly: false,
             piiExposureDetected: true,
             suspiciousPackets: [],
             totalPackets: 0,
             encryptedPackets: 0,
-          },
-          violations: [],
+          }
         };
       }
 
@@ -84,38 +86,48 @@ export class PcapAnalyzer {
       const passed =
         analysis.encryptedPayloadsOnly && !analysis.piiExposureDetected && violations.length === 0;
 
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      violations.forEach(v => {
+        if (v.severity === 'HIGH') {
+          errors.push(v.description);
+        } else {
+          warnings.push(v.description);
+        }
+      });
+      
       return {
+        valid: passed,
         passed,
-        message: passed
+        errors,
+        warnings,
+        details: passed
           ? 'Network traffic analysis passed - all payloads encrypted, no PII exposure detected'
           : `Network traffic analysis failed - ${violations.length} violations found`,
-        details: analysis,
-        violations: violations.map(v => ({
-          type: v.type,
-          severity: v.severity,
-          description: v.description,
-          location: `${v.packet.sourceIp} -> ${v.packet.destinationIp}`,
-        })),
+        metadata: analysis as unknown as Record<string, unknown>,
       };
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `PCAP analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: {
+        errors: [`PCAP analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        warnings: [],
+        details: 'PCAP analysis failed due to an error',
+        metadata: {
           encryptedPayloadsOnly: false,
           piiExposureDetected: true,
           suspiciousPackets: [],
           totalPackets: 0,
           encryptedPackets: 0,
         },
-        violations: [],
       };
     }
   }
 
   async analyzeNetworkTrafficInMemory(
     packets: PcapPacket[]
-  ): Promise<SecurityGateResult<PcapAnalysisResult>> {
+  ): Promise<SecurityGateResult> {
     try {
       const analysis = await this.analyzePackets(packets);
       const violations = await this.identifyViolations(packets);
@@ -123,31 +135,41 @@ export class PcapAnalyzer {
       const passed =
         analysis.encryptedPayloadsOnly && !analysis.piiExposureDetected && violations.length === 0;
 
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      violations.forEach(v => {
+        if (v.severity === 'HIGH') {
+          errors.push(v.description);
+        } else {
+          warnings.push(v.description);
+        }
+      });
+      
       return {
+        valid: passed,
         passed,
-        message: passed
+        errors,
+        warnings,
+        details: passed
           ? 'Network traffic analysis passed - all payloads encrypted, no PII exposure detected'
           : `Network traffic analysis failed - ${violations.length} violations found`,
-        details: analysis,
-        violations: violations.map(v => ({
-          type: v.type,
-          severity: v.severity,
-          description: v.description,
-          location: `${v.packet.sourceIp} -> ${v.packet.destinationIp}`,
-        })),
+        metadata: analysis as unknown as Record<string, unknown>,
       };
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `Network traffic analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: {
+        errors: [`Network traffic analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        warnings: [],
+        details: 'Network traffic analysis failed due to an error',
+        metadata: {
           encryptedPayloadsOnly: false,
           piiExposureDetected: true,
           suspiciousPackets: [],
           totalPackets: 0,
           encryptedPackets: 0,
         },
-        violations: [],
       };
     }
   }
@@ -190,7 +212,7 @@ export class PcapAnalyzer {
     return packets;
   }
 
-  private parsePacketLine(line: string, index: number): PcapPacket | null {
+  private parsePacketLine(line: string, _index: number): PcapPacket | null {
     // Simplified packet parsing for demonstration
     const parts = line.split(' ');
     if (parts.length < 3) return null;

@@ -73,7 +73,7 @@ export class TlsInspector {
     hostname: string,
     port: number = 443,
     timeout: number = 10000
-  ): Promise<SecurityGateResult<TlsInspectionResult>> {
+  ): Promise<SecurityGateResult> {
     try {
       const connectionInfo = await this.analyzeTlsConnection(hostname, port, timeout);
       const violations = await this.identifyTlsViolations(connectionInfo, hostname);
@@ -85,24 +85,35 @@ export class TlsInspector {
         connectionInfo.tlsVersionSecure &&
         violations.filter(v => v.severity === 'HIGH').length === 0;
 
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      violations.forEach(v => {
+        if (v.severity === 'HIGH') {
+          errors.push(v.description);
+        } else {
+          warnings.push(v.description);
+        }
+      });
+      
       return {
+        valid: passed,
         passed,
-        message: passed
+        errors,
+        warnings,
+        details: passed
           ? `TLS inspection passed for ${hostname}:${port}`
           : `TLS inspection failed for ${hostname}:${port} - ${violations.length} violations found`,
-        details: connectionInfo,
-        violations: violations.map(v => ({
-          type: v.type,
-          severity: v.severity,
-          description: v.description,
-          location: `${hostname}:${port}`,
-        })),
+        metadata: connectionInfo as unknown as Record<string, unknown>,
       };
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `TLS inspection failed for ${hostname}:${port}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: {
+        errors: [`TLS inspection failed for ${hostname}:${port}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'Failed to establish TLS connection'],
+        warnings: [],
+        details: 'TLS inspection failed due to connection error',
+        metadata: {
           certificateValid: false,
           certificatePinned: false,
           cipherSuiteSecure: false,
@@ -110,33 +121,39 @@ export class TlsInspector {
           certificateDetails: this.createEmptyCertificateDetails(),
           vulnerabilities: [],
         },
-        violations: [
-          {
-            type: 'CERTIFICATE_INVALID',
-            severity: 'HIGH',
-            description: 'Failed to establish TLS connection',
-            location: `${hostname}:${port}`,
-          },
-        ],
       };
     }
   }
 
   async inspectCertificateFile(
     certificatePath: string
-  ): Promise<SecurityGateResult<TlsInspectionResult>> {
+  ): Promise<SecurityGateResult> {
     try {
       const certificateDetails = await this.parseCertificateFile(certificatePath);
       const violations = await this.validateCertificate(certificateDetails);
 
       const passed = violations.filter(v => v.severity === 'HIGH').length === 0;
 
+      const errors: string[] = [];
+      const warnings: string[] = [];
+      
+      violations.forEach(v => {
+        if (v.severity === 'HIGH') {
+          errors.push(v.description);
+        } else {
+          warnings.push(v.description);
+        }
+      });
+      
       return {
+        valid: passed,
         passed,
-        message: passed
+        errors,
+        warnings,
+        details: passed
           ? `Certificate validation passed for ${certificatePath}`
           : `Certificate validation failed for ${certificatePath} - ${violations.length} violations found`,
-        details: {
+        metadata: {
           certificateValid: passed,
           certificatePinned: false, // Cannot verify pinning from file alone
           cipherSuiteSecure: true, // Not applicable for certificate files
@@ -144,18 +161,15 @@ export class TlsInspector {
           certificateDetails,
           vulnerabilities: [],
         },
-        violations: violations.map(v => ({
-          type: v.type,
-          severity: v.severity,
-          description: v.description,
-          location: certificatePath,
-        })),
       };
     } catch (error) {
       return {
+        valid: false,
         passed: false,
-        message: `Certificate inspection failed for ${certificatePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        details: {
+        errors: [`Certificate inspection failed for ${certificatePath}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'Failed to parse certificate file'],
+        warnings: [],
+        details: 'Certificate inspection failed due to parsing error',
+        metadata: {
           certificateValid: false,
           certificatePinned: false,
           cipherSuiteSecure: false,
@@ -163,14 +177,6 @@ export class TlsInspector {
           certificateDetails: this.createEmptyCertificateDetails(),
           vulnerabilities: [],
         },
-        violations: [
-          {
-            type: 'CERTIFICATE_INVALID',
-            severity: 'HIGH',
-            description: 'Failed to parse certificate file',
-            location: certificatePath,
-          },
-        ],
       };
     }
   }
@@ -178,7 +184,7 @@ export class TlsInspector {
   private async analyzeTlsConnection(
     hostname: string,
     port: number,
-    timeout: number
+    _timeout: number
   ): Promise<TlsInspectionResult> {
     // In a real implementation, this would use Node.js tls module
     // For now, we'll simulate TLS connection analysis
@@ -331,8 +337,8 @@ export class TlsInspector {
   }
 
   private async scanForTlsVulnerabilities(
-    hostname: string,
-    port: number
+    _hostname: string,
+    _port: number
   ): Promise<TlsVulnerability[]> {
     // In a real implementation, this would scan for known TLS vulnerabilities
     // like Heartbleed, POODLE, BEAST, etc.
@@ -346,7 +352,7 @@ export class TlsInspector {
 
   private async identifyTlsViolations(
     result: TlsInspectionResult,
-    hostname: string
+    _hostname: string
   ): Promise<TlsViolation[]> {
     const violations: TlsViolation[] = [];
 

@@ -230,27 +230,29 @@ export class LogAnalyzer {
   private async readLogFiles(): Promise<string[]> {
     const logs: string[] = [];
     const fs = await import('fs/promises');
-    const path = await import('path');
+    // const path = await import('path'); // Currently unused
     const glob = await import('glob');
 
     for (const logPath of this.config.logPaths) {
       try {
-        const files = await glob.glob(logPath);
+        const files = glob.sync(logPath);
+        const fileArray = Array.isArray(files) ? files : [files];
 
-        for (const file of files) {
+        for (const file of fileArray) {
+          const filePath = String(file);
           try {
-            const stats = await fs.stat(file);
+            const stats = await fs.stat(filePath);
 
             if (stats.size > this.config.maxFileSize) {
-              console.warn(`Skipping large log file: ${file} (${stats.size} bytes)`);
+              console.warn(`Skipping large log file: ${filePath} (${stats.size} bytes)`);
               continue;
             }
 
-            const content = await fs.readFile(file, 'utf-8');
+            const content = await fs.readFile(filePath, 'utf-8');
             const lines = content.split('\n').filter(line => line.trim());
             logs.push(...lines);
           } catch (fileError) {
-            console.warn(`Could not read log file ${file}:`, fileError);
+            console.warn(`Could not read log file ${filePath}:`, fileError);
           }
         }
       } catch (globError) {

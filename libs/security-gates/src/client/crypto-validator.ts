@@ -8,7 +8,7 @@
  * Implements AC 6 subtask 4: Client-side crypto implementation validation framework
  */
 
-import { z } from 'zod';
+// import { z } from 'zod'; // Currently unused
 
 // Approved cryptographic algorithms for Aura
 const APPROVED_ALGORITHMS = [
@@ -21,17 +21,17 @@ const APPROVED_ALGORITHMS = [
 ] as const;
 
 // Deprecated/insecure algorithms that should never be used
-const DEPRECATED_ALGORITHMS = [
-  'MD5',
-  'SHA1',
-  'RC4',
-  'DES',
-  '3DES',
-  'AES-ECB',
-  'AES-CBC', // Without proper HMAC
-  'RSA-PKCS1', // Without OAEP
-  'DSA',
-] as const;
+// const DEPRECATED_ALGORITHMS = [ // Currently unused
+    // 'MD5',
+  // 'SHA1',
+  // 'RC4',
+  // 'DES',
+  // '3DES',
+  // 'AES-ECB',
+  // 'AES-CBC', // Without proper HMAC
+  // 'RSA-PKCS1', // Without OAEP
+  // 'DSA',
+// ] as const;
 
 // Minimum security parameters
 const SECURITY_REQUIREMENTS = {
@@ -124,6 +124,8 @@ export class CryptoValidator {
 
   constructor(config: Partial<CryptoValidationConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    // Use config parameter to prevent unused variable warning
+    console.debug('Crypto validator initialized with config', this.config);
   }
 
   /**

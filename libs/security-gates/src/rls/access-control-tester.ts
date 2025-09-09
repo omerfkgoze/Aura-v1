@@ -31,8 +31,8 @@ export interface DataIsolationTest {
   userA: string;
   userB: string;
   setupData: {
-    userAData: { query: string; params?: any[] }[];
-    userBData: { query: string; params?: any[] }[];
+    userAData: { query: string; params?: any[] | undefined }[];
+    userBData: { query: string; params?: any[] | undefined }[];
   };
   isolationTests: {
     description: string;
@@ -146,7 +146,7 @@ export class AccessControlTester {
         query: operation.query,
         expectedBlocked: operation.expectedBlocked,
         actuallyBlocked,
-        error,
+        ...(error !== undefined && { error }),
       });
     }
 

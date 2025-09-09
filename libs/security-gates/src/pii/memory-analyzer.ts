@@ -291,7 +291,7 @@ export class MemoryAnalyzer {
       if (typeof require !== 'undefined') {
         try {
           const v8 = require('v8');
-          const heapSnapshot = v8.writeHeapSnapshot();
+          v8.writeHeapSnapshot(); // Heap snapshot created but not used in current implementation
 
           // Note: In a real implementation, you'd parse the heap snapshot
           // This is a simplified version that scans string representations

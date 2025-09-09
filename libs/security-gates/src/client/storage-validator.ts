@@ -8,7 +8,7 @@
  * Implements AC 6 subtask 2: Client-side storage encryption validation system
  */
 
-import { z } from 'zod';
+// import { z } from 'zod'; // Currently unused
 
 // Storage types that require validation
 export type StorageType = 'localStorage' | 'sessionStorage' | 'indexedDB' | 'webSQL' | 'cookies';

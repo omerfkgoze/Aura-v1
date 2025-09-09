@@ -22,6 +22,9 @@ export interface RLSTestResult {
 export interface DatabaseConnection {
   query: (sql: string, params?: any[]) => Promise<any[]>;
   queryAsUser: (sql: string, userId: string, params?: any[]) => Promise<any[]>;
+  beginTransaction: () => Promise<void>;
+  commitTransaction: () => Promise<void>;
+  rollbackTransaction: () => Promise<void>;
 }
 
 const RLSPolicySchema = z.object({

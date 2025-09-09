@@ -31,9 +31,9 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzePcapFile('/path/to/nonexistent.pcap');
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('PCAP file not found');
-      expect(result.details.totalPackets).toBe(0);
-      expect(result.details.encryptedPackets).toBe(0);
+      expect(result.details).toContain('PCAP file not found');
+      expect((result.metadata as any).totalPackets).toBe(0);
+      expect((result.metadata as any).encryptedPackets).toBe(0);
     });
 
     it('should analyze encrypted traffic successfully', async () => {
@@ -48,11 +48,11 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzePcapFile('/path/to/valid.pcap');
 
       expect(result.passed).toBe(true);
-      expect(result.message).toContain('all payloads encrypted, no PII exposure detected');
-      expect(result.details.totalPackets).toBe(2);
-      expect(result.details.encryptedPackets).toBe(2);
-      expect(result.details.encryptedPayloadsOnly).toBe(true);
-      expect(result.details.piiExposureDetected).toBe(false);
+      expect(result.details).toContain('all payloads encrypted, no PII exposure detected');
+      expect((result.metadata as any).totalPackets).toBe(2);
+      expect((result.metadata as any).encryptedPackets).toBe(2);
+      expect((result.metadata as any).encryptedPayloadsOnly).toBe(true);
+      expect((result.metadata as any).piiExposureDetected).toBe(false);
     });
 
     it('should detect PII exposure in network traffic', async () => {
@@ -67,10 +67,10 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzePcapFile('/path/to/pii.pcap');
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('violations found');
-      expect(result.details.piiExposureDetected).toBe(true);
-      expect(result.details.suspiciousPackets.length).toBeGreaterThan(0);
-      expect(result.violations.length).toBeGreaterThan(0);
+      expect(result.details).toContain('violations found');
+      expect((result.metadata as any).piiExposureDetected).toBe(true);
+      expect((result.metadata as any).suspiciousPackets.length).toBeGreaterThan(0);
+      expect(result.errors.length).toBeGreaterThan(0);
     });
 
     it('should detect unencrypted health data', async () => {
@@ -85,8 +85,8 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzePcapFile('/path/to/health.pcap');
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some((v: any) => v.type === 'PLAINTEXT_HEALTH_DATA')).toBe(true);
-      expect(result.violations.some((v: any) => v.severity === 'HIGH')).toBe(true);
+      expect(result.errors.some((v: any) => v.type === 'PLAINTEXT_HEALTH_DATA')).toBe(true);
+      expect(result.errors.some((v: any) => v.severity === 'HIGH')).toBe(true);
     });
 
     it('should handle file read errors gracefully', async () => {
@@ -96,7 +96,7 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzePcapFile('/path/to/error.pcap');
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('PCAP analysis failed');
+      expect(result.details).toContain('PCAP analysis failed');
     });
   });
 
@@ -120,9 +120,9 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzeNetworkTrafficInMemory(packets);
 
       expect(result.passed).toBe(true);
-      expect(result.details.totalPackets).toBe(2);
-      expect(result.details.encryptedPackets).toBe(2);
-      expect(result.details.encryptedPayloadsOnly).toBe(true);
+      expect((result.metadata as any).totalPackets).toBe(2);
+      expect((result.metadata as any).encryptedPackets).toBe(2);
+      expect((result.metadata as any).encryptedPayloadsOnly).toBe(true);
     });
 
     it('should detect PII in memory packets', async () => {
@@ -144,16 +144,16 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzeNetworkTrafficInMemory(packets);
 
       expect(result.passed).toBe(false);
-      expect(result.details.piiExposureDetected).toBe(true);
-      expect(result.violations.length).toBeGreaterThan(0);
+      expect((result.metadata as any).piiExposureDetected).toBe(true);
+      expect(result.errors.length).toBeGreaterThan(0);
     });
 
     it('should handle empty packet array', async () => {
       const result = await analyzer.analyzeNetworkTrafficInMemory([]);
 
       expect(result.passed).toBe(true);
-      expect(result.details.totalPackets).toBe(0);
-      expect(result.details.encryptedPayloadsOnly).toBe(true);
+      expect((result.metadata as any).totalPackets).toBe(0);
+      expect((result.metadata as any).encryptedPayloadsOnly).toBe(true);
     });
   });
 
@@ -170,8 +170,8 @@ describe('PcapAnalyzer', () => {
 
       const result = await analyzer.analyzeNetworkTrafficInMemory(piiPackets);
 
-      expect(result.details.piiExposureDetected).toBe(true);
-      expect(result.details.suspiciousPackets.length).toBeGreaterThan(0);
+      expect((result.metadata as any).piiExposureDetected).toBe(true);
+      expect((result.metadata as any).suspiciousPackets.length).toBeGreaterThan(0);
     });
 
     it('should detect health-specific data patterns', async () => {
@@ -186,7 +186,7 @@ describe('PcapAnalyzer', () => {
       const result = await analyzer.analyzeNetworkTrafficInMemory(healthPackets);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some((v: any) => v.type === 'PLAINTEXT_HEALTH_DATA')).toBe(true);
+      expect(result.errors.some((v: any) => v.type === 'PLAINTEXT_HEALTH_DATA')).toBe(true);
     });
   });
 
@@ -216,8 +216,8 @@ describe('PcapAnalyzer', () => {
 
       const result = await analyzer.analyzeNetworkTrafficInMemory(encryptedPackets);
 
-      expect(result.details.encryptedPackets).toBe(4);
-      expect(result.details.encryptedPayloadsOnly).toBe(true);
+      expect((result.metadata as any).encryptedPackets).toBe(4);
+      expect((result.metadata as any).encryptedPayloadsOnly).toBe(true);
     });
 
     it('should identify unencrypted payloads', async () => {
@@ -229,9 +229,9 @@ describe('PcapAnalyzer', () => {
 
       const result = await analyzer.analyzeNetworkTrafficInMemory(unencryptedPackets);
 
-      expect(result.details.encryptedPackets).toBe(0);
-      expect(result.details.encryptedPayloadsOnly).toBe(false);
-      expect(result.violations.some((v: any) => v.type === 'UNENCRYPTED_PAYLOAD')).toBe(true);
+      expect((result.metadata as any).encryptedPackets).toBe(0);
+      expect((result.metadata as any).encryptedPayloadsOnly).toBe(false);
+      expect(result.errors.some((v: any) => v.type === 'UNENCRYPTED_PAYLOAD')).toBe(true);
     });
   });
 
@@ -246,14 +246,14 @@ describe('PcapAnalyzer', () => {
 
       const result = await analyzer.analyzeNetworkTrafficInMemory(violatingPackets);
 
-      expect(result.violations.length).toBeGreaterThan(0);
+      expect(result.errors.length).toBeGreaterThan(0);
 
-      const violationTypes = result.violations.map((v: any) => v.type);
-      expect(violationTypes).toContain('PLAINTEXT_HEALTH_DATA');
-      expect(violationTypes).toContain('UNENCRYPTED_PAYLOAD');
-      expect(violationTypes).toContain('PII_IN_HEADERS');
+      const errorTypes = result.errors.map((v: any) => v.type);
+      expect(errorTypes).toContain('PLAINTEXT_HEALTH_DATA');
+      expect(errorTypes).toContain('UNENCRYPTED_PAYLOAD');
+      expect(errorTypes).toContain('PII_IN_HEADERS');
 
-      const severities = result.violations.map((v: any) => v.severity);
+      const severities = result.errors.map((v: any) => v.severity);
       expect(severities).toContain('HIGH');
       expect(severities).toContain('MEDIUM');
     });
@@ -267,7 +267,7 @@ describe('PcapAnalyzer', () => {
 
       const result = await analyzer.analyzeNetworkTrafficInMemory(suspiciousPackets);
 
-      expect(result.violations.some((v: any) => v.type === 'SUSPICIOUS_METADATA')).toBe(true);
+      expect(result.errors.some((v: any) => v.type === 'SUSPICIOUS_METADATA')).toBe(true);
     });
   });
 

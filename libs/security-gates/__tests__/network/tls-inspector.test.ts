@@ -24,26 +24,26 @@ describe('TlsInspector', () => {
       const result = await inspector.inspectTlsConnection('api.aura-app.com', 443);
 
       expect(result.passed).toBe(true);
-      expect(result.message).toContain('TLS inspection passed');
-      expect(result.details.certificateValid).toBe(true);
-      expect(result.details.tlsVersionSecure).toBe(true);
-      expect(result.details.cipherSuiteSecure).toBe(true);
+      expect(result.details).toContain('TLS inspection passed');
+      expect((result.metadata as any).certificateValid).toBe(true);
+      expect((result.metadata as any).tlsVersionSecure).toBe(true);
+      expect((result.metadata as any).cipherSuiteSecure).toBe(true);
     });
 
     it('should fail inspection for non-pinned certificate', async () => {
       const result = await inspector.inspectTlsConnection('unknown-host.com', 443);
 
       expect(result.passed).toBe(false);
-      expect(result.details.certificatePinned).toBe(false);
-      expect(result.violations.some((v: any) => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(true);
+      expect((result.metadata as any).certificatePinned).toBe(false);
+      expect(result.errors.some((v: any) => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(true);
     });
 
     it('should handle connection timeout gracefully', async () => {
       const result = await inspector.inspectTlsConnection('nonexistent-host.invalid', 443, 100);
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('TLS inspection failed');
-      expect(result.violations.length).toBeGreaterThan(0);
+      expect(result.details).toContain('TLS inspection failed');
+      expect(result.errors.length).toBeGreaterThan(0);
     });
 
     it('should detect certificate expiration warnings', async () => {
@@ -78,8 +78,8 @@ describe('TlsInspector', () => {
 
       const result = await mockInspector.inspectTlsConnection('expiring.example.com', 443);
 
-      expect(result.violations.some((v: any) => v.type === 'CERTIFICATE_EXPIRED')).toBe(true);
-      expect(result.violations.some((v: any) => v.severity === 'MEDIUM')).toBe(true);
+      expect(result.errors.some((v: any) => v.type === 'CERTIFICATE_EXPIRED')).toBe(true);
+      expect(result.errors.some((v: any) => v.severity === 'MEDIUM')).toBe(true);
     });
   });
 
@@ -88,23 +88,23 @@ describe('TlsInspector', () => {
       const result = await inspector.inspectCertificateFile('/path/to/valid-cert.pem');
 
       expect(result.passed).toBe(true);
-      expect(result.message).toContain('Certificate validation passed');
-      expect(result.details.certificateDetails.subject).toContain('CN=example.com');
+      expect(result.details).toContain('Certificate validation passed');
+      expect((result.metadata as any).certificateDetails.subject).toContain('CN=example.com');
     });
 
     it('should handle invalid certificate file paths', async () => {
       const result = await inspector.inspectCertificateFile('/path/to/nonexistent.pem');
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('Certificate inspection failed');
-      expect(result.violations.length).toBeGreaterThan(0);
+      expect(result.details).toContain('Certificate inspection failed');
+      expect(result.errors.length).toBeGreaterThan(0);
     });
 
     it('should detect localhost certificates', async () => {
       const result = await inspector.inspectCertificateFile('/path/to/localhost.pem');
 
-      expect(result.details.certificateDetails.subject).toContain('CN=localhost');
-      expect(result.details.certificateDetails.san).toContain('localhost');
+      expect((result.metadata as any).certificateDetails.subject).toContain('CN=localhost');
+      expect((result.metadata as any).certificateDetails.san).toContain('localhost');
     });
   });
 
@@ -159,9 +159,9 @@ describe('TlsInspector', () => {
 
       const result = await inspector.inspectTlsConnection('secure.example.com', 443);
 
-      expect(result.details.certificatePinned).toBe(true);
-      expect(result.details.tlsVersionSecure).toBe(true);
-      expect(result.details.cipherSuiteSecure).toBe(true);
+      expect((result.metadata as any).certificatePinned).toBe(true);
+      expect((result.metadata as any).tlsVersionSecure).toBe(true);
+      expect((result.metadata as any).cipherSuiteSecure).toBe(true);
     });
 
     it('should detect weak cipher suites', async () => {
@@ -179,8 +179,8 @@ describe('TlsInspector', () => {
       const result = await mockInspector.inspectTlsConnection('weak.example.com', 443);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some((v: any) => v.type === 'WEAK_CIPHER')).toBe(true);
-      expect(result.violations.some((v: any) => v.severity === 'HIGH')).toBe(true);
+      expect(result.errors.some((v: any) => v.type === 'WEAK_CIPHER')).toBe(true);
+      expect(result.errors.some((v: any) => v.severity === 'HIGH')).toBe(true);
     });
 
     it('should detect insecure TLS versions', async () => {
@@ -198,8 +198,8 @@ describe('TlsInspector', () => {
       const result = await mockInspector.inspectTlsConnection('oldtls.example.com', 443);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.some((v: any) => v.type === 'WEAK_TLS_VERSION')).toBe(true);
-      expect(result.violations.some((v: any) => v.severity === 'HIGH')).toBe(true);
+      expect(result.errors.some((v: any) => v.type === 'WEAK_TLS_VERSION')).toBe(true);
+      expect(result.errors.some((v: any) => v.severity === 'HIGH')).toBe(true);
     });
   });
 
@@ -306,15 +306,15 @@ describe('TlsInspector', () => {
         vulnerabilities: [],
       };
 
-      const violations = await (inspector as any).identifyTlsViolations(
+      const errors = await (inspector as any).identifyTlsViolations(
         mockResult,
         'bad.example.com'
       );
 
-      expect(violations.length).toBeGreaterThan(0);
-      expect(violations.every((v: TlsViolation) => v.recommendation.length > 0)).toBe(true);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.every((v: TlsViolation) => v.recommendation.length > 0)).toBe(true);
 
-      const types = violations.map((v: TlsViolation) => v.type);
+      const types = errors.map((v: TlsViolation) => v.type);
       expect(types).toContain('CERTIFICATE_INVALID');
       expect(types).toContain('CERTIFICATE_NOT_PINNED');
       expect(types).toContain('WEAK_CIPHER');
@@ -324,12 +324,12 @@ describe('TlsInspector', () => {
     it('should prioritize high-severity violations', async () => {
       const result = await inspector.inspectTlsConnection('insecure.example.com', 443);
 
-      const mediumSeverityViolations = result.violations.filter(
+      const mediumSeverityErrors = result.errors.filter(
         (v: any) => v.severity === 'MEDIUM'
       );
 
       // Certificate not pinned should be medium severity
-      expect(mediumSeverityViolations.some((v: any) => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(
+      expect(mediumSeverityErrors.some((v: any) => v.type === 'CERTIFICATE_NOT_PINNED')).toBe(
         true
       );
     });
@@ -340,22 +340,22 @@ describe('TlsInspector', () => {
       const result = await inspector.inspectTlsConnection('192.0.2.1', 443, 100); // Non-routable IP
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('TLS inspection failed');
-      expect(result.violations.length).toBeGreaterThan(0);
+      expect(result.details).toContain('TLS inspection failed');
+      expect(result.errors.length).toBeGreaterThan(0);
     });
 
     it('should handle invalid hostnames gracefully', async () => {
       const result = await inspector.inspectTlsConnection('', 443);
 
       expect(result.passed).toBe(false);
-      expect(result.violations.length).toBeGreaterThan(0);
+      expect(result.errors.length).toBeGreaterThan(0);
     });
 
     it('should handle invalid ports gracefully', async () => {
       const result = await inspector.inspectTlsConnection('example.com', -1);
 
       expect(result.passed).toBe(false);
-      expect(result.message).toContain('TLS inspection failed');
+      expect(result.details).toContain('TLS inspection failed');
     });
   });
 

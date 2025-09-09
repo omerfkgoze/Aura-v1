@@ -275,7 +275,7 @@ export class ErrorSanitizer {
     for (const rule of this.config.rules) {
       const matches = errorMessage.matchAll(rule.pattern);
 
-      for (const match of matches) {
+      for (const _match of matches) {
         const sanitizedMessage = errorMessage.replace(rule.pattern, rule.replacement);
 
         const violation: ErrorViolation = {
@@ -297,7 +297,7 @@ export class ErrorSanitizer {
    * Create sanitized error handler middleware
    */
   createErrorHandler(environment: 'development' | 'staging' | 'production') {
-    return (error: Error, req?: any, res?: any, next?: any) => {
+    return (error: Error, _req?: any, res?: any, next?: any) => {
       const shouldSanitize = this.config.environments.includes(environment);
 
       let errorMessage = error.message;

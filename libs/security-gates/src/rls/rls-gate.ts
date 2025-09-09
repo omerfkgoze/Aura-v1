@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { SecurityGateResult, SecurityGate } from '../core/security-gate.interface';
-import { RLSTester, RLSTestConfig, DEFAULT_RLS_CONFIG } from './rls-tester';
+import { RLSTester, RLSTestConfig, DEFAULT_RLS_CONFIG, DatabaseConnection } from './rls-tester';
 import {
   AccessControlTester,
   CrossUserTestConfig,
@@ -48,13 +48,7 @@ export interface RLSMigrationValidation {
   };
 }
 
-export interface DatabaseConnection {
-  query: (sql: string, params?: any[]) => Promise<any[]>;
-  queryAsUser: (sql: string, userId: string, params?: any[]) => Promise<any[]>;
-  beginTransaction: () => Promise<void>;
-  commitTransaction: () => Promise<void>;
-  rollbackTransaction: () => Promise<void>;
-}
+// DatabaseConnection interface moved to rls-tester.ts to avoid duplication
 
 const RLSGateConfigSchema = z.object({
   enabled: z.boolean(),

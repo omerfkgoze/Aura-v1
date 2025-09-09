@@ -266,7 +266,7 @@ export class DebugFilter {
    */
   private async findBuildFiles(): Promise<string[]> {
     const fs = await import('fs/promises');
-    const path = await import('path');
+    // const path = await import('path'); // Currently unused
     const glob = await import('glob');
 
     const files: string[] = [];
@@ -285,25 +285,31 @@ export class DebugFilter {
         ];
 
         for (const pattern of patterns) {
-          const matchedFiles = await glob.glob(pattern);
-
-          for (const file of matchedFiles) {
-            // Skip excluded paths
-            if (this.shouldExcludeFile(file)) {
-              continue;
-            }
-
-            try {
-              const stats = await fs.stat(file);
-              if (stats.size > this.config.maxFileSize) {
-                console.warn(`Skipping large file: ${file} (${stats.size} bytes)`);
+          try {
+            const matchedFiles = glob.sync(pattern);
+            const fileArray = Array.isArray(matchedFiles) ? matchedFiles : [matchedFiles];
+            
+            for (const file of fileArray) {
+              const filePath = String(file);
+              // Skip excluded paths
+              if (this.shouldExcludeFile(filePath)) {
                 continue;
               }
 
-              files.push(file);
-            } catch (statError) {
-              console.warn(`Could not stat file ${file}:`, statError);
+              try {
+                const stats = await fs.stat(filePath);
+                if (stats.size > this.config.maxFileSize) {
+                  console.warn(`Skipping large file: ${filePath} (${stats.size} bytes)`);
+                  continue;
+                }
+
+                files.push(filePath);
+              } catch (statError) {
+                console.warn(`Could not stat file ${filePath}:`, statError);
+              }
             }
+          } catch (patternError) {
+            console.warn(`Pattern ${pattern} failed:`, patternError);
           }
         }
       } catch (globError) {
@@ -433,13 +439,12 @@ export class DebugFilter {
             result.cleaned++;
           }
         } catch (error) {
-          result.errors.push(
-            `Failed to clean ${file}: ${error instanceof Error ? error.message : String(error)}`
-          );
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          (result.errors as string[]).push(`Failed to clean ${file}: ${errorMsg}`);
         }
       }
     } catch (error) {
-      result.errors.push(
+      (result.errors as string[]).push(
         `Clean operation failed: ${error instanceof Error ? error.message : String(error)}`
       );
     }

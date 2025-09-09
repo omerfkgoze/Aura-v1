@@ -8,7 +8,7 @@
  * as specified in AC 6: Client-Side Security Validation Framework
  */
 
-import { z } from 'zod';
+// import { z } from 'zod'; // Currently unused
 
 // PII patterns that should never appear in SSR HTML
 const PII_PATTERNS = [
@@ -68,7 +68,7 @@ const RISKY_ELEMENTS = [
 ];
 
 // Attributes that commonly contain PII
-const RISKY_ATTRIBUTES = ['data-*', 'value', 'placeholder', 'aria-label', 'title', 'alt'];
+// const RISKY_ATTRIBUTES = ['data-*', 'value', 'placeholder', 'aria-label', 'title', 'alt']; // Currently unused
 
 export interface SSRValidationResult {
   isValid: boolean;
@@ -285,11 +285,12 @@ export class SSRValidator {
     return violations;
   }
 
-  private async checkComponentDataUsage(componentPath: string): Promise<SSRViolation[]> {
+  private async checkComponentDataUsage(_componentPath: string): Promise<SSRViolation[]> {
     const violations: SSRViolation[] = [];
 
     // Check for direct sensitive data usage in component
     // This would analyze the actual component code in real implementation
+    // componentPath parameter would be used here in a real implementation
 
     return violations;
   }

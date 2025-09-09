@@ -58,6 +58,7 @@ const PRODUCTION_CONFIG: ClientSecurityGateConfig = {
 export class ClientSecurityGate implements SecurityGate {
   name = 'Client-Side Security Gate';
   description = 'Comprehensive client-side security validation framework';
+  version = '1.0.0';
 
   private config: ClientSecurityGateConfig;
   private ssrValidator: SSRValidator;
@@ -67,37 +68,73 @@ export class ClientSecurityGate implements SecurityGate {
 
   constructor(config: Partial<ClientSecurityGateConfig> = {}) {
     // Use production config for production builds
-    const baseConfig = config.buildMode === 'production' ? PRODUCTION_CONFIG : DEFAULT_CONFIG;
+    const baseConfig = config['buildMode'] === 'production' ? PRODUCTION_CONFIG : DEFAULT_CONFIG;
     this.config = { ...baseConfig, ...config };
 
     // Initialize validators
     this.ssrValidator = new SSRValidator({
-      enableStrictMode: this.config.buildMode === 'production',
-      maxRiskScore: this.config.buildMode === 'production' ? 0 : 25,
+      enableStrictMode: this.config['buildMode'] === 'production',
+      maxRiskScore: this.config['buildMode'] === 'production' ? 0 : 25,
     });
 
     this.storageValidator = new StorageValidator({
-      enforceStrictMode: this.config.buildMode === 'production',
+      enableStrictMode: this.config['buildMode'] === 'production',
       storageTypes: ['localStorage', 'sessionStorage', 'indexedDB', 'cookies'],
     });
 
     this.xssTester = new XSSTester({
       enableDOMTesting: true,
       enableNetworkTesting: false, // Disable in automated testing
-      maxPayloads: this.config.buildMode === 'production' ? 100 : 50,
+      maxPayloads: this.config['buildMode'] === 'production' ? 100 : 50,
     });
 
     this.cryptoValidator = new CryptoValidator({
-      enforceStrictMode: this.config.buildMode === 'production',
+      enforceStrictMode: this.config['buildMode'] === 'production',
       checkMemoryLeaks: true,
-      validateAAD: this.config.buildMode === 'production',
+      validateAAD: this.config['buildMode'] === 'production',
     });
+  }
+
+  /**
+   * Get gate configuration
+   */
+  getConfig(): Record<string, unknown> {
+    return { ...this.config };
+  }
+
+  /**
+   * Validate gate configuration
+   */
+  validateConfig(config: Record<string, unknown>): SecurityGateResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Validate required properties
+    if (config['buildMode'] && !['development', 'staging', 'production'].includes(config['buildMode'] as string)) {
+      errors.push('Invalid buildMode. Must be one of: development, staging, production');
+    }
+
+    if (typeof config['maxRiskScore'] === 'number' && (config['maxRiskScore'] as number) < 0) {
+      errors.push('maxRiskScore must be a non-negative number');
+    }
+
+    if (typeof config['minComplianceRate'] === 'number' && ((config['minComplianceRate'] as number) < 0 || (config['minComplianceRate'] as number) > 100)) {
+      errors.push('minComplianceRate must be between 0 and 100');
+    }
+
+    return {
+      valid: errors.length === 0,
+      passed: errors.length === 0,
+      errors,
+      warnings,
+      details: errors.length > 0 ? 'Configuration validation failed' : 'Configuration is valid',
+    };
   }
 
   /**
    * Execute comprehensive client-side security validation
    */
-  async execute(): Promise<ClientSecurityGateResult> {
+  async execute(_input?: unknown): Promise<ClientSecurityGateResult> {
     const startTime = Date.now();
 
     try {
@@ -194,7 +231,27 @@ export class ClientSecurityGate implements SecurityGate {
         '<html><head><title>Dashboard</title></head><body><div id="app"></div></body></html>'
       );
 
-      return await this.ssrValidator.validatePages(testPages);
+      const validationResults = await this.ssrValidator.validatePages(testPages);
+      
+      // Combine all page results into a single SSRValidationResult
+      const allViolations: any[] = [];
+      let totalRiskScore = 0;
+      const allRecommendations: string[] = [];
+      let isOverallValid = true;
+      
+      for (const [, result] of validationResults) {
+        if (!result.isValid) isOverallValid = false;
+        allViolations.push(...result.violations);
+        totalRiskScore += result.riskScore;
+        allRecommendations.push(...result.recommendations);
+      }
+      
+      return {
+        isValid: isOverallValid,
+        violations: allViolations,
+        riskScore: totalRiskScore,
+        recommendations: allRecommendations,
+      } as SSRValidationResult;
     } catch (error) {
       return {
         isValid: false,
@@ -222,7 +279,7 @@ export class ClientSecurityGate implements SecurityGate {
         isValid: false,
         violations: [
           {
-            storageType: 'localStorage',
+            storageType: 'localStorage' as StorageType,
             key: 'validation_error',
             value: error instanceof Error ? error.message : 'Unknown error',
             violationType: 'invalid_format',
@@ -237,7 +294,7 @@ export class ClientSecurityGate implements SecurityGate {
         unencryptedItems: 0,
       };
 
-      return new Map([['localStorage', errorResult]]);
+      return new Map<StorageType, StorageValidationResult>([['localStorage', errorResult]]);
     }
   }
 
@@ -299,7 +356,7 @@ export class ClientSecurityGate implements SecurityGate {
   }
 
   private createEmptyStorageResult(): Map<StorageType, StorageValidationResult> {
-    return new Map();
+    return new Map<StorageType, StorageValidationResult>();
   }
 
   private createEmptyXSSResult(): XSSTestResult {
@@ -389,12 +446,12 @@ export class ClientSecurityGate implements SecurityGate {
     cryptoResult: CryptoValidationResult
   ): boolean {
     // Check overall risk score
-    if (overallRiskScore > this.config.maxRiskScore) {
+    if (overallRiskScore > this.config['maxRiskScore']) {
       return false;
     }
 
     // Check compliance rate
-    if (complianceRate < this.config.minComplianceRate) {
+    if (complianceRate < this.config['minComplianceRate']) {
       return false;
     }
 
@@ -575,7 +632,7 @@ export class ClientSecurityGate implements SecurityGate {
         );
       }
 
-      if (this.config.buildMode === 'production') {
+      if (this.config['buildMode'] === 'production') {
         console.log('\n🚫 Production build BLOCKED due to security violations');
         console.log('   Fix all security issues before deploying to production');
       }
@@ -593,9 +650,9 @@ export class ClientSecurityGate implements SecurityGate {
 
 ## Executive Summary
 - **Status**: ${result.passed ? '✅ PASSED' : '❌ FAILED'}
-- **Build Mode**: ${this.config.buildMode.toUpperCase()}
-- **Overall Risk Score**: ${result.overallRiskScore} / ${this.config.maxRiskScore} (max allowed)
-- **Compliance Rate**: ${result.complianceRate.toFixed(1)}% / ${this.config.minComplianceRate}% (min required)
+- **Build Mode**: ${this.config['buildMode'].toUpperCase()}
+- **Overall Risk Score**: ${result.overallRiskScore} / ${this.config['maxRiskScore']} (max allowed)
+- **Compliance Rate**: ${result.complianceRate.toFixed(1)}% / ${this.config['minComplianceRate']}% (min required)
 - **Execution Time**: ${result.executionTime}ms
 
 ## Validation Results
@@ -616,7 +673,7 @@ ${this.cryptoValidator.generateReport(result.cryptoValidation)}
 
 This security gate is integrated into the frontend build pipeline and will:
 
-${this.config.buildMode === 'production' ? '- **BLOCK** production deployments on any security violation' : '- **WARN** about security violations in development/staging'}
+${this.config['buildMode'] === 'production' ? '- **BLOCK** production deployments on any security violation' : '- **WARN** about security violations in development/staging'}
 - Generate detailed security reports for each build
 - Track security compliance metrics over time
 - Provide actionable recommendations for fixing violations
@@ -644,7 +701,7 @@ ${
 
 ---
 Generated by Client-Side Security Gate Framework
-Build Mode: ${this.config.buildMode}
+Build Mode: ${this.config['buildMode']}
 Timestamp: ${new Date().toISOString()}
 `;
 

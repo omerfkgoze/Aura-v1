@@ -133,7 +133,7 @@ export class PrivilegeTester {
         query: attempt.query,
         expectedBlocked: attempt.expectedBlocked,
         actuallyBlocked,
-        error,
+        ...(error !== undefined && { error }),
       });
     }
 
