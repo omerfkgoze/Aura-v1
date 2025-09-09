@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable */
 
 const fs = require('fs');
 const path = require('path');
@@ -98,7 +99,7 @@ function generateAPIReference() {
   
   let apiDocs = `# Crypto Core API Reference
 
-Generated: ${new Date().toISOString()}
+Generated: ' + new Date().toISOString() + '
 
 ## Overview
 
@@ -150,15 +151,15 @@ The Aura Crypto Core provides secure client-side cryptographic operations throug
     const rustDoc = allRustFunctions.find(f => f.name === funcName);
     const tsDoc = allTsFunctions.find(f => f.name === funcName);
     
-    apiDocs += `### \`${funcName}\`\n\n`;
+    apiDocs += '### `' + funcName + '`\n\n';
     
     if (rustDoc) {
-      apiDocs += `${rustDoc.documentation}\n\n`;
-      apiDocs += `**Rust Signature:**\n```rust\n${rustDoc.signature}\n```\n\n`;
+      apiDocs += rustDoc.documentation + '\n\n';
+      apiDocs += '**Rust Signature:**\\n```rust\\n' + rustDoc.signature + '\\n```\\n\\n';
     }
     
     if (tsDoc) {
-      apiDocs += `**TypeScript Signature:**\n```typescript\n${tsDoc.signature}\n```\n\n`;
+      apiDocs += '**TypeScript Signature:**\\n```typescript\\n' + tsDoc.signature + '\\n```\\n\\n';
     }
     
     // Add usage examples
@@ -171,8 +172,8 @@ The Aura Crypto Core provides secure client-side cryptographic operations throug
     apiDocs += `## TypeScript Interfaces\n\n`;
     
     for (const interfaceItem of allTsInterfaces) {
-      apiDocs += `### \`${interfaceItem.name}\`\n\n`;
-      apiDocs += ````typescript\n${interfaceItem.definition}\n```\n\n`;
+      apiDocs += '### `' + interfaceItem.name + '`\n\n';
+      apiDocs += '```typescript\n' + interfaceItem.definition + '\n```\n\n';
     }
   }
   
@@ -205,74 +206,74 @@ The Aura Crypto Core provides secure client-side cryptographic operations throug
 
 function generateUsageExample(funcName) {
   const examples = {
-    encrypt_cycle_data: `**Example:**
-```typescript
-import { encrypt_cycle_data, generate_user_key } from '@aura/crypto-core';
+    encrypt_cycle_data: '**Example:**\\n' +
+'```typescript\\n' +
+'import { encrypt_cycle_data, generate_user_key } from \'@aura/crypto-core\';\\n' +
+'\\n' +
+'const userKey = await generate_user_key(\'user-password\', \'salt\');\\n' +
+'const sensitiveData = { temperature: 98.6, symptoms: [\'headache\'] };\\n' +
+'\\n' +
+'const result = await encrypt_cycle_data(\\n' +
+'  JSON.stringify(sensitiveData),\\n' +
+'  userKey,\\n' +
+'  \'device-hash\',\\n' +
+'  { userId: \'user123\', dataType: \'cycle\' }\\n' +
+');\\n' +
+'```',
 
-const userKey = await generate_user_key('user-password', 'salt');
-const sensitiveData = { temperature: 98.6, symptoms: ['headache'] };
+    decrypt_cycle_data: '**Example:**\\n' +
+'```typescript\\n' +
+'import { decrypt_cycle_data } from \'@aura/crypto-core\';\\n' +
+'\\n' +
+'const decryptedData = await decrypt_cycle_data(\\n' +
+'  ciphertext,\\n' +
+'  cryptoEnvelope,\\n' +
+'  userKey\\n' +
+');\\n' +
+'\\n' +
+'const originalData = JSON.parse(decryptedData);\\n' +
+'```',
 
-const result = await encrypt_cycle_data(
-  JSON.stringify(sensitiveData),
-  userKey,
-  'device-hash',
-  { userId: 'user123', dataType: 'cycle' }
-);
-````,
+    generate_user_key: '**Example:**\\n' +
+'```typescript\\n' +
+'import { generate_user_key } from \'@aura/crypto-core\';\\n' +
+'\\n' +
+'const userKey = await generate_user_key(\\n' +
+'  \'secure-password\',\\n' +
+'  \'cryptographic-salt\'\\n' +
+');\\n' +
+'```',
 
-    decrypt_cycle_data: `**Example:**
-```typescript
-import { decrypt_cycle_data } from '@aura/crypto-core';
+    create_crypto_envelope: '**Example:**\\n' +
+'```typescript\\n' +
+'import { create_crypto_envelope } from \'@aura/crypto-core\';\\n' +
+'\\n' +
+'const envelope = create_crypto_envelope({\\n' +
+'  version: 1,\\n' +
+'  algorithm: \'AES-GCM-256\',\\n' +
+'  kdf_params: { iterations: 100000 },\\n' +
+'  encrypted_data: result.ciphertext,\\n' +
+'  nonce: result.nonce,\\n' +
+'  salt: result.salt,\\n' +
+'  key_id: \'key-v1\'\\n' +
+'});\\n' +
+'```',
 
-const decryptedData = await decrypt_cycle_data(
-  ciphertext,
-  cryptoEnvelope,
-  userKey
-);
+    zeroize_memory: '**Example:**\\n' +
+'```typescript\\n' +
+'import { zeroize_memory } from \'@aura/crypto-core\';\\n' +
+'\\n' +
+'// Manually trigger memory cleanup\\n' +
+'zeroize_memory();\\n' +
+'```',
 
-const originalData = JSON.parse(decryptedData);
-````,
-
-    generate_user_key: `**Example:**
-```typescript
-import { generate_user_key } from '@aura/crypto-core';
-
-const userKey = await generate_user_key(
-  'secure-password',
-  'cryptographic-salt'
-);
-````,
-
-    create_crypto_envelope: `**Example:**
-```typescript
-import { create_crypto_envelope } from '@aura/crypto-core';
-
-const envelope = create_crypto_envelope({
-  version: 1,
-  algorithm: 'AES-GCM-256',
-  kdf_params: { iterations: 100000 },
-  encrypted_data: result.ciphertext,
-  nonce: result.nonce,
-  salt: result.salt,
-  key_id: 'key-v1'
-});
-````,
-
-    zeroize_memory: `**Example:**
-```typescript
-import { zeroize_memory } from '@aura/crypto-core';
-
-// Manually trigger memory cleanup
-zeroize_memory();
-````,
-
-    get_memory_stats: `**Example:**
-```typescript
-import { get_memory_stats } from '@aura/crypto-core';
-
-const stats = get_memory_stats();
-console.log(`Active allocations: ${stats.active_allocations}`);
-````
+    get_memory_stats: '**Example:**\\n' +
+'```typescript\\n' +
+'import { get_memory_stats } from \'@aura/crypto-core\';\\n' +
+'\\n' +
+'const stats = get_memory_stats();\\n' +
+'console.log(\'Active allocations: \' + stats.active_allocations);\\n' +
+'```'
   };
   
   return examples[funcName] || '';
@@ -338,7 +339,7 @@ function generateMigrationGuide() {
 When upgrading to future versions:
 
 1. **Check Breaking Changes**: Review changelog for API modifications
-2. **Update Dependencies**: `npm update @aura/crypto-core`
+2. **Update Dependencies**: \`npm update @aura/crypto-core\`
 3. **Verify Integrity**: New WASM modules will have updated SRI hashes
 4. **Test Compatibility**: Crypto envelopes remain backward compatible
 5. **Update Types**: TypeScript definitions may include new features

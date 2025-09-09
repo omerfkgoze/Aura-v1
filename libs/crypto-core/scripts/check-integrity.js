@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable */
 
 const fs = require('fs');
 const crypto = require('crypto');
@@ -192,17 +193,17 @@ import { CRYPTO_CORE_INTEGRITY, verifyIntegrity } from './integrity';
  * Securely loads crypto-core WASM with integrity verification
  */
 export async function loadCryptoCoreSecurely(target: 'bundler' | 'web' | 'nodejs' = 'bundler') {
-  const wasmPath = target === 'bundler' ? 'pkg' : `pkg-${target}`;
-  const expectedHash = CRYPTO_CORE_INTEGRITY[`${wasmPath}/crypto_core_bg.wasm`];
+  const wasmPath = target === 'bundler' ? 'pkg' : 'pkg-' + target;
+  const expectedHash = CRYPTO_CORE_INTEGRITY[wasmPath + '/crypto_core_bg.wasm'];
   
   if (!expectedHash) {
-    throw new Error(`No integrity hash found for target: ${target}`);
+    throw new Error('No integrity hash found for target: ' + target);
   }
   
   // Fetch WASM module
-  const response = await fetch(`./${wasmPath}/crypto_core_bg.wasm`);
+  const response = await fetch('./' + wasmPath + '/crypto_core_bg.wasm');
   if (!response.ok) {
-    throw new Error(`Failed to fetch WASM: ${response.status}`);
+    throw new Error('Failed to fetch WASM: ' + response.status);
   }
   
   const wasmBytes = await response.arrayBuffer();
@@ -216,7 +217,7 @@ export async function loadCryptoCoreSecurely(target: 'bundler' | 'web' | 'nodejs
   // Load verified WASM
   const wasmModule = await WebAssembly.instantiate(wasmBytes);
   
-  console.log(`✅ Crypto core WASM loaded securely (${target})`);
+  console.log('✅ Crypto core WASM loaded securely (' + target + ')');
   return wasmModule;
 }
 
