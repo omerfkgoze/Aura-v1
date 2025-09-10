@@ -115,9 +115,20 @@ jobs:
 
       - name: Build all packages
         run: |
-          echo "Building all packages with direct Next.js build..."
-          # Build web app directly with Next.js to avoid Nx Html import issues
-          cd apps/web && pnpm build || {
+          echo "Building all packages with WASM and Next.js build..."
+
+          # Build WASM crypto-core first
+          echo "Building WASM crypto-core..."
+          cd libs/crypto-core && wasm-pack build || {
+            echo "❌ WASM build failed!"
+            echo "Check WASM build errors in the logs above"
+            exit 1
+          }
+          echo "✅ WASM crypto-core built successfully"
+
+          # Build web app with Next.js
+          echo "Building web app..."
+          cd ../../apps/web && pnpm build || {
             echo "❌ Web build failed!"
             echo "Check build errors in the logs above"
             exit 1
