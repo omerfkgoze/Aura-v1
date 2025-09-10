@@ -138,3 +138,6 @@ pkg-node/
 # Rust profiling
 perf.data
 perf.data.old
+
+# Playwright test reports
+apps/web/playwright-report/
