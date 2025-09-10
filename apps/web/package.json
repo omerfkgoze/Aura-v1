@@ -29,6 +29,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
+    "e2e": "playwright test",
     "type-check": "tsc --noEmit"
   }
 }
