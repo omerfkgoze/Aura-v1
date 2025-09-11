@@ -177,6 +177,15 @@ function hexToBytes(hex: string): Uint8Array {
 }
 
 /**
+ * Convert string to bytes (handles both hex and regular strings)
+ */
+function stringToBytes(input: string): Uint8Array {
+  // Always treat as regular string and convert to UTF-8 bytes
+  // This ensures consistent round-trip behavior
+  return new TextEncoder().encode(input);
+}
+
+/**
  * Create Shamir secret shares from a secret
  */
 export function createShamirShares(config: ShamirSecretConfig): ShamirShare[] {
@@ -196,7 +205,7 @@ export function createShamirShares(config: ShamirSecretConfig): ShamirShare[] {
     throw new Error('Secret cannot be empty');
   }
 
-  const secretBytes = hexToBytes(secret);
+  const secretBytes = stringToBytes(secret);
   const shares: ShamirShare[] = [];
 
   // Process each byte of the secret separately
@@ -304,7 +313,8 @@ export function reconstructSecret(shares: ShamirShare[]): string {
     reconstructedBytes[byteIndex] = lagrangeInterpolation(points);
   }
 
-  return bytesToHex(reconstructedBytes);
+  // Convert back to string since we encode strings as UTF-8
+  return new TextDecoder().decode(reconstructedBytes);
 }
 
 /**

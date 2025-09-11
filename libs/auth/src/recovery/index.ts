@@ -21,24 +21,32 @@ export type {
 } from './types';
 
 // Recovery phrase operations
-export {
+import {
   generateRecoveryPhrase,
   validateRecoveryPhrase,
   phraseToSeed,
   getStorageRecommendations,
 } from './phrases';
+export { generateRecoveryPhrase, validateRecoveryPhrase, phraseToSeed, getStorageRecommendations };
 
 // Shamir secret sharing operations
-export {
+import {
   createShamirShares,
   reconstructSecret,
   validateShamirShares,
   createTestShamirConfig,
   getShamirDistributionRecommendations,
 } from './shamir';
+export {
+  createShamirShares,
+  reconstructSecret,
+  validateShamirShares,
+  createTestShamirConfig,
+  getShamirDistributionRecommendations,
+};
 
 // Emergency access codes
-export {
+import {
   generateEmergencyCode,
   validateEmergencyCode,
   markCodeAsUsed,
@@ -51,14 +59,28 @@ export {
   getEmergencyCodeRecommendations,
   DEFAULT_EMERGENCY_CONFIG,
 } from './emergency';
+export {
+  generateEmergencyCode,
+  validateEmergencyCode,
+  markCodeAsUsed,
+  incrementAttempts,
+  isCodeValid,
+  getTimeRemaining,
+  generateEmergencyCodeSet,
+  formatCodeForDisplay,
+  parseUserInputCode,
+  getEmergencyCodeRecommendations,
+  DEFAULT_EMERGENCY_CONFIG,
+};
 
 export type { EmergencyCodeConfig } from './emergency';
 
 // Recovery validation system
-export { RecoveryValidator } from './validation';
+import { RecoveryValidator } from './validation';
+export { RecoveryValidator };
 
 // User guidance system
-export {
+import {
   getRecoveryPhraseGuidance,
   getShamirSharingGuidance,
   getEmergencyCodeGuidance,
@@ -66,9 +88,18 @@ export {
   getPersonalizedRecoveryStrategy,
   getRecoverySetupGuide,
 } from './guidance';
+export {
+  getRecoveryPhraseGuidance,
+  getShamirSharingGuidance,
+  getEmergencyCodeGuidance,
+  getRecoverySecurityChecklist,
+  getPersonalizedRecoveryStrategy,
+  getRecoverySetupGuide,
+};
 
 // Main recovery manager
-export { RecoveryManager, createDefaultRecoveryConfig, createRecoveryManager } from './manager';
+import { RecoveryManager, createDefaultRecoveryConfig, createRecoveryManager } from './manager';
+export { RecoveryManager, createDefaultRecoveryConfig, createRecoveryManager };
 
 // Convenience re-exports for common operations
 export const RecoverySystem = {

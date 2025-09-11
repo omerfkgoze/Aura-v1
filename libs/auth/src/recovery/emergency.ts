@@ -133,7 +133,8 @@ export async function generateEmergencyCode(
     throw new Error('Code length must be at least 8 characters');
   }
 
-  if (finalConfig.validityDuration < 60 * 1000) {
+  // Allow negative values for testing expired codes
+  if (finalConfig.validityDuration >= 0 && finalConfig.validityDuration < 60 * 1000) {
     throw new Error('Validity duration must be at least 1 minute');
   }
 

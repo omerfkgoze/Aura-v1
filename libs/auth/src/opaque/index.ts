@@ -41,7 +41,7 @@ export {
 } from './authentication';
 
 // Fallback authentication manager
-export { OpaqueManager } from './manager';
+export { OpaqueManager, createOpaqueManager } from './manager';
 
 // Migration utilities
 export {
