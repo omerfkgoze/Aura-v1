@@ -13,6 +13,21 @@ export type {
   WebWebAuthnOptions,
 } from './platform';
 
+// Cross-Platform Implementations (Task 5)
+export { IOSWebAuthnManager } from './ios';
+export { AndroidWebAuthnManager } from './android';
+export { WebWebAuthnManager } from './web';
+
+// Platform Detection and Unified API (Task 5)
+export { PlatformDetectionManager } from './detection';
+export {
+  UnifiedAuthenticationManager,
+  CrossPlatformAuthFactory,
+  AuthenticationService,
+} from './unified';
+export { FallbackAuthenticationManager } from './fallback';
+export type { FallbackMethod, FallbackResult } from './fallback';
+
 // Secure Storage
 export {
   SecureStorage,
@@ -44,6 +59,13 @@ export type {
   PlatformCapabilities,
   WebAuthnRegistrationRequest,
   WebAuthnAuthenticationRequest,
+  // Cross-Platform Types (Task 5)
+  BiometricAuthenticationOptions,
+  IOSBiometricResult,
+  AndroidBiometricResult,
+  WebBrowserResult,
+  CrossPlatformAuthResult,
+  PlatformDetectionResult,
 } from './types';
 
 // Configuration Types
