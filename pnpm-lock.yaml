@@ -167,6 +167,9 @@ importers:
 
   libs/auth:
     dependencies:
+      '@cloudflare/opaque-ts':
+        specifier: ^0.7.5
+        version: 0.7.5
       '@simplewebauthn/browser':
         specifier: ^9.0.1
         version: 9.0.1
@@ -278,7 +281,7 @@ importers:
         version: 20.19.11
       '@vitest/coverage-v8':
         specifier: ^1.0.0
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0))
       eslint:
         specifier: ^8.0.0
         version: 8.57.1
@@ -290,7 +293,7 @@ importers:
         version: 5.3.3
       vitest:
         specifier: ^1.0.0
-        version: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
+        version: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
 
   libs/shared-types: {}
 
@@ -1090,6 +1093,12 @@ packages:
   '@bufbuild/protobuf@2.7.0':
     resolution: {integrity: sha512-qn6tAIZEw5i/wiESBF4nQxZkl86aY4KoO0IkUa2Lh+rya64oTOdJQFlZuMwI1Qz9VBJQrQC4QlSA2DNek5gCOA==}
 
+  '@cloudflare/opaque-ts@0.7.5':
+    resolution: {integrity: sha512-S+BlQbKknJVdiX5bQELbLBwOHNfML/vNi4Zh3b5U7F3fU8gGeS/ozUYOLRd+i5v4gQutTNa4GFKStltr+4aG7w==}
+
+  '@cloudflare/voprf-ts@0.8.0':
+    resolution: {integrity: sha512-fKKU2PHgVPyJ0xaxnKCZ2WEwNzN7QsT4M8n/iJ4oWNi2dnILGALhHhlGoRoUAXNunIxdRmbQi1xF2Vi2LaaMXQ==}
+
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
     engines: {node: '>=0.1.90'}
@@ -1828,6 +1837,10 @@ packages:
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
+
+  '@noble/hashes@0.4.4':
+    resolution: {integrity: sha512-crq2J2g8nIcczVZjYjIQ73GafloqJ6sSual8I/iC8iacMyHwI/ZVskR8Jn8ZmYBq48VC4G+16d2R0SYWVARYGg==}
+    deprecated: Upgrade to v1.0.0 or higher for audited package
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -7745,6 +7758,9 @@ packages:
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
 
+  sjcl@1.0.8:
+    resolution: {integrity: sha512-LzIjEQ0S0DpIgnxMEayM1rq9aGwGRG4OnZhCdjx7glTaJtf4zRfpg87ImfjSJjoW9vKpagd82McDOwbRT5kQKQ==}
+
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
@@ -9731,6 +9747,15 @@ snapshots:
 
   '@bufbuild/protobuf@2.7.0': {}
 
+  '@cloudflare/opaque-ts@0.7.5':
+    dependencies:
+      '@cloudflare/voprf-ts': 0.8.0
+      '@noble/hashes': 0.4.4
+
+  '@cloudflare/voprf-ts@0.8.0':
+    dependencies:
+      sjcl: 1.0.8
+
   '@colors/colors@1.6.0':
     optional: true
 
@@ -10547,6 +10572,8 @@ snapshots:
 
   '@next/swc-win32-x64-msvc@15.5.2':
     optional: true
+
+  '@noble/hashes@0.4.4': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -12671,7 +12698,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0))':
+  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -12686,7 +12713,7 @@ snapshots:
       std-env: 3.9.0
       strip-literal: 2.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
+      vitest: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -12704,7 +12731,7 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
+      vitest: 2.1.9(@types/node@18.16.9)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -12781,7 +12808,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
+      vitest: 2.1.9(@types/node@18.16.9)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
 
   '@vitest/utils@1.6.1':
     dependencies:
@@ -18154,6 +18181,8 @@ snapshots:
 
   sisteransi@1.0.5: {}
 
+  sjcl@1.0.8: {}
+
   slash@3.0.0: {}
 
   slash@4.0.0: {}
@@ -18845,7 +18874,7 @@ snapshots:
       sass-embedded: 1.92.1
       terser: 5.44.0
 
-  vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0):
+  vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
