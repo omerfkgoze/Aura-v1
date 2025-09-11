@@ -2,6 +2,7 @@ node_modules/
 dist/
 .next/
 .expo/
+.pnpm-store/
 *.generated.ts
 package-lock.json
 pnpm-lock.yaml

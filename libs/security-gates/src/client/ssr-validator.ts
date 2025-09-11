@@ -13,18 +13,18 @@
 // PII patterns that should never appear in SSR HTML
 const PII_PATTERNS = [
   // Health Data Patterns (highest priority)
-  /cycle\s*data/gi,
-  /period\s*track/gi,
+  /cycle[\s\-_]*data/gi,
+  /period[\s\-_]*track/gi,
   /menstrual/gi,
   /ovulat/gi,
   /fertility/gi,
   /pregnancy/gi,
   /contracepti/gi,
-  /sexual\s*health/gi,
+  /sexual[\s\-_]*health/gi,
   /reproductive/gi,
   /hormone/gi,
   /symptom/gi,
-  /mood\s*track/gi,
+  /mood[\s\-_]*track/gi,
   /temperature/gi,
   /cervical/gi,
   /luteal/gi,
@@ -38,9 +38,12 @@ const PII_PATTERNS = [
   /scrypt\$[^$]+\$[^$]+\$/gi,
 
   // Personal Information
+  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi, // Email addresses
   /email["\s]*[:=]["\s]*[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi,
+  /[\+]?[0-9][\-\s]?[0-9]{3}[\-\s]?[0-9]{3}[\-\s]?[0-9]{4}/g, // Phone numbers
   /phone["\s]*[:=]["\s]*[\+]?[1-9]?[0-9]{7,15}/gi,
   /ssn["\s]*[:=]["\s]*\d{3}-\d{2}-\d{4}/gi,
+  /\d{3}-\d{2}-\d{4}/g, // SSN format
   /birthdate["\s]*[:=]/gi,
   /dob["\s]*[:=]/gi,
 
@@ -51,20 +54,6 @@ const PII_PATTERNS = [
   /nonce["\s]*[:=]/gi,
   /iv["\s]*[:=]/gi,
   /aad["\s]*[:=]/gi,
-];
-
-// HTML elements that commonly leak PII in SSR
-const RISKY_ELEMENTS = [
-  'meta[name*="user"]',
-  'meta[property*="user"]',
-  'input[value]',
-  'textarea',
-  'script[type="application/json"]',
-  'script[type="application/ld+json"]',
-  '[data-user]',
-  '[data-cycle]',
-  '[data-health]',
-  '[data-crypto]',
 ];
 
 // Attributes that commonly contain PII
@@ -214,10 +203,34 @@ export class SSRValidator {
   private async checkRiskyElements(html: string, context: string): Promise<SSRViolation[]> {
     const violations: SSRViolation[] = [];
 
-    // In a real implementation, this would use a DOM parser
-    for (const elementSelector of RISKY_ELEMENTS) {
-      const elementRegex = new RegExp(`<${elementSelector}[^>]*>`, 'gi');
-      const matches = html.match(elementRegex);
+    // Check for risky elements with proper regex patterns
+    const riskyPatterns = [
+      {
+        pattern: /<meta[^>]*name\s*=\s*["'][^"']*user[^"']*["'][^>]*>/gi,
+        element: 'meta[name*="user"]',
+      },
+      {
+        pattern: /<meta[^>]*property\s*=\s*["'][^"']*user[^"']*["'][^>]*>/gi,
+        element: 'meta[property*="user"]',
+      },
+      { pattern: /<input[^>]*value\s*=\s*["'][^"']+["'][^>]*>/gi, element: 'input[value]' },
+      { pattern: /<textarea[^>]*>/gi, element: 'textarea' },
+      {
+        pattern: /<script[^>]*type\s*=\s*["']application\/json["'][^>]*>/gi,
+        element: 'script[type="application/json"]',
+      },
+      {
+        pattern: /<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>/gi,
+        element: 'script[type="application/ld+json"]',
+      },
+      { pattern: /<[^>]*data-user[^>]*>/gi, element: '[data-user]' },
+      { pattern: /<[^>]*data-cycle[^>]*>/gi, element: '[data-cycle]' },
+      { pattern: /<[^>]*data-health[^>]*>/gi, element: '[data-health]' },
+      { pattern: /<[^>]*data-crypto[^>]*>/gi, element: '[data-crypto]' },
+    ];
+
+    for (const { pattern, element } of riskyPatterns) {
+      const matches = html.match(pattern);
 
       if (matches) {
         for (const match of matches) {
@@ -226,8 +239,8 @@ export class SSRValidator {
             severity: 'medium',
             location: context,
             content: match,
-            element: elementSelector,
-            recommendation: `Review element "${elementSelector}" for potential PII exposure`,
+            element,
+            recommendation: `Review element "${element}" for potential PII exposure`,
           });
         }
       }
