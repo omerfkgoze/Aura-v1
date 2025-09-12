@@ -21,6 +21,8 @@ pub mod memory;
 pub mod bindings;
 pub mod security;
 pub mod integration;
+pub mod device;
+pub mod secure_storage;
 
 // Re-export main functions for JavaScript consumption
 pub use envelope::*;
@@ -30,6 +32,8 @@ pub use memory::{SecureBuffer, MemoryPool, SecureTempData, get_memory_usage, get
 pub use bindings::*;
 pub use security::*;
 pub use integration::*;
+pub use device::*;
+pub use secure_storage::*;
 
 // Initialize function called when WASM module is loaded
 #[wasm_bindgen(start)]
