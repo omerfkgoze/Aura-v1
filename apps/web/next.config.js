@@ -6,7 +6,8 @@ const nextConfig = {
 
   // Static export for Vercel deployment
   output: 'export',
-  trailingSlash: false,
+  distDir: 'out',
+  trailingSlash: true,
   images: {
     unoptimized: true, // Required for static export
   },

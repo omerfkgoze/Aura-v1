@@ -3,7 +3,7 @@
   "name": "aura-app",
   "buildCommand": "bash scripts/build-with-rust.sh",
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "framework": "nextjs",
+  "framework": null,
   "outputDirectory": "apps/web/out",
 
   "env": {
