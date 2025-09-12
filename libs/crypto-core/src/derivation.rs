@@ -7,6 +7,7 @@ use std::collections::HashMap;
 type HmacSha256 = Hmac<Sha256>;
 
 // Data categories for key isolation
+#[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq)]
 pub enum DataCategory {
     CycleData,

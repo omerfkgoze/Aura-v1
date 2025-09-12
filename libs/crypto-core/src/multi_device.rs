@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use crate::memory::{SecureBuffer, track_secret_allocation, track_secret_zeroization};
 use crate::keys::CryptoKey;
-use crate::derivation::HierarchicalKey;
+use crate::derivation::HierarchicalKeyDerivation;
 
 /// Device pairing request containing public key and device metadata
 #[wasm_bindgen]
@@ -275,7 +275,7 @@ impl DeviceRegistryEntry {
 #[wasm_bindgen]
 pub struct MultiDeviceProtocol {
     device_registry: HashMap<String, DeviceRegistryEntry>,
-    master_key: Option<HierarchicalKey>,
+    master_key: Option<CryptoKey>,
     current_device_id: String,
     trust_threshold: f64,
     max_devices: usize,
@@ -297,7 +297,7 @@ impl MultiDeviceProtocol {
 
     /// Initialize protocol with hierarchical master key
     #[wasm_bindgen]
-    pub fn initialize(&mut self, master_key: &HierarchicalKey) -> Result<(), JsValue> {
+    pub fn initialize(&mut self, master_key: &CryptoKey) -> Result<(), JsValue> {
         self.master_key = Some(master_key.clone());
         Ok(())
     }

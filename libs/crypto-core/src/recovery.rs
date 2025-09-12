@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use crate::memory::{SecureBuffer, track_secret_allocation, track_secret_zeroization};
 use crate::keys::CryptoKey;
-use crate::derivation::HierarchicalKey;
+use crate::derivation::HierarchicalKeyDerivation;
 
 /// BIP39 wordlist languages supported for recovery phrases
 #[wasm_bindgen]
@@ -280,7 +280,7 @@ impl RecoverySystem {
     #[wasm_bindgen]
     pub fn create_backup(
         &mut self,
-        hierarchical_key: &HierarchicalKey,
+        hierarchical_key: &CryptoKey,
         recovery_phrase: &RecoveryPhrase,
         passkey_challenge: Vec<u8>,
     ) -> Result<KeyBackup, JsValue> {
@@ -295,7 +295,8 @@ impl RecoverySystem {
         );
 
         // Hash the recovery phrase for verification
-        let phrase_bytes = recovery_phrase.phrase_string().as_bytes();
+        let phrase_string = recovery_phrase.phrase_string();
+        let phrase_bytes = phrase_string.as_bytes();
         let recovery_phrase_hash = simple_hash(phrase_bytes);
 
         // Encrypt master key with recovery phrase seed
@@ -351,7 +352,8 @@ impl RecoverySystem {
         }
 
         // Verify recovery phrase matches backup
-        let phrase_bytes = recovery_phrase.phrase_string().as_bytes();
+        let phrase_string = recovery_phrase.phrase_string();
+        let phrase_bytes = phrase_string.as_bytes();
         let phrase_hash = simple_hash(phrase_bytes);
         
         if phrase_hash != backup.recovery_phrase_hash() {
@@ -586,13 +588,12 @@ fn simple_hash(data: &[u8]) -> Vec<u8> {
     hash
 }
 
-fn encrypt_with_seed(seed: &[u8], key: &HierarchicalKey) -> Result<Vec<u8>, JsValue> {
+fn encrypt_with_seed(seed: &[u8], _key: &CryptoKey) -> Result<Vec<u8>, JsValue> {
     // Mock encryption with seed - in real implementation would use proper AEAD
-    let key_bytes = key.key_bytes();
-    let mut encrypted = vec![0u8; key_bytes.len()];
+    let mut encrypted = vec![0u8; 32]; // Mock 32 byte encryption
     
-    for (i, (&k, &s)) in key_bytes.iter().zip(seed.iter().cycle()).enumerate() {
-        encrypted[i] = k ^ s ^ ((i as u8).wrapping_mul(73));
+    for (i, &s) in seed.iter().cycle().take(32).enumerate() {
+        encrypted[i] = (i as u8) ^ s ^ ((i as u8).wrapping_mul(73));
     }
     
     Ok(encrypted)

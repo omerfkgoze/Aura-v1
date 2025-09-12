@@ -379,3 +379,127 @@ export interface KeyRestoration {
   validationLevel: RecoveryValidationLevel;
   hierarchicalKeyVersion: number;
 }
+
+// Key Rotation Framework types
+export interface KeyVersion {
+  major: number;
+  minor: number;
+  patch: number;
+  createdAt: number;
+  expiresAt?: number;
+}
+
+export type KeyStatus = 'Active' | 'Deprecated' | 'Migrating' | 'Revoked' | 'Expired';
+
+export interface VersionedKey {
+  version: KeyVersion;
+  status: KeyStatus;
+  purpose: HierarchicalKeyPurpose;
+  predecessorVersion?: KeyVersion;
+  migrationProgress: number;
+  auditLog: string[];
+}
+
+export interface RotationPolicy {
+  maxAgeDays: number;
+  maxUsageCount?: number;
+  forceRotationOnCompromise: boolean;
+  requiresUserConfirmation: boolean;
+}
+
+export interface KeyRotationSchedule {
+  purpose: string;
+  nextRotation: number;
+  isDue: boolean;
+  timeUntilRotation?: number;
+  maxAgeDays: number;
+  requiresUserConfirmation: boolean;
+}
+
+export interface RotationStatistics {
+  totalScheduled: number;
+  dueNow: number;
+  dueWithin24Hours: number;
+  dueWithin7Days: number;
+  nextRotationPurpose?: string;
+  nextRotationTime?: number;
+}
+
+export interface MigrationBatchInfo {
+  purpose: string;
+  batchSize: number;
+  totalItems: number;
+  totalBatches: number;
+  currentProgress: number;
+  processedItems: number;
+  currentBatch: number;
+  remainingItems: number;
+  status?: string;
+}
+
+export interface MigrationTimeEstimate {
+  purpose: string;
+  totalItems: number;
+  itemsPerSecond: number;
+  estimatedTotalTimeSeconds: number;
+  estimatedBatchTimeSeconds: number;
+  remainingTimeSeconds?: number;
+  remainingProgress?: number;
+  error?: string;
+}
+
+export interface KeyLifecycleStatus {
+  purpose: string;
+  totalKeys: number;
+  activeKeys: number;
+  deprecatedKeys: number;
+  migratingKeys: number;
+  revokedKeys: number;
+  expiredKeys: number;
+  oldestVersion?: string;
+  oldestCreatedAt?: number;
+  newestVersion?: string;
+  newestCreatedAt?: number;
+  lifecycleHealthScore: number;
+  error?: string;
+}
+
+export interface CompatibilityRequirements {
+  purpose: string;
+  totalKeys: number;
+  usableKeys: number;
+  currentVersion?: string;
+  supportedVersions?: string[];
+  deprecatedKeys: number;
+  migratingKeys: number;
+  compatibilityHealthScore: number;
+  error?: string;
+}
+
+export interface KeyAuditEntry {
+  version: string;
+  status: string;
+  createdAt: number;
+  auditLog: string[];
+  predecessorVersion?: string;
+  migrationProgress?: number;
+}
+
+export interface KeyUsageAnalytics {
+  purpose: string;
+  totalKeys: number;
+  averageKeyAgeDays: number;
+  totalRotationEvents: number;
+  completedMigrations: number;
+  securityEvents: number;
+  efficiencyScore: number;
+  error?: string;
+}
+
+export interface KeyRotationConfig {
+  batchSize: number;
+  autoRotationEnabled: boolean;
+  validationLevel: 'basic' | 'standard' | 'enhanced';
+  backupBeforeRotation: boolean;
+  allowManualOverride: boolean;
+}

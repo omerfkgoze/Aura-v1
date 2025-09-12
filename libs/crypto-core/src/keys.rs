@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 use crate::security::{SecureRandom, constant_time_compare, MemoryProtection};
 use crate::memory::{SecureBuffer, track_secret_zeroization};
 
-// Key management for cryptographic operations with security hardening
+// Key management for cryptographic operations with security hardening  
 #[wasm_bindgen]
 pub struct CryptoKey {
     key_buffer: SecureBuffer,
@@ -119,5 +119,13 @@ impl Drop for CryptoKey {
     fn drop(&mut self) {
         self.zeroize_key();
         track_secret_zeroization();
+    }
+}
+
+// Manual Clone implementation for CryptoKey
+impl Clone for CryptoKey {
+    fn clone(&self) -> Self {
+        // Create a new key of the same type but don't copy sensitive data
+        CryptoKey::new(self.key_type.clone())
     }
 }
