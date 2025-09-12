@@ -137,3 +137,56 @@ export interface KeyVersionInfo {
   deprecatedAt?: Date;
   status: 'active' | 'deprecated' | 'revoked';
 }
+
+// Hierarchical key derivation types
+export type DataCategory = 'cycle_data' | 'preferences' | 'healthcare_sharing' | 'device_sync';
+
+export interface HierarchicalDerivationPath {
+  pathString: string;
+  purpose: number;
+  coinType: number;
+  account: number;
+  change: number;
+  addressIndex: number;
+  isHardened: boolean;
+}
+
+export interface ExtendedKeyInfo {
+  depth: number;
+  parentFingerprint: string;
+  childNumber: number;
+  keyVersion: number;
+  chainCode: string;
+}
+
+export interface KeyDerivationResult {
+  keyBytes: Uint8Array;
+  derivationPath: string;
+  category: DataCategory;
+  deviceId: string;
+  keyVersion: number;
+  extendedInfo: ExtendedKeyInfo;
+}
+
+export interface HierarchicalKeyConfig {
+  masterSeed: Uint8Array;
+  deviceId: string;
+  keyVersion: number;
+  supportedCategories: DataCategory[];
+}
+
+export interface KeyIsolationVerification {
+  isIsolated: boolean;
+  testedCategories: DataCategory[];
+  deviceId: string;
+  keyVersion: number;
+  isolationMatrix: Record<string, boolean>;
+}
+
+export interface KeyRotationEvent {
+  previousVersion: number;
+  newVersion: number;
+  rotatedAt: Date;
+  deviceId: string;
+  affectedCategories: DataCategory[];
+}

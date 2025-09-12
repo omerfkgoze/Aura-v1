@@ -23,10 +23,12 @@ pub mod security;
 pub mod integration;
 pub mod device;
 pub mod secure_storage;
+pub mod derivation;
 
 // Re-export main functions for JavaScript consumption
 pub use envelope::*;
 pub use keys::*;
+pub use derivation::*;
 pub use aad::*;
 pub use memory::{SecureBuffer, MemoryPool, SecureTempData, get_memory_usage, get_active_allocations, cleanup_unused_buffers, has_memory_leaks, get_memory_stats, reset_memory_stats, MemoryStats, track_secret_allocation, track_secret_zeroization, track_allocation};
 pub use bindings::*;

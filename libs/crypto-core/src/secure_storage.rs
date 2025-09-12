@@ -438,7 +438,7 @@ impl PlatformSecureStorage {
     }
 
     // Private helper methods (implemented as async functions that delegate to JS)
-    async fn store_in_ios_keychain(&self, key_id: &str, key_material: &[u8]) -> Result<String, JsValue> {
+    async fn store_in_ios_keychain(&self, key_id: &str, _key_material: &[u8]) -> Result<String, JsValue> {
         // This would delegate to native iOS Keychain via React Native/Expo
         let storage_location = format!("ios_keychain://{}/{}", self.config.keychain_service(), key_id);
         Ok(storage_location)

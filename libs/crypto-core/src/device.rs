@@ -11,9 +11,28 @@ pub enum DeviceClass {
     WebLimited,
 }
 
+// WASM-friendly functions for DeviceClass
 #[wasm_bindgen]
+pub fn get_memory_limit_for_class(class: DeviceClass) -> u32 {
+    class.memory_limit()
+}
+
+#[wasm_bindgen]
+pub fn get_argon2_iterations_for_class(class: DeviceClass) -> u32 {
+    class.argon2_iterations()
+}
+
+#[wasm_bindgen]
+pub fn get_argon2_memory_for_class(class: DeviceClass) -> u32 {
+    class.argon2_memory()
+}
+
+#[wasm_bindgen]
+pub fn get_argon2_parallelism_for_class(class: DeviceClass) -> u32 {
+    class.argon2_parallelism()
+}
+
 impl DeviceClass {
-    #[wasm_bindgen(getter)]
     pub fn memory_limit(&self) -> u32 {
         match self {
             DeviceClass::MobileHigh => 256 * 1024 * 1024,   // 256 MB
@@ -23,7 +42,6 @@ impl DeviceClass {
         }
     }
 
-    #[wasm_bindgen(getter)]
     pub fn argon2_iterations(&self) -> u32 {
         match self {
             DeviceClass::MobileHigh => 3,
@@ -33,7 +51,6 @@ impl DeviceClass {
         }
     }
 
-    #[wasm_bindgen(getter)]
     pub fn argon2_memory(&self) -> u32 {
         match self {
             DeviceClass::MobileHigh => 256 * 1024,  // 256 KB
@@ -43,7 +60,6 @@ impl DeviceClass {
         }
     }
 
-    #[wasm_bindgen(getter)]
     pub fn argon2_parallelism(&self) -> u32 {
         match self {
             DeviceClass::MobileHigh => 4,
@@ -313,7 +329,7 @@ impl DeviceCapabilityDetector {
         }
 
         // Perform benchmark (simplified mock implementation)
-        let start_time = js_sys::Date::now();
+        let _start_time = js_sys::Date::now();
         
         // Mock Argon2 operation (in real implementation, this would be actual Argon2)
         let mock_operation_time = (test_params.memory_kb() as f64 * test_params.iterations() as f64) / 1000.0;
@@ -351,10 +367,10 @@ impl DeviceCapabilityDetector {
         let iteration_options = vec![2, 3, 4];
 
         for memory_kb in memory_options {
-            for iterations in iteration_options {
+            for iterations in &iteration_options {
                 let test_params = Argon2Params::new(
                     memory_kb,
-                    iterations,
+                    *iterations,
                     capabilities.cpu_cores().min(4),
                     32,
                     32,
