@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 use std::collections::HashMap;
 use chrono::{DateTime, Duration, Utc};
+use crate::key_rotation::types::{SecurityEventType, RotationTrigger, RotationTiming, KeyRotationError};
 
 /// Rotation policy configuration for automated key management
 #[wasm_bindgen]
@@ -10,6 +11,11 @@ pub struct RotationPolicy {
     max_usage_count: Option<u64>,
     force_rotation_on_compromise: bool,
     requires_user_confirmation: bool,
+    trigger_type: RotationTrigger,
+    timing_preference: RotationTiming,
+    security_event_triggers: Vec<SecurityEventType>,
+    low_usage_threshold_hours: u32,
+    emergency_rotation_enabled: bool,
 }
 
 #[wasm_bindgen]
@@ -21,6 +27,15 @@ impl RotationPolicy {
             max_usage_count: None,
             force_rotation_on_compromise: true,
             requires_user_confirmation: false,
+            trigger_type: RotationTrigger::TimeBased,
+            timing_preference: RotationTiming::LowUsage,
+            security_event_triggers: vec![
+                SecurityEventType::DeviceCompromise,
+                SecurityEventType::DataBreach,
+                SecurityEventType::UnauthorizedAccess,
+            ],
+            low_usage_threshold_hours: 4,
+            emergency_rotation_enabled: true,
         }
     }
 
@@ -48,6 +63,241 @@ impl RotationPolicy {
     pub fn force_rotation_on_compromise(&self) -> bool {
         self.force_rotation_on_compromise
     }
+
+    #[wasm_bindgen(js_name = setTriggerType)]
+    pub fn set_trigger_type(&mut self, trigger_type: RotationTrigger) {
+        self.trigger_type = trigger_type;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn trigger_type(&self) -> RotationTrigger {
+        self.trigger_type.clone()
+    }
+
+    #[wasm_bindgen(js_name = setTimingPreference)]
+    pub fn set_timing_preference(&mut self, timing: RotationTiming) {
+        self.timing_preference = timing;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn timing_preference(&self) -> RotationTiming {
+        self.timing_preference.clone()
+    }
+
+    #[wasm_bindgen(js_name = addSecurityEventTrigger)]
+    pub fn add_security_event_trigger(&mut self, event_type: SecurityEventType) {
+        if !self.security_event_triggers.contains(&event_type) {
+            self.security_event_triggers.push(event_type);
+        }
+    }
+
+    #[wasm_bindgen(js_name = removeSecurityEventTrigger)]
+    pub fn remove_security_event_trigger(&mut self, event_type: SecurityEventType) {
+        self.security_event_triggers.retain(|&e| e != event_type);
+    }
+
+    #[wasm_bindgen(js_name = hasSecurityEventTrigger)]
+    pub fn has_security_event_trigger(&self, event_type: SecurityEventType) -> bool {
+        self.security_event_triggers.contains(&event_type)
+    }
+
+    #[wasm_bindgen(js_name = setLowUsageThresholdHours)]
+    pub fn set_low_usage_threshold_hours(&mut self, hours: u32) {
+        self.low_usage_threshold_hours = hours;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn low_usage_threshold_hours(&self) -> u32 {
+        self.low_usage_threshold_hours
+    }
+
+    #[wasm_bindgen(js_name = setEmergencyRotationEnabled)]
+    pub fn set_emergency_rotation_enabled(&mut self, enabled: bool) {
+        self.emergency_rotation_enabled = enabled;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn emergency_rotation_enabled(&self) -> bool {
+        self.emergency_rotation_enabled
+    }
+
+    #[wasm_bindgen(js_name = shouldTriggerRotation)]
+    pub fn should_trigger_rotation(&self, 
+        current_age_hours: u32, 
+        usage_count: u64, 
+        security_event: Option<SecurityEventType>
+    ) -> bool {
+        // Check emergency security events
+        if let Some(event) = security_event {
+            if self.emergency_rotation_enabled && self.security_event_triggers.contains(&event) {
+                return true;
+            }
+        }
+
+        match self.trigger_type {
+            RotationTrigger::TimeBased => {
+                current_age_hours >= (self.max_age_days * 24)
+            },
+            RotationTrigger::UsageBased => {
+                if let Some(max_count) = self.max_usage_count {
+                    usage_count >= max_count
+                } else {
+                    false
+                }
+            },
+            RotationTrigger::EventBased => {
+                security_event.is_some()
+            },
+            RotationTrigger::Manual => false,
+            RotationTrigger::Emergency => true,
+        }
+    }
+}
+
+/// User preferences for rotation timing and behavior
+#[wasm_bindgen]
+#[derive(Debug, Clone)]
+pub struct UserRotationPreferences {
+    preferred_rotation_time_hour: u8, // 0-23
+    allow_automatic_rotation: bool,
+    notification_advance_hours: u32,
+    pause_during_active_usage: bool,
+    emergency_rotation_requires_confirmation: bool,
+}
+
+#[wasm_bindgen]
+impl UserRotationPreferences {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            preferred_rotation_time_hour: 3, // 3 AM default
+            allow_automatic_rotation: true,
+            notification_advance_hours: 24,
+            pause_during_active_usage: true,
+            emergency_rotation_requires_confirmation: false,
+        }
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn preferred_rotation_time_hour(&self) -> u8 {
+        self.preferred_rotation_time_hour
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_preferred_rotation_time_hour(&mut self, hour: u8) {
+        if hour <= 23 {
+            self.preferred_rotation_time_hour = hour;
+        }
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn allow_automatic_rotation(&self) -> bool {
+        self.allow_automatic_rotation
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_allow_automatic_rotation(&mut self, allow: bool) {
+        self.allow_automatic_rotation = allow;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn notification_advance_hours(&self) -> u32 {
+        self.notification_advance_hours
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_notification_advance_hours(&mut self, hours: u32) {
+        self.notification_advance_hours = hours;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn pause_during_active_usage(&self) -> bool {
+        self.pause_during_active_usage
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_pause_during_active_usage(&mut self, pause: bool) {
+        self.pause_during_active_usage = pause;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn emergency_rotation_requires_confirmation(&self) -> bool {
+        self.emergency_rotation_requires_confirmation
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_emergency_rotation_requires_confirmation(&mut self, requires: bool) {
+        self.emergency_rotation_requires_confirmation = requires;
+    }
+}
+
+/// Security event for triggering rotations
+#[wasm_bindgen]
+#[derive(Debug, Clone)]
+pub struct SecurityEvent {
+    event_type: SecurityEventType,
+    severity: u8, // 1-10 scale
+    timestamp: DateTime<Utc>,
+    device_id: Option<String>,
+    description: String,
+}
+
+#[wasm_bindgen]
+impl SecurityEvent {
+    #[wasm_bindgen(constructor)]
+    pub fn new(event_type: SecurityEventType, severity: u8, description: String) -> Self {
+        Self {
+            event_type,
+            severity: if severity > 10 { 10 } else if severity < 1 { 1 } else { severity },
+            timestamp: Utc::now(),
+            device_id: None,
+            description,
+        }
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn event_type(&self) -> SecurityEventType {
+        self.event_type.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn severity(&self) -> u8 {
+        self.severity
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn timestamp(&self) -> f64 {
+        self.timestamp.timestamp_millis() as f64
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn description(&self) -> String {
+        self.description.clone()
+    }
+
+    #[wasm_bindgen(js_name = setDeviceId)]
+    pub fn set_device_id(&mut self, device_id: Option<String>) {
+        self.device_id = device_id;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn device_id(&self) -> Option<String> {
+        self.device_id.clone()
+    }
+
+    #[wasm_bindgen(js_name = isHighSeverity)]
+    pub fn is_high_severity(&self) -> bool {
+        self.severity >= 7
+    }
+
+    #[wasm_bindgen(js_name = requiresImmedateAction)]
+    pub fn requires_immediate_action(&self) -> bool {
+        match self.event_type {
+            SecurityEventType::DeviceCompromise | 
+            SecurityEventType::DataBreach => true,
+            _ => self.severity >= 8,
+        }
+    }
 }
 
 /// Automated key rotation scheduler with policy-based management
@@ -56,6 +306,9 @@ pub struct KeyRotationScheduler {
     rotation_intervals: HashMap<String, Duration>, // purpose -> interval
     next_rotations: HashMap<String, DateTime<Utc>>, // purpose -> next rotation time
     rotation_policies: HashMap<String, RotationPolicy>,
+    user_preferences: UserRotationPreferences,
+    security_events: Vec<SecurityEvent>,
+    usage_tracking: HashMap<String, u64>, // purpose -> usage count
 }
 
 #[wasm_bindgen]
@@ -66,6 +319,9 @@ impl KeyRotationScheduler {
             rotation_intervals: HashMap::new(),
             next_rotations: HashMap::new(),
             rotation_policies: HashMap::new(),
+            user_preferences: UserRotationPreferences::new(),
+            security_events: Vec::new(),
+            usage_tracking: HashMap::new(),
         }
     }
 
@@ -246,5 +502,252 @@ impl KeyRotationScheduler {
         self.next_rotations.retain(|_, next_rotation| *next_rotation > expired_threshold);
         
         (original_count - self.next_rotations.len()) as u32
+    }
+
+    // User Preference Management
+    #[wasm_bindgen(js_name = setUserPreferences)]
+    pub fn set_user_preferences(&mut self, preferences: UserRotationPreferences) {
+        self.user_preferences = preferences;
+        // Reschedule rotations based on new preferences
+        self.apply_user_preferences_to_schedules();
+    }
+
+    #[wasm_bindgen(js_name = getUserPreferences)]
+    pub fn get_user_preferences(&self) -> UserRotationPreferences {
+        self.user_preferences.clone()
+    }
+
+    #[wasm_bindgen(js_name = updateUserPreference)]
+    pub fn update_user_preference(&mut self, preference_type: &str, value: &str) -> Result<(), JsValue> {
+        match preference_type {
+            "preferred_hour" => {
+                if let Ok(hour) = value.parse::<u8>() {
+                    if hour <= 23 {
+                        self.user_preferences.set_preferred_rotation_time_hour(hour);
+                        self.apply_user_preferences_to_schedules();
+                        return Ok(());
+                    }
+                }
+                Err(JsValue::from_str("Invalid hour value (0-23)"))
+            },
+            "allow_automatic" => {
+                if let Ok(allow) = value.parse::<bool>() {
+                    self.user_preferences.set_allow_automatic_rotation(allow);
+                    Ok(())
+                } else {
+                    Err(JsValue::from_str("Invalid boolean value"))
+                }
+            },
+            "notification_hours" => {
+                if let Ok(hours) = value.parse::<u32>() {
+                    self.user_preferences.set_notification_advance_hours(hours);
+                    Ok(())
+                } else {
+                    Err(JsValue::from_str("Invalid hours value"))
+                }
+            },
+            "pause_during_usage" => {
+                if let Ok(pause) = value.parse::<bool>() {
+                    self.user_preferences.set_pause_during_active_usage(pause);
+                    Ok()
+                } else {
+                    Err(JsValue::from_str("Invalid boolean value"))
+                }
+            },
+            "emergency_confirmation" => {
+                if let Ok(requires) = value.parse::<bool>() {
+                    self.user_preferences.set_emergency_rotation_requires_confirmation(requires);
+                    Ok()
+                } else {
+                    Err(JsValue::from_str("Invalid boolean value"))
+                }
+            },
+            _ => Err(JsValue::from_str("Unknown preference type"))
+        }
+    }
+
+    // Security Event Management
+    #[wasm_bindgen(js_name = reportSecurityEvent)]
+    pub fn report_security_event(&mut self, event: SecurityEvent) -> Result<bool, JsValue> {
+        let should_trigger_rotation = self.should_trigger_emergency_rotation(&event)?;
+        
+        // Store the security event
+        self.security_events.push(event.clone());
+        
+        // Clean up old events (keep only last 100)
+        if self.security_events.len() > 100 {
+            self.security_events.remove(0);
+        }
+        
+        if should_trigger_rotation {
+            self.trigger_emergency_rotations_for_event(&event)?;
+        }
+        
+        Ok(should_trigger_rotation)
+    }
+
+    #[wasm_bindgen(js_name = getRecentSecurityEvents)]
+    pub fn get_recent_security_events(&self, hours: u32) -> js_sys::Array {
+        let array = js_sys::Array::new();
+        let threshold = Utc::now() - Duration::hours(hours as i64);
+        
+        for event in &self.security_events {
+            if event.timestamp >= threshold {
+                let obj = js_sys::Object::new();
+                
+                js_sys::Reflect::set(&obj, &JsValue::from_str("eventType"), &JsValue::from_str(&format!("{:?}", event.event_type()))).unwrap();
+                js_sys::Reflect::set(&obj, &JsValue::from_str("severity"), &JsValue::from_f64(event.severity() as f64)).unwrap();
+                js_sys::Reflect::set(&obj, &JsValue::from_str("timestamp"), &JsValue::from_f64(event.timestamp())).unwrap();
+                js_sys::Reflect::set(&obj, &JsValue::from_str("description"), &JsValue::from_str(&event.description())).unwrap();
+                js_sys::Reflect::set(&obj, &JsValue::from_str("isHighSeverity"), &JsValue::from_bool(event.is_high_severity())).unwrap();
+                js_sys::Reflect::set(&obj, &JsValue::from_str("requiresImmediateAction"), &JsValue::from_bool(event.requires_immediate_action())).unwrap();
+                
+                if let Some(device_id) = event.device_id() {
+                    js_sys::Reflect::set(&obj, &JsValue::from_str("deviceId"), &JsValue::from_str(&device_id)).unwrap();
+                }
+                
+                array.push(&obj);
+            }
+        }
+        
+        array
+    }
+
+    // Usage Tracking
+    #[wasm_bindgen(js_name = trackKeyUsage)]
+    pub fn track_key_usage(&mut self, purpose: &str) {
+        let count = self.usage_tracking.entry(purpose.to_string()).or_insert(0);
+        *count += 1;
+        
+        // Check if usage-based rotation should be triggered
+        if let Some(policy) = self.rotation_policies.get(purpose) {
+            if let Some(max_count) = policy.max_usage_count {
+                if *count >= max_count {
+                    self.force_rotation(purpose);
+                }
+            }
+        }
+    }
+
+    #[wasm_bindgen(js_name = getUsageCount)]
+    pub fn get_usage_count(&self, purpose: &str) -> u64 {
+        self.usage_tracking.get(purpose).copied().unwrap_or(0)
+    }
+
+    #[wasm_bindgen(js_name = resetUsageCount)]
+    pub fn reset_usage_count(&mut self, purpose: &str) {
+        self.usage_tracking.insert(purpose.to_string(), 0);
+    }
+
+    // Smart Scheduling with User Preferences
+    #[wasm_bindgen(js_name = scheduleRotationWithPreferences)]
+    pub fn schedule_rotation_with_preferences(&mut self, purpose: &str) -> Result<f64, JsValue> {
+        if !self.user_preferences.allow_automatic_rotation {
+            return Err(JsValue::from_str("Automatic rotation disabled by user preferences"));
+        }
+        
+        let policy = self.rotation_policies.get(purpose)
+            .ok_or_else(|| JsValue::from_str("Policy not found for purpose"))?;
+        
+        let preferred_hour = self.user_preferences.preferred_rotation_time_hour;
+        let base_time = Utc::now() + Duration::days(policy.max_age_days as i64);
+        
+        // Adjust to preferred hour
+        let adjusted_time = base_time
+            .with_hour(preferred_hour as u32).unwrap_or(base_time)
+            .with_minute(0).unwrap_or(base_time)
+            .with_second(0).unwrap_or(base_time);
+        
+        self.next_rotations.insert(purpose.to_string(), adjusted_time);
+        Ok(adjusted_time.timestamp_millis() as f64)
+    }
+
+    #[wasm_bindgen(js_name = isRotationAllowedNow)]
+    pub fn is_rotation_allowed_now(&self, purpose: &str, is_user_active: bool) -> bool {
+        if !self.user_preferences.allow_automatic_rotation {
+            return false;
+        }
+        
+        if self.user_preferences.pause_during_active_usage && is_user_active {
+            return false;
+        }
+        
+        // Check if it's within low usage hours based on policy
+        if let Some(policy) = self.rotation_policies.get(purpose) {
+            match policy.timing_preference() {
+                RotationTiming::Immediate => true,
+                RotationTiming::LowUsage => !is_user_active,
+                RotationTiming::Scheduled => {
+                    let now = Utc::now();
+                    let current_hour = now.hour() as u8;
+                    let preferred_hour = self.user_preferences.preferred_rotation_time_hour;
+                    
+                    // Allow rotation within 2 hours of preferred time
+                    let diff = if current_hour > preferred_hour {
+                        current_hour - preferred_hour
+                    } else {
+                        preferred_hour - current_hour
+                    };
+                    diff <= 2 || diff >= 22 // Handle wrap around (e.g., 23-1)
+                },
+                RotationTiming::UserControlled => false,
+            }
+        } else {
+            false
+        }
+    }
+
+    // Private helper methods
+    fn apply_user_preferences_to_schedules(&mut self) {
+        if !self.user_preferences.allow_automatic_rotation {
+            return;
+        }
+        
+        let preferred_hour = self.user_preferences.preferred_rotation_time_hour;
+        let mut updated_rotations = HashMap::new();
+        
+        for (purpose, current_time) in &self.next_rotations {
+            let adjusted_time = current_time
+                .with_hour(preferred_hour as u32).unwrap_or(*current_time)
+                .with_minute(0).unwrap_or(*current_time)
+                .with_second(0).unwrap_or(*current_time);
+            
+            updated_rotations.insert(purpose.clone(), adjusted_time);
+        }
+        
+        self.next_rotations = updated_rotations;
+    }
+
+    fn should_trigger_emergency_rotation(&self, event: &SecurityEvent) -> Result<bool, JsValue> {
+        if !event.requires_immediate_action() {
+            return Ok(false);
+        }
+        
+        // Check if any policies should trigger for this event type
+        for policy in self.rotation_policies.values() {
+            if policy.emergency_rotation_enabled() && 
+               policy.has_security_event_trigger(event.event_type()) {
+                return Ok(true);
+            }
+        }
+        
+        Ok(false)
+    }
+
+    fn trigger_emergency_rotations_for_event(&mut self, event: &SecurityEvent) -> Result<(), JsValue> {
+        let purposes_to_rotate: Vec<String> = self.rotation_policies
+            .iter()
+            .filter(|(_, policy)| {
+                policy.emergency_rotation_enabled() && 
+                policy.has_security_event_trigger(event.event_type())
+            })
+            .map(|(purpose, _)| purpose.clone())
+            .collect();
+        
+        for purpose in purposes_to_rotate {
+            self.force_rotation(&purpose);
+        }
+        
+        Ok(())
     }
 }

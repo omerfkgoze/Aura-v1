@@ -100,6 +100,40 @@ pub enum KeyStatus {
     Expired,
 }
 
+/// Security event types that can trigger emergency key rotations
+#[wasm_bindgen]
+#[derive(Debug, Clone, PartialEq)]
+pub enum SecurityEventType {
+    DeviceCompromise,
+    UnauthorizedAccess,
+    SuspiciousActivity,
+    DataBreach,
+    NetworkIntrusion,
+    MalwareDetected,
+    UserReported,
+}
+
+/// Rotation trigger types for policy-based scheduling
+#[wasm_bindgen]
+#[derive(Debug, Clone, PartialEq)]
+pub enum RotationTrigger {
+    TimeBased,
+    UsageBased,
+    EventBased,
+    Manual,
+    Emergency,
+}
+
+/// User timing preferences for rotation operations
+#[wasm_bindgen]
+#[derive(Debug, Clone, PartialEq)]
+pub enum RotationTiming {
+    Immediate,
+    LowUsage,
+    Scheduled,
+    UserControlled,
+}
+
 /// Error types for key rotation operations
 #[wasm_bindgen]
 #[derive(Debug, Clone, PartialEq)]
@@ -111,6 +145,9 @@ pub enum KeyRotationError {
     CryptoError,
     StorageError,
     NetworkError,
+    SecurityEventProcessingError,
+    InvalidRotationTiming,
+    UserPreferencesNotFound,
 }
 
 impl std::fmt::Display for KeyRotationError {
@@ -123,6 +160,9 @@ impl std::fmt::Display for KeyRotationError {
             KeyRotationError::CryptoError => write!(f, "Cryptographic operation failed"),
             KeyRotationError::StorageError => write!(f, "Storage operation failed"),
             KeyRotationError::NetworkError => write!(f, "Network operation failed"),
+            KeyRotationError::SecurityEventProcessingError => write!(f, "Security event processing failed"),
+            KeyRotationError::InvalidRotationTiming => write!(f, "Invalid rotation timing preference"),
+            KeyRotationError::UserPreferencesNotFound => write!(f, "User rotation preferences not found"),
         }
     }
 }
