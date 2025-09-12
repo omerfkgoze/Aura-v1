@@ -29,7 +29,7 @@ export interface DeviceRegistration {
   deviceId: string;
   deviceName: string;
   deviceType: DeviceType;
-  platform: Platform;
+  platform: DevicePlatform;
 
   // Registration details
   registeredAt: Date;
@@ -143,7 +143,7 @@ export interface SessionContextHandoff {
 
 // Supporting Types and Enums
 export type DeviceType = 'smartphone' | 'tablet' | 'desktop' | 'laptop' | 'wearable' | 'iot';
-export type Platform = 'ios' | 'android' | 'web' | 'macos' | 'windows' | 'linux';
+export type DevicePlatform = 'ios' | 'android' | 'web' | 'macos' | 'windows' | 'linux';
 
 export type DeviceRegistrationMethod =
   | 'qr_code'

@@ -29,15 +29,16 @@ class GaloisField {
     this.logTable = new Array(this.FIELD_SIZE);
 
     let x = 1;
-    for (let i = 0; i < this.FIELD_SIZE; i++) {
+    // GF(256) multiplicative group has order 255, not 256
+    for (let i = 0; i < this.FIELD_SIZE - 1; i++) {
       this.expTable[i] = x;
       this.logTable[x] = i;
       x = this.multiply(x, 2);
     }
 
     // Extend exp table for easier computation
-    for (let i = this.FIELD_SIZE; i < this.FIELD_SIZE * 2; i++) {
-      this.expTable[i] = this.expTable[i - this.FIELD_SIZE];
+    for (let i = this.FIELD_SIZE - 1; i < this.FIELD_SIZE * 2 - 1; i++) {
+      this.expTable[i] = this.expTable[i - (this.FIELD_SIZE - 1)];
     }
 
     this.initialized = true;
@@ -79,7 +80,7 @@ class GaloisField {
     this.initialize();
     if (a === 0) return 0;
     if (b === 0) throw new Error('Division by zero in Galois Field');
-    return this.expTable[this.logTable[a] - this.logTable[b] + this.FIELD_SIZE];
+    return this.expTable[this.logTable[a] - this.logTable[b] + this.FIELD_SIZE - 1];
   }
 
   /**
@@ -109,7 +110,7 @@ function evaluatePolynomial(coefficients: number[], x: number): number {
 }
 
 /**
- * Lagrange interpolation to reconstruct secret
+ * Lagrange interpolation to reconstruct secret at x=0
  */
 function lagrangeInterpolation(shares: Array<{ x: number; y: number }>): number {
   let result = 0;
@@ -120,7 +121,9 @@ function lagrangeInterpolation(shares: Array<{ x: number; y: number }>): number 
 
     for (let j = 0; j < shares.length; j++) {
       if (i !== j) {
+        // For evaluation at x=0: numerator = product of all other x_j values
         numerator = GaloisField.fastMultiply(numerator, shares[j].x);
+        // denominator = (x_i - x_j) where subtraction in GF is XOR
         denominator = GaloisField.fastMultiply(denominator, shares[i].x ^ shares[j].x);
       }
     }
@@ -314,12 +317,8 @@ export function reconstructSecret(shares: ShamirShare[]): string {
   }
 
   // Convert back to string using UTF-8 decoder
-  try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(reconstructedBytes);
-  } catch (error) {
-    // If UTF-8 decoding fails, return as hex string
-    return bytesToHex(reconstructedBytes);
-  }
+  // Use standard decoder without fatal mode for better compatibility
+  return new TextDecoder('utf-8').decode(reconstructedBytes);
 }
 
 /**

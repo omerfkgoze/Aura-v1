@@ -1,6 +1,6 @@
 import type { Platform, PlatformDetectionResult, BiometricAuthenticationOptions } from './types';
 import { PlatformDetectionManager } from './detection';
-import { OPAQUEManager } from '../opaque/manager';
+import { OpaqueManager } from '../opaque/manager';
 import { RecoveryManager } from '../recovery/manager';
 
 /**
@@ -9,14 +9,32 @@ import { RecoveryManager } from '../recovery/manager';
  */
 export class FallbackAuthenticationManager {
   private detectionManager: PlatformDetectionManager;
-  private opaqueManager: OPAQUEManager;
+  private opaqueManager: OpaqueManager;
   private recoveryManager: RecoveryManager;
   private fallbackChain: FallbackMethod[];
 
   constructor(rpId: string, rpName: string) {
     this.detectionManager = new PlatformDetectionManager(rpId, rpName);
-    this.opaqueManager = new OPAQUEManager();
-    this.recoveryManager = new RecoveryManager();
+    this.opaqueManager = new OpaqueManager();
+    // Basic recovery manager config for fallback use
+    const recoveryConfig = {
+      storage: {
+        store: async () => {},
+        retrieve: async () => null,
+        delete: async () => {},
+        list: async () => [],
+      },
+      events: {
+        onRecoveryAttempt: () => {},
+        onRecoverySuccess: () => {},
+        onRecoveryFailure: () => {},
+      },
+      rateLimiting: {
+        maxAttempts: 5,
+        windowMs: 900000, // 15 minutes
+      },
+    };
+    this.recoveryManager = new RecoveryManager(recoveryConfig);
 
     // Initialize fallback chain
     this.fallbackChain = this.buildFallbackChain();

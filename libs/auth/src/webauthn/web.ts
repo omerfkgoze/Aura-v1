@@ -1,7 +1,7 @@
 import type { WebAuthnCredential, BiometricAuthenticationOptions, WebBrowserResult } from './types';
 import { PlatformWebAuthnManager } from './platform';
-import { WebAuthnRegistrationManager } from './registration';
-import { WebAuthnAuthenticationManager } from './authentication';
+import { WebAuthnRegistration } from './registration';
+import { WebAuthnAuthentication } from './authentication';
 
 /**
  * Web platform WebAuthn implementation with browser compatibility
@@ -9,8 +9,8 @@ import { WebAuthnAuthenticationManager } from './authentication';
  */
 export class WebWebAuthnManager {
   private platformManager: PlatformWebAuthnManager;
-  private registrationManager: WebAuthnRegistrationManager;
-  private authenticationManager: WebAuthnAuthenticationManager;
+  private registrationManager: WebAuthnRegistration;
+  private authenticationManager: WebAuthnAuthentication;
 
   constructor(rpId: string, rpName: string) {
     this.platformManager = new PlatformWebAuthnManager({
@@ -21,8 +21,8 @@ export class WebWebAuthnManager {
       attestation: 'none', // Less stringent for web
     });
 
-    this.registrationManager = new WebAuthnRegistrationManager();
-    this.authenticationManager = new WebAuthnAuthenticationManager();
+    this.registrationManager = new WebAuthnRegistration(rpName, rpId);
+    this.authenticationManager = new WebAuthnAuthentication(rpId);
   }
 
   /**
@@ -108,10 +108,18 @@ export class WebWebAuthnManager {
 
     try {
       // Attempt WebAuthn registration with browser-specific handling
-      const credential = await this.registrationManager.createCredential(
-        webRegistrationOptions,
-        webOptions
-      );
+      const registrationResponse =
+        await this.registrationManager.startRegistration(webRegistrationOptions);
+
+      const credential: WebAuthnCredential = {
+        id: registrationResponse.id,
+        userId: userId,
+        credentialId: registrationResponse.id,
+        publicKeyData: { data: registrationResponse.response.publicKey },
+        counter: 0,
+        platform: 'web',
+        createdAt: new Date(),
+      };
 
       // Validate browser compatibility
       const validatedCredential = await this.validateWebCredential(credential);
@@ -162,10 +170,8 @@ export class WebWebAuthnManager {
     };
 
     try {
-      const assertion = await this.authenticationManager.getAssertion(
-        webAuthenticationOptions,
-        webOptions
-      );
+      const assertion =
+        await this.authenticationManager.startAuthentication(webAuthenticationOptions);
 
       // Extract browser-specific authentication information
       const browserResult = await this.extractWebAuthData(assertion);

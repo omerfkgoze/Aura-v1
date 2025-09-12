@@ -243,7 +243,10 @@ export class PlatformWebAuthnManager {
         // Android 13+ supports passkeys
         return this.isAndroidVersionSupported(13);
       case 'web':
-        return typeof PublicKeyCredential.isConditionalMediationAvailable === 'function';
+        return (
+          typeof PublicKeyCredential !== 'undefined' &&
+          typeof PublicKeyCredential.isConditionalMediationAvailable === 'function'
+        );
       default:
         return false;
     }

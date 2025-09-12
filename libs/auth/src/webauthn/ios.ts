@@ -4,8 +4,8 @@ import type {
   IOSBiometricResult,
 } from './types';
 import { PlatformWebAuthnManager } from './platform';
-import { WebAuthnRegistrationManager } from './registration';
-import { WebAuthnAuthenticationManager } from './authentication';
+import { WebAuthnRegistration } from './registration';
+import { WebAuthnAuthentication } from './authentication';
 
 /**
  * iOS-specific WebAuthn implementation with Face ID/Touch ID integration
@@ -13,8 +13,8 @@ import { WebAuthnAuthenticationManager } from './authentication';
  */
 export class IOSWebAuthnManager {
   private platformManager: PlatformWebAuthnManager;
-  private registrationManager: WebAuthnRegistrationManager;
-  private authenticationManager: WebAuthnAuthenticationManager;
+  private registrationManager: WebAuthnRegistration;
+  private authenticationManager: WebAuthnAuthentication;
 
   constructor(rpId: string, rpName: string) {
     this.platformManager = new PlatformWebAuthnManager({
@@ -25,8 +25,8 @@ export class IOSWebAuthnManager {
       attestation: 'direct',
     });
 
-    this.registrationManager = new WebAuthnRegistrationManager();
-    this.authenticationManager = new WebAuthnAuthenticationManager();
+    this.registrationManager = new WebAuthnRegistration(rpName, rpId);
+    this.authenticationManager = new WebAuthnAuthentication(rpId);
   }
 
   /**
@@ -90,10 +90,19 @@ export class IOSWebAuthnManager {
 
     try {
       // Attempt WebAuthn registration with iOS-specific options
-      const credential = await this.registrationManager.createCredential(
-        iosRegistrationOptions,
-        biometricOptions
-      );
+      const registrationResponse =
+        await this.registrationManager.startRegistration(iosRegistrationOptions);
+
+      // Convert response to credential format
+      const credential: WebAuthnCredential = {
+        id: registrationResponse.id,
+        userId: userId,
+        credentialId: registrationResponse.id,
+        publicKeyData: { data: registrationResponse.response.publicKey },
+        counter: 0,
+        platform: 'ios',
+        createdAt: new Date(),
+      };
 
       // Validate iOS-specific attestation data
       const validatedCredential = await this.validateIOSAttestation(credential);
@@ -136,10 +145,8 @@ export class IOSWebAuthnManager {
     };
 
     try {
-      const assertion = await this.authenticationManager.getAssertion(
-        iosAuthenticationOptions,
-        biometricOptions
-      );
+      const assertion =
+        await this.authenticationManager.startAuthentication(iosAuthenticationOptions);
 
       // Extract iOS-specific biometric information
       const biometricResult = await this.extractIOSBiometricData(assertion);

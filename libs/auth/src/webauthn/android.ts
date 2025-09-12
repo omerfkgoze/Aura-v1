@@ -4,8 +4,8 @@ import type {
   AndroidBiometricResult,
 } from './types';
 import { PlatformWebAuthnManager } from './platform';
-import { WebAuthnRegistrationManager } from './registration';
-import { WebAuthnAuthenticationManager } from './authentication';
+import { WebAuthnRegistration } from './registration';
+import { WebAuthnAuthentication } from './authentication';
 
 /**
  * Android-specific WebAuthn implementation with biometric authentication
@@ -13,8 +13,8 @@ import { WebAuthnAuthenticationManager } from './authentication';
  */
 export class AndroidWebAuthnManager {
   private platformManager: PlatformWebAuthnManager;
-  private registrationManager: WebAuthnRegistrationManager;
-  private authenticationManager: WebAuthnAuthenticationManager;
+  private registrationManager: WebAuthnRegistration;
+  private authenticationManager: WebAuthnAuthentication;
 
   constructor(rpId: string, rpName: string) {
     this.platformManager = new PlatformWebAuthnManager({
@@ -25,8 +25,8 @@ export class AndroidWebAuthnManager {
       attestation: 'direct',
     });
 
-    this.registrationManager = new WebAuthnRegistrationManager();
-    this.authenticationManager = new WebAuthnAuthenticationManager();
+    this.registrationManager = new WebAuthnRegistration(rpName, rpId);
+    this.authenticationManager = new WebAuthnAuthentication(rpId);
   }
 
   /**
@@ -92,10 +92,19 @@ export class AndroidWebAuthnManager {
 
     try {
       // Attempt WebAuthn registration with Android-specific options
-      const credential = await this.registrationManager.createCredential(
-        androidRegistrationOptions,
-        biometricOptions
+      const registrationResponse = await this.registrationManager.startRegistration(
+        androidRegistrationOptions
       );
+
+      const credential: WebAuthnCredential = {
+        id: registrationResponse.id,
+        userId: userId,
+        credentialId: registrationResponse.id,
+        publicKeyData: { data: registrationResponse.response.publicKey },
+        counter: 0,
+        platform: 'android',
+        createdAt: new Date(),
+      };
 
       // Validate Android-specific attestation data
       const validatedCredential = await this.validateAndroidAttestation(credential);
@@ -139,9 +148,8 @@ export class AndroidWebAuthnManager {
     };
 
     try {
-      const assertion = await this.authenticationManager.getAssertion(
-        androidAuthenticationOptions,
-        biometricOptions
+      const assertion = await this.authenticationManager.startAuthentication(
+        androidAuthenticationOptions
       );
 
       // Extract Android-specific biometric information

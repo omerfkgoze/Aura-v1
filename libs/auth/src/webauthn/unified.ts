@@ -9,7 +9,7 @@ import { IOSWebAuthnManager } from './ios';
 import { AndroidWebAuthnManager } from './android';
 import { WebWebAuthnManager } from './web';
 import { PlatformDetectionManager } from './detection';
-import { OPAQUEManager } from '../opaque/manager';
+import { OpaqueManager } from '../opaque/manager';
 
 /**
  * Unified authentication API across all platforms
@@ -21,7 +21,7 @@ export class UnifiedAuthenticationManager {
   private iosManager: IOSWebAuthnManager;
   private androidManager: AndroidWebAuthnManager;
   private webManager: WebWebAuthnManager;
-  private opaqueManager: OPAQUEManager;
+  private opaqueManager: OpaqueManager;
   private currentPlatform: Platform;
 
   constructor(rpId: string, rpName: string) {
@@ -33,7 +33,7 @@ export class UnifiedAuthenticationManager {
     this.iosManager = new IOSWebAuthnManager(rpId, rpName);
     this.androidManager = new AndroidWebAuthnManager(rpId, rpName);
     this.webManager = new WebWebAuthnManager(rpId, rpName);
-    this.opaqueManager = new OPAQUEManager();
+    this.opaqueManager = new OpaqueManager();
   }
 
   /**
@@ -78,7 +78,7 @@ export class UnifiedAuthenticationManager {
 
       // Fallback to OPAQUE authentication
       try {
-        await this.opaqueManager.register(username, ''); // Password will be collected separately
+        await this.opaqueManager.registerUser(username, '', userId); // Password will be collected separately
         return {
           success: true,
           method: 'opaque-password',
@@ -138,7 +138,7 @@ export class UnifiedAuthenticationManager {
       // Fallback to OPAQUE authentication
       // Note: In real implementation, password would be collected from user
       try {
-        const authResult = await this.opaqueManager.authenticate(identifier, '');
+        const authResult = await this.opaqueManager.authenticateUser(identifier, '');
         return {
           success: true,
           result: authResult as any, // Cast for compatibility

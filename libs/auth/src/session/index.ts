@@ -12,7 +12,7 @@ export type {
 
 // Storage
 export { SessionStorage, WebStorage, MockSecureStorage } from './storage';
-export type { SecureStorage } from './storage';
+export type { SessionSecureStorage } from './storage';
 
 // Token Management
 export { TokenManager, defaultSessionConfig } from './tokens';

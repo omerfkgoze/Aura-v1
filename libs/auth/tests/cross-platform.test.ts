@@ -27,10 +27,21 @@ const mockPublicKeyCredential = {
   isConditionalMediationAvailable: vi.fn(),
 };
 
+// Mock crypto for testing
+const mockCrypto = {
+  getRandomValues: vi.fn((array: Uint8Array) => {
+    for (let i = 0; i < array.length; i++) {
+      array[i] = Math.floor(Math.random() * 256);
+    }
+    return array;
+  }),
+};
+
 // Mock window for testing
 const mockWindow = {
   PublicKeyCredential: mockPublicKeyCredential,
   navigator: mockNavigator,
+  crypto: mockCrypto,
 };
 
 describe('Cross-Platform Authentication Integration', () => {
@@ -41,10 +52,15 @@ describe('Cross-Platform Authentication Integration', () => {
     // Reset mocks
     vi.resetAllMocks();
 
+    // Setup default mock return values
+    mockPublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable.mockResolvedValue(true);
+    mockPublicKeyCredential.isConditionalMediationAvailable.mockResolvedValue(true);
+
     // Mock global objects
     vi.stubGlobal('navigator', mockNavigator);
     vi.stubGlobal('window', mockWindow);
     vi.stubGlobal('PublicKeyCredential', mockPublicKeyCredential);
+    vi.stubGlobal('crypto', mockCrypto);
   });
 
   afterEach(() => {

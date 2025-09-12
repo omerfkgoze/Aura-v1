@@ -357,9 +357,17 @@ export class OpaqueSessionManager {
   /**
    * Revoke session
    */
-  async revokeSession(sessionKey: string): Promise<void> {
-    this.activeSessions.delete(sessionKey);
-    await this.server.revokeSession(sessionKey);
+  async revokeSession(sessionKey: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      this.activeSessions.delete(sessionKey);
+      await this.server.revokeSession(sessionKey);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to revoke session',
+      };
+    }
   }
 
   /**
@@ -380,10 +388,23 @@ export class OpaqueSessionManager {
   /**
    * Revoke all sessions for user
    */
-  async revokeAllUserSessions(userId: string): Promise<void> {
+  async revokeAllUserSessions(
+    userId: string
+  ): Promise<{ success: boolean; revokedCount: number; errors?: string[] }> {
     const userSessions = this.getUserSessions(userId);
 
-    await Promise.all(userSessions.map(sessionKey => this.revokeSession(sessionKey)));
+    const results = await Promise.all(
+      userSessions.map(sessionKey => this.revokeSession(sessionKey))
+    );
+
+    const errors = results.filter(result => !result.success).map(result => result.error!);
+    const revokedCount = results.filter(result => result.success).length;
+
+    return {
+      success: errors.length === 0,
+      revokedCount,
+      errors: errors.length > 0 ? errors : undefined,
+    };
   }
 
   /**

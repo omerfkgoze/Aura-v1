@@ -182,7 +182,7 @@ describe('Phrase to Seed Conversion', () => {
 
 describe('Shamir Secret Sharing', () => {
   it('should create and reconstruct secrets correctly', () => {
-    const secret = 'deadbeefcafebabe';
+    const secret = 'recovery-phrase-test-secret';
     const shares = createShamirShares({
       totalShares: 5,
       threshold: 3,
@@ -200,7 +200,7 @@ describe('Shamir Secret Sharing', () => {
   });
 
   it('should work with different threshold combinations', () => {
-    const secret = 'abcdef1234567890';
+    const secret = 'test-secret-with-threshold-combinations';
     const shares = createShamirShares({
       totalShares: 7,
       threshold: 4,
@@ -353,7 +353,7 @@ describe('Recovery Validation System', () => {
   });
 
   it('should validate Shamir share requests', async () => {
-    const secret = 'recoverySecret123';
+    const secret = 'recovery-validation-test-secret';
     const shares = createShamirShares({
       totalShares: 5,
       threshold: 3,
@@ -437,7 +437,7 @@ describe('Recovery Manager Integration', () => {
   });
 
   it('should create and manage Shamir shares', async () => {
-    const secret = 'managerTestSecret';
+    const secret = 'recovery-manager-test-secret';
     const shares = manager.createShamirShares(secret);
 
     expect(shares).toHaveLength(RECOVERY_DEFAULTS.SHAMIR_CONFIG.totalShares);

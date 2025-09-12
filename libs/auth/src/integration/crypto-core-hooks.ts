@@ -16,10 +16,9 @@ import type {
   DeviceKeyManagementInfo,
   HardwareBackingInfo,
   SessionSecurityContext,
-  DeviceKeyInfo,
   AuthenticationMethod,
   RiskLevel,
-} from './types.js';
+} from './types/index';
 
 // Core Crypto Integration Interfaces
 export interface CryptoCoreAuthIntegration {
@@ -153,22 +152,16 @@ export interface SessionCryptoManager {
   ): Promise<ArrayBuffer>;
 
   // Session key management
-  rotateSessionKeys(
-    sessionId: string,
-    reason: SessionKeyRotationReason
-  ): Promise<SessionKeyRotationResult>;
-  validateSessionKeyIntegrity(sessionId: string): Promise<SessionKeyIntegrityResult>;
+  rotateSessionKeys(sessionId: string, reason: SessionKeyRotationReason): Promise<any>; // SessionKeyRotationResult - placeholder
+  validateSessionKeyIntegrity(sessionId: string): Promise<any>; // SessionKeyIntegrityResult - placeholder
 
   // Cross-session data protection
-  migrationSessionKeys(
-    oldSessionId: string,
-    newSessionId: string
-  ): Promise<SessionKeyMigrationResult>;
+  migrationSessionKeys(oldSessionId: string, newSessionId: string): Promise<any>; // SessionKeyMigrationResult - placeholder
   shareDataBetweenSessions(
     sourceSessionId: string,
     targetSessionId: string,
     dataId: string
-  ): Promise<CrossSessionDataResult>;
+  ): Promise<any>; // CrossSessionDataResult - placeholder
 
   // Session-bound cryptographic operations
   signWithSessionKey(sessionId: string, data: ArrayBuffer): Promise<ArrayBuffer>;
@@ -180,41 +173,38 @@ export interface SessionCryptoManager {
 
   // Forward secrecy
   enableForwardSecrecy(sessionId: string): Promise<ForwardSecrecyContext>;
-  advanceForwardSecrecy(sessionId: string): Promise<ForwardSecrecyAdvancementResult>;
+  advanceForwardSecrecy(sessionId: string): Promise<any>; // ForwardSecrecyAdvancementResult - placeholder
 }
 
 export interface DeviceCryptoManager {
   // Device key lifecycle
-  initializeDeviceKeys(deviceInfo: DeviceKeyManagementInfo): Promise<DeviceKeyInitializationResult>;
-  synchronizeDeviceKeys(deviceId: string, masterDeviceId: string): Promise<DeviceKeySyncResult>;
+  initializeDeviceKeys(deviceInfo: DeviceKeyManagementInfo): Promise<any>; // DeviceKeyInitializationResult - placeholder
+  synchronizeDeviceKeys(deviceId: string, masterDeviceId: string): Promise<any>; // DeviceKeySyncResult - placeholder
 
   // Device-specific encryption
-  encryptForDevice(data: ArrayBuffer, deviceId: string): Promise<DeviceEncryptedData>;
-  decryptFromDevice(encryptedData: DeviceEncryptedData, deviceId: string): Promise<ArrayBuffer>;
+  encryptForDevice(data: ArrayBuffer, deviceId: string): Promise<any>; // DeviceEncryptedData - placeholder
+  decryptFromDevice(
+    encryptedData: any /* DeviceEncryptedData */,
+    deviceId: string
+  ): Promise<ArrayBuffer>;
 
   // Cross-device operations
   establishSecureChannel(fromDeviceId: string, toDeviceId: string): Promise<SecureDeviceChannel>;
-  transferSecureData(
-    channel: SecureDeviceChannel,
-    data: ArrayBuffer
-  ): Promise<SecureDataTransferResult>;
+  transferSecureData(channel: SecureDeviceChannel, data: ArrayBuffer): Promise<any>; // SecureDataTransferResult - placeholder
 
   // Device trust management
   establishDeviceTrust(
     deviceId: string,
     trustMethod: DeviceTrustMethod
   ): Promise<DeviceTrustResult>;
-  validateDeviceTrust(deviceId: string): Promise<DeviceTrustValidationResult>;
-  revokeDeviceTrust(
-    deviceId: string,
-    reason: TrustRevocationReason
-  ): Promise<TrustRevocationResult>;
+  validateDeviceTrust(deviceId: string): Promise<any>; // DeviceTrustValidationResult - placeholder
+  revokeDeviceTrust(deviceId: string, reason: TrustRevocationReason): Promise<any>; // TrustRevocationResult - placeholder
 
   // Device key attestation
-  generateDeviceKeyAttestation(deviceId: string, keyId: string): Promise<DeviceKeyAttestation>;
+  generateDeviceKeyAttestation(deviceId: string, keyId: string): Promise<any>; // DeviceKeyAttestation - placeholder
   validateDeviceKeyAttestation(
-    attestation: DeviceKeyAttestation
-  ): Promise<AttestationValidationResult>;
+    attestation: any // DeviceKeyAttestation - placeholder
+  ): Promise<any>; // AttestationValidationResult - placeholder
 }
 
 // Core Data Types
@@ -287,7 +277,7 @@ export interface DeviceKey {
   biometricProtected: boolean;
 
   // Trust and verification
-  attestation?: DeviceKeyAttestation;
+  attestation?: any; // DeviceKeyAttestation - placeholder
   trustLevel: number;
 
   // Lifecycle

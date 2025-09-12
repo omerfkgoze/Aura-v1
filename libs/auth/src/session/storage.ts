@@ -1,6 +1,6 @@
 import { StoredSession } from './types';
 
-export interface SecureStorage {
+export interface SessionSecureStorage {
   setItem(key: string, value: string): Promise<void>;
   getItem(key: string): Promise<string | null>;
   removeItem(key: string): Promise<void>;
@@ -8,11 +8,11 @@ export interface SecureStorage {
 }
 
 export class SessionStorage {
-  private storage: SecureStorage;
+  private storage: SessionSecureStorage;
   private readonly SESSION_KEY = 'aura_auth_session';
   private readonly DEVICE_ID_KEY = 'aura_device_id';
 
-  constructor(storage: SecureStorage) {
+  constructor(storage: SessionSecureStorage) {
     this.storage = storage;
   }
 
@@ -141,7 +141,7 @@ export class SessionStorage {
 }
 
 // Platform-specific storage implementations
-export class WebStorage implements SecureStorage {
+export class WebStorage implements SessionSecureStorage {
   private storage: Storage;
 
   constructor(storage: Storage = localStorage) {
@@ -190,7 +190,7 @@ export class WebStorage implements SecureStorage {
 }
 
 // Mock storage for React Native (would be replaced with actual secure storage)
-export class MockSecureStorage implements SecureStorage {
+export class MockSecureStorage implements SessionSecureStorage {
   private data: Map<string, string> = new Map();
 
   async setItem(key: string, value: string): Promise<void> {

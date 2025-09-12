@@ -501,6 +501,7 @@ describe('OPAQUE Protocol Implementation', () => {
 
       // Authenticate
       const authResult = await authSystem.authenticate(testUsername, testPassword);
+      expect(authResult).toBeDefined();
       expect(authResult.success).toBe(true);
       expect(authResult.sessionKey).toBeDefined();
 
