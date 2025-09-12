@@ -67,8 +67,15 @@ cd ../..
 echo "📦 Installing dependencies..."
 pnpm install --no-frozen-lockfile
 
-# Build all packages
-echo "🔧 Building all packages..."
-pnpm nx run web:build
+# Build dependencies first
+echo "🔧 Building shared dependencies..."
+pnpm nx build shared-types utils crypto-core
+
+# Build web app directly (avoiding NX environment issues)
+echo "🔧 Building web application..."
+cd apps/web
+export NODE_ENV=production
+npm run build
+cd ../..
 
 echo "✅ Build completed successfully!"

@@ -2,8 +2,9 @@
   "version": 2,
   "name": "aura-app",
   "buildCommand": "bash scripts/build-with-rust.sh",
-  "outputDirectory": "apps/web/out",
   "installCommand": "pnpm install --no-frozen-lockfile",
+  "framework": "nextjs",
+  "outputDirectory": "apps/web/out",
 
   "env": {
     "NODE_ENV": "production",
