@@ -14,6 +14,12 @@ async function getOpaqueModule() {
   try {
     // Try to import the real OPAQUE library
     opaqueModule = await import('@cloudflare/opaque-ts');
+
+    // Verify the library has the required functions
+    if (!opaqueModule.createClientRegistration || !opaqueModule.createClientLogin) {
+      throw new Error('OPAQUE library missing required functions');
+    }
+
     return opaqueModule;
   } catch (error) {
     // Fall back to mock implementation in test environment

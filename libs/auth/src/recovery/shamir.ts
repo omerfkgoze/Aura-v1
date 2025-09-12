@@ -177,11 +177,11 @@ function hexToBytes(hex: string): Uint8Array {
 }
 
 /**
- * Convert string to bytes (handles both hex and regular strings)
+ * Convert string to bytes (always treats as UTF-8 string)
  */
 function stringToBytes(input: string): Uint8Array {
-  // Always treat as regular string and convert to UTF-8 bytes
-  // This ensures consistent round-trip behavior
+  // Always convert string to UTF-8 bytes for consistent behavior
+  // This ensures round-trip compatibility between create and reconstruct
   return new TextEncoder().encode(input);
 }
 
@@ -240,9 +240,9 @@ export function createShamirShares(config: ShamirSecretConfig): ShamirShare[] {
       threshold,
       totalShares,
       metadata: {
-        description: metadata?.description,
+        ...(metadata?.description && { description: metadata.description }),
         createdAt: new Date(),
-        expiresAt: metadata?.expiresAt,
+        ...(metadata?.expiresAt && { expiresAt: metadata.expiresAt }),
       },
     });
   }
@@ -313,8 +313,13 @@ export function reconstructSecret(shares: ShamirShare[]): string {
     reconstructedBytes[byteIndex] = lagrangeInterpolation(points);
   }
 
-  // Convert back to string since we encode strings as UTF-8
-  return new TextDecoder().decode(reconstructedBytes);
+  // Convert back to string using UTF-8 decoder
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(reconstructedBytes);
+  } catch (error) {
+    // If UTF-8 decoding fails, return as hex string
+    return bytesToHex(reconstructedBytes);
+  }
 }
 
 /**
