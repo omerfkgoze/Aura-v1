@@ -41,7 +41,7 @@ pub use device::*;
 pub use secure_storage::*;
 pub use multi_device::*;
 pub use recovery::*;
-pub use key_rotation::{KeyVersion, KeyStatus, KeyRotationError, VersionedKey, KeyRotationScheduler, RotationPolicy, KeyRotationManager, KeyMigrationHelper};
+pub use key_rotation::*;
 
 // Initialize function called when WASM module is loaded
 #[wasm_bindgen(start)]

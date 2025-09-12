@@ -3,38 +3,17 @@
  * Central exports for authentication event logging system
  */
 
-// Core interfaces and types
+// Core interfaces and types - includes all event definitions
 export * from './types.js';
 
-// Event type definitions
-export * from './authentication-events.js';
-export * from './security-events.js';
-export * from './data-events.js';
-export * from './compliance-events.js';
-export * from './system-events.js';
-export * from './forensic-events.js';
+// Note: All event types and analytics interfaces are already exported from types.js
+// Individual modules can be imported directly if specific functionality is needed:
+// import { ... } from './analytics.js';
+// import { ... } from './compliance-reporting.js';
+// import { ... } from './forensic-analysis.js';
 
-// Analytics and pattern analysis
-export * from './analytics.js';
+// Note: Event type definitions from individual modules already included in types.js
+// to avoid duplicate exports. Specific modules can be imported directly if needed.
 
-// Compliance reporting and retention
-export * from './compliance-reporting.js';
-
-// Forensic analysis and timeline reconstruction
-export * from './forensic-analysis.js';
-
-// Re-export main event logger interfaces for convenience
-export type { SecurityEventLogger, ComplianceEventLogger, ForensicEventLogger } from './types.js';
-
-// Re-export key event types
-export type {
-  AuthenticationEvent,
-  SecurityEvent,
-  DataAccessEvent,
-  SystemEvent,
-  GDPREvent,
-  HIPAAEvent,
-  DataProcessingEvent,
-  ConsentEvent,
-  ForensicEvent,
-} from './types.js';
+// Note: Main types already exported via 'export * from './types.js'' above
+// Specific re-exports removed to avoid duplication

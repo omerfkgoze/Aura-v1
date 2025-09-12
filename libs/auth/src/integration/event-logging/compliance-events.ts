@@ -3,7 +3,7 @@
  * Defines GDPR, HIPAA, and other compliance-related events
  */
 
-import type { BaseEvent, ComplianceFramework } from './types.js';
+import type { BaseEvent } from './types.js';
 import type { DataCategory, LegalBasis } from './data-events.js';
 
 export interface GDPREvent extends BaseEvent {

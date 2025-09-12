@@ -104,13 +104,7 @@ export interface KeyExchangeResponse {
   signature: string;
 }
 
-// Recovery and backup types
-export interface RecoveryPhrase {
-  words: string[];
-  checksum: string;
-  entropy: string; // hex encoded
-  language: string;
-}
+// Recovery and backup types (moved to line ~199 for better organization)
 
 export interface KeyBackupInfo {
   backupId: string;
@@ -140,6 +134,8 @@ export interface KeyVersionInfo {
 
 // Hierarchical key derivation types
 export type DataCategory = 'cycle_data' | 'preferences' | 'healthcare_sharing' | 'device_sync';
+
+export type HierarchicalKeyPurpose = DataCategory;
 
 export interface HierarchicalDerivationPath {
   pathString: string;

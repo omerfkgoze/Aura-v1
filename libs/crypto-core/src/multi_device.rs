@@ -1,9 +1,9 @@
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::memory::{SecureBuffer, track_secret_allocation, track_secret_zeroization};
+use crate::memory::{track_secret_allocation, track_secret_zeroization};
 use crate::keys::CryptoKey;
-use crate::derivation::HierarchicalKeyDerivation;
+// use crate::derivation::HierarchicalKeyDerivation; // Unused import removed
 
 /// Device pairing request containing public key and device metadata
 #[wasm_bindgen]
@@ -522,7 +522,7 @@ impl MultiDeviceProtocol {
         let count = expired_devices.len();
         
         for device_id in expired_devices {
-            if let Some(mut entry) = self.device_registry.get_mut(&device_id) {
+            if let Some(entry) = self.device_registry.get_mut(&device_id) {
                 entry.set_status(DeviceStatus::Expired as u8);
             }
         }

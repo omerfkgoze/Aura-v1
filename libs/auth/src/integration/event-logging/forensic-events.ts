@@ -3,7 +3,7 @@
  * Defines forensic investigation and evidence collection events
  */
 
-import type { BaseEvent, SecuritySeverity } from './types.js';
+import type { BaseEvent } from './types.js';
 
 export interface ForensicEvent extends BaseEvent {
   eventType:

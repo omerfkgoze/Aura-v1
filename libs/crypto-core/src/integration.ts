@@ -118,7 +118,7 @@ export interface KeyRotationIntegration {
    * Check if key rotation is needed
    * @param keyVersion Current key version information
    */
-  isRotationNeeded(keyVersion: KeyVersion): Promise<boolean>;
+  isRotationNeeded(keyVersion: IntegrationKeyVersion): Promise<boolean>;
 
   /**
    * Rotate key to new version
@@ -131,7 +131,7 @@ export interface KeyRotationIntegration {
    * Get key version history
    * @param keyId Key identifier
    */
-  getKeyVersionHistory(keyId: string): Promise<KeyVersion[]>;
+  getKeyVersionHistory(keyId: string): Promise<IntegrationKeyVersion[]>;
 
   /**
    * Validate crypto envelope with key version
@@ -159,7 +159,7 @@ export interface KeyRotationConfig {
   autoRotationEnabled: boolean;
 }
 
-export interface KeyVersion {
+export interface IntegrationKeyVersion {
   versionId: string;
   createdAt: number;
   status: 'active' | 'deprecated' | 'revoked';
@@ -168,7 +168,7 @@ export interface KeyVersion {
 
 export interface KeyRotationResult {
   newKeyId: string;
-  newKeyVersion: KeyVersion;
+  newKeyVersion: IntegrationKeyVersion;
   rotationTimestamp: number;
   rotationReason: string;
   success: boolean;
@@ -176,7 +176,7 @@ export interface KeyRotationResult {
 
 export interface KeyVersionValidationResult {
   valid: boolean;
-  keyVersion: KeyVersion;
+  keyVersion: IntegrationKeyVersion;
   rotationNeeded: boolean;
   validationErrors: string[];
 }
@@ -449,7 +449,7 @@ class CryptoCoreIntegrationImpl implements CryptoCoreIntegration {
     this.integrationStatus.keyRotation = true;
   }
 
-  async isRotationNeeded(keyVersion: KeyVersion): Promise<boolean> {
+  async isRotationNeeded(keyVersion: IntegrationKeyVersion): Promise<boolean> {
     throw new Error('Key rotation not implemented yet - Story 1.5');
   }
 
@@ -457,7 +457,7 @@ class CryptoCoreIntegrationImpl implements CryptoCoreIntegration {
     throw new Error('Key rotation not implemented yet - Story 1.5');
   }
 
-  async getKeyVersionHistory(keyId: string): Promise<KeyVersion[]> {
+  async getKeyVersionHistory(keyId: string): Promise<IntegrationKeyVersion[]> {
     throw new Error('Key rotation not implemented yet - Story 1.5');
   }
 

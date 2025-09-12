@@ -1,0 +1,410 @@
+/**
+ * Shamir Secret Sharing Implementation
+ *
+ * Implements Shamir's Secret Sharing algorithm for advanced account recovery.
+ * Allows splitting a secret into multiple shares where a threshold number
+ * of shares is required to reconstruct the original secret.
+ */
+/**
+ * Galois Field GF(256) operations for Shamir Secret Sharing
+ */
+class GaloisField {
+  /**
+   * Initialize lookup tables for efficient operations
+   */
+  static initialize() {
+    if (this.initialized) return;
+    this.expTable = new Array(this.FIELD_SIZE * 2);
+    this.logTable = new Array(this.FIELD_SIZE);
+    let x = 1;
+    // GF(256) multiplicative group has order 255, not 256
+    for (let i = 0; i < this.FIELD_SIZE - 1; i++) {
+      this.expTable[i] = x;
+      this.logTable[x] = i;
+      x = this.multiply(x, 2);
+    }
+    // Extend exp table for easier computation
+    for (let i = this.FIELD_SIZE - 1; i < this.FIELD_SIZE * 2 - 1; i++) {
+      this.expTable[i] = this.expTable[i - (this.FIELD_SIZE - 1)];
+    }
+    this.initialized = true;
+  }
+  /**
+   * Multiply two elements in GF(256)
+   */
+  static multiply(a, b) {
+    if (a === 0 || b === 0) return 0;
+    let result = 0;
+    while (b > 0) {
+      if (b & 1) {
+        result ^= a;
+      }
+      a <<= 1;
+      if (a & 0x100) {
+        a ^= this.PRIMITIVE_POLYNOMIAL;
+      }
+      b >>= 1;
+    }
+    return result & 0xff;
+  }
+  /**
+   * Fast multiplication using lookup tables
+   */
+  static fastMultiply(a, b) {
+    this.initialize();
+    if (a === 0 || b === 0) return 0;
+    return this.expTable[this.logTable[a] + this.logTable[b]];
+  }
+  /**
+   * Division in GF(256)
+   */
+  static divide(a, b) {
+    this.initialize();
+    if (a === 0) return 0;
+    if (b === 0) throw new Error('Division by zero in Galois Field');
+    return this.expTable[this.logTable[a] - this.logTable[b] + this.FIELD_SIZE - 1];
+  }
+  /**
+   * Calculate power in GF(256)
+   */
+  static power(base, exponent) {
+    this.initialize();
+    if (base === 0) return 0;
+    if (exponent === 0) return 1;
+    return this.expTable[(this.logTable[base] * exponent) % (this.FIELD_SIZE - 1)];
+  }
+}
+GaloisField.FIELD_SIZE = 256;
+GaloisField.PRIMITIVE_POLYNOMIAL = 0x11d; // x^8 + x^4 + x^3 + x^2 + 1
+GaloisField.expTable = [];
+GaloisField.logTable = [];
+GaloisField.initialized = false;
+/**
+ * Polynomial evaluation in GF(256)
+ */
+function evaluatePolynomial(coefficients, x) {
+  let result = 0;
+  let xPower = 1;
+  for (const coefficient of coefficients) {
+    result ^= GaloisField.fastMultiply(coefficient, xPower);
+    xPower = GaloisField.fastMultiply(xPower, x);
+  }
+  return result;
+}
+/**
+ * Lagrange interpolation to reconstruct secret at x=0
+ */
+function lagrangeInterpolation(shares) {
+  let result = 0;
+  for (let i = 0; i < shares.length; i++) {
+    let numerator = 1;
+    let denominator = 1;
+    for (let j = 0; j < shares.length; j++) {
+      if (i !== j) {
+        // For evaluation at x=0: numerator = product of all other x_j values
+        numerator = GaloisField.fastMultiply(numerator, shares[j].x);
+        // denominator = (x_i - x_j) where subtraction in GF is XOR
+        denominator = GaloisField.fastMultiply(denominator, shares[i].x ^ shares[j].x);
+      }
+    }
+    const lagrangeCoeff = GaloisField.divide(numerator, denominator);
+    result ^= GaloisField.fastMultiply(shares[i].y, lagrangeCoeff);
+  }
+  return result;
+}
+/**
+ * Generate cryptographically secure random bytes
+ */
+function getSecureRandomBytes(length) {
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
+    return bytes;
+  } else if (typeof require !== 'undefined') {
+    try {
+      const nodeCrypto = require('crypto');
+      return new Uint8Array(nodeCrypto.randomBytes(length));
+    } catch (error) {
+      throw new Error('No secure random number generator available');
+    }
+  } else {
+    throw new Error('No secure random number generator available');
+  }
+}
+/**
+ * Convert bytes to hex string
+ */
+function bytesToHex(bytes) {
+  return Array.from(bytes)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+/**
+ * Convert hex string to bytes
+ */
+function hexToBytes(hex) {
+  if (hex.length % 2 !== 0) {
+    throw new Error('Invalid hex string length');
+  }
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+  return bytes;
+}
+/**
+ * Convert string to bytes (always treats as UTF-8 string)
+ */
+function stringToBytes(input) {
+  // Always convert string to UTF-8 bytes for consistent behavior
+  // This ensures round-trip compatibility between create and reconstruct
+  return new TextEncoder().encode(input);
+}
+/**
+ * Create Shamir secret shares from a secret
+ */
+export function createShamirShares(config) {
+  const { totalShares, threshold, secret, metadata } = config;
+  // Validation
+  if (threshold < 2) {
+    throw new Error('Threshold must be at least 2');
+  }
+  if (totalShares < threshold) {
+    throw new Error('Total shares must be at least equal to threshold');
+  }
+  if (totalShares > 255) {
+    throw new Error('Maximum 255 shares supported');
+  }
+  if (!secret || secret.length === 0) {
+    throw new Error('Secret cannot be empty');
+  }
+  const secretBytes = stringToBytes(secret);
+  const shares = [];
+  // Process each byte of the secret separately
+  const shareData = Array(totalShares)
+    .fill(null)
+    .map(() => []);
+  for (let byteIndex = 0; byteIndex < secretBytes.length; byteIndex++) {
+    const secretByte = secretBytes[byteIndex];
+    // Generate random coefficients for polynomial
+    const coefficients = [secretByte]; // a0 = secret byte
+    for (let i = 1; i < threshold; i++) {
+      const randomBytes = getSecureRandomBytes(1);
+      coefficients.push(randomBytes[0]);
+    }
+    // Evaluate polynomial at different x values to create shares
+    for (let shareIndex = 0; shareIndex < totalShares; shareIndex++) {
+      const x = shareIndex + 1; // x values from 1 to totalShares
+      const y = evaluatePolynomial(coefficients, x);
+      shareData[shareIndex].push(y);
+    }
+  }
+  // Create share objects
+  for (let i = 0; i < totalShares; i++) {
+    const shareBytes = new Uint8Array(shareData[i]);
+    shares.push({
+      id: i + 1,
+      data: bytesToHex(shareBytes),
+      threshold,
+      totalShares,
+      metadata: Object.assign(
+        Object.assign(
+          Object.assign(
+            {},
+            (metadata === null || metadata === void 0 ? void 0 : metadata.description) && {
+              description: metadata.description,
+            }
+          ),
+          { createdAt: new Date() }
+        ),
+        (metadata === null || metadata === void 0 ? void 0 : metadata.expiresAt) && {
+          expiresAt: metadata.expiresAt,
+        }
+      ),
+    });
+  }
+  return shares;
+}
+/**
+ * Reconstruct secret from Shamir shares
+ */
+export function reconstructSecret(shares) {
+  if (!shares || shares.length === 0) {
+    throw new Error('No shares provided');
+  }
+  const threshold = shares[0].threshold;
+  // Validation
+  if (shares.length < threshold) {
+    throw new Error(`Insufficient shares. Need ${threshold}, got ${shares.length}`);
+  }
+  // Check that all shares have the same configuration
+  const firstShare = shares[0];
+  for (const share of shares) {
+    if (share.threshold !== firstShare.threshold || share.totalShares !== firstShare.totalShares) {
+      throw new Error('Inconsistent share configuration');
+    }
+  }
+  // Check for expired shares
+  const now = new Date();
+  for (const share of shares) {
+    if (share.metadata.expiresAt && share.metadata.expiresAt < now) {
+      throw new Error(`Share ${share.id} has expired`);
+    }
+  }
+  // Convert share data to bytes
+  const shareBytes = shares.map(share => {
+    try {
+      return {
+        id: share.id,
+        data: hexToBytes(share.data),
+      };
+    } catch (error) {
+      throw new Error(`Invalid share data for share ${share.id}`);
+    }
+  });
+  // Ensure all shares have the same length
+  const secretLength = shareBytes[0].data.length;
+  for (const share of shareBytes) {
+    if (share.data.length !== secretLength) {
+      throw new Error('Shares have different lengths');
+    }
+  }
+  // Reconstruct each byte of the secret
+  const reconstructedBytes = new Uint8Array(secretLength);
+  for (let byteIndex = 0; byteIndex < secretLength; byteIndex++) {
+    const points = shareBytes.slice(0, threshold).map(share => ({
+      x: share.id,
+      y: share.data[byteIndex],
+    }));
+    reconstructedBytes[byteIndex] = lagrangeInterpolation(points);
+  }
+  // Convert back to string using UTF-8 decoder
+  // Use standard decoder without fatal mode for better compatibility
+  return new TextDecoder('utf-8').decode(reconstructedBytes);
+}
+/**
+ * Validate Shamir shares without reconstructing the secret
+ */
+export function validateShamirShares(shares) {
+  const errors = [];
+  const warnings = [];
+  try {
+    if (!shares || shares.length === 0) {
+      errors.push('No shares provided');
+      return { valid: false, errors, warnings };
+    }
+    // Check minimum requirements
+    const firstShare = shares[0];
+    if (shares.length < firstShare.threshold) {
+      errors.push(`Insufficient shares. Need ${firstShare.threshold}, got ${shares.length}`);
+    }
+    // Check consistency
+    for (let i = 1; i < shares.length; i++) {
+      if (shares[i].threshold !== firstShare.threshold) {
+        errors.push(
+          `Inconsistent threshold values: ${firstShare.threshold} vs ${shares[i].threshold}`
+        );
+      }
+      if (shares[i].totalShares !== firstShare.totalShares) {
+        errors.push(
+          `Inconsistent total shares: ${firstShare.totalShares} vs ${shares[i].totalShares}`
+        );
+      }
+    }
+    // Check for duplicate share IDs
+    const shareIds = new Set();
+    for (const share of shares) {
+      if (shareIds.has(share.id)) {
+        errors.push(`Duplicate share ID: ${share.id}`);
+      }
+      shareIds.add(share.id);
+    }
+    // Check expiration
+    const now = new Date();
+    for (const share of shares) {
+      if (share.metadata.expiresAt) {
+        if (share.metadata.expiresAt < now) {
+          errors.push(`Share ${share.id} has expired`);
+        } else {
+          const daysUntilExpiry = Math.ceil(
+            (share.metadata.expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (daysUntilExpiry <= 30) {
+            warnings.push(`Share ${share.id} expires in ${daysUntilExpiry} days`);
+          }
+        }
+      }
+    }
+    // Validate share data format
+    for (const share of shares) {
+      try {
+        hexToBytes(share.data);
+      } catch (error) {
+        errors.push(`Invalid hex data in share ${share.id}`);
+      }
+    }
+    // Check data length consistency
+    if (shares.length > 0) {
+      const expectedLength = shares[0].data.length;
+      for (const share of shares) {
+        if (share.data.length !== expectedLength) {
+          errors.push(`Inconsistent data length in share ${share.id}`);
+        }
+      }
+    }
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    };
+  } catch (error) {
+    errors.push(`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return { valid: false, errors, warnings };
+  }
+}
+/**
+ * Create a test configuration for Shamir sharing
+ */
+export function createTestShamirConfig(secret = 'deadbeef', totalShares = 5, threshold = 3) {
+  return {
+    totalShares,
+    threshold,
+    secret,
+    metadata: {
+      description: 'Test configuration for Shamir Secret Sharing',
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+    },
+  };
+}
+/**
+ * Get recommendations for Shamir share distribution
+ */
+export function getShamirDistributionRecommendations(totalShares, threshold) {
+  return {
+    distribution: [
+      `Store ${totalShares - threshold + 1} shares yourself for easy access`,
+      `Distribute remaining ${threshold - 1} shares to trusted individuals`,
+      'Use different storage methods for different shares',
+      'Consider geographic distribution for disaster recovery',
+    ],
+    security: [
+      'Never store threshold number of shares in the same location',
+      'Use different communication channels to distribute shares',
+      'Consider encrypting individual shares with recipient-specific passwords',
+      'Document share distribution without revealing share content',
+    ],
+    accessibility: [
+      'Ensure share holders understand the importance of their share',
+      'Provide clear instructions for share reconstruction',
+      'Test the reconstruction process before relying on it',
+      'Have a backup plan if share holders become unavailable',
+    ],
+    warnings: [
+      `If ${threshold} or more shares are compromised, your secret is compromised`,
+      'Lost shares cannot be recovered - plan for share holder unavailability',
+      'Share metadata might reveal information about your security setup',
+      'Consider the long-term availability of share holders',
+    ],
+  };
+}
+//# sourceMappingURL=shamir.js.map

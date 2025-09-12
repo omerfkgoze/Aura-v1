@@ -3,8 +3,8 @@
  * Defines authentication-specific event types and context data
  */
 
-import type { BaseEvent, EventType } from './types.js';
-import type { RiskLevel, AuthenticationMethod } from '../types.js';
+import type { BaseEvent } from './types.js';
+import type { RiskLevel, AuthenticationMethod } from '../types/index.js';
 
 export interface AuthenticationEvent extends BaseEvent {
   eventType:

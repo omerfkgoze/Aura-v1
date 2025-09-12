@@ -5,7 +5,7 @@
 
 import type { EventType, SecuritySeverity, TimeRange } from './types.js';
 import type { AttackVector } from './security-events.js';
-import type { EvidenceType } from './forensic-events.js';
+// import type { EvidenceType } from './forensic-events.js'; // Unused import removed
 
 export interface EventTimeline {
   timelineId: string;

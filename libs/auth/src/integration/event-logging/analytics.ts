@@ -4,7 +4,7 @@
  */
 
 import type { EventType, SecuritySeverity, TimeRange } from './types.js';
-import type { RiskLevel } from '../types.js';
+import type { RiskLevel } from '../types/index.js';
 
 export interface EventQueryFilters {
   startTime?: Date;

@@ -1,9 +1,9 @@
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::memory::{SecureBuffer, track_secret_allocation, track_secret_zeroization};
+use crate::memory::{track_secret_allocation, track_secret_zeroization};
 use crate::keys::CryptoKey;
-use crate::derivation::HierarchicalKeyDerivation;
+// use crate::derivation::HierarchicalKeyDerivation; // Unused import removed
 
 /// BIP39 wordlist languages supported for recovery phrases
 #[wasm_bindgen]
