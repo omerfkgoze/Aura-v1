@@ -14,7 +14,7 @@ export interface SecureStorageServiceConfig {
   keychainService: string;
   requireAuthentication: boolean;
   requireBiometrics: boolean;
-  accessibilityLevel: SecureStore.SecureStoreAccessibilityConstant;
+  accessibilityLevel: string;
 }
 
 export class SecureStorageService {
@@ -26,7 +26,7 @@ export class SecureStorageService {
       keychainService: 'aura-secure-keys',
       requireAuthentication: false,
       requireBiometrics: false,
-      accessibilityLevel: SecureStore.WHEN_UNLOCKED,
+      accessibilityLevel: 'WHEN_UNLOCKED',
       ...config,
     };
 
@@ -188,7 +188,6 @@ export class SecureStorageService {
     await SecureStore.setItemAsync(keyId, base64Key, {
       keychainService: this.config.keychainService,
       requireAuthentication: this.config.requireAuthentication,
-      accessibilityConstant: this.config.accessibilityLevel,
       // iOS specific options
       ...(Platform.OS === 'ios' && {
         touchID: this.config.requireBiometrics,
@@ -266,19 +265,19 @@ export class SecureStorageService {
 
   private getAccessibilityLevel(): string {
     switch (this.config.accessibilityLevel) {
-      case SecureStore.WHEN_UNLOCKED:
+      case 'WHEN_UNLOCKED':
         return 'WhenUnlocked';
-      case SecureStore.AFTER_FIRST_UNLOCK:
+      case 'AFTER_FIRST_UNLOCK':
         return 'AfterFirstUnlock';
-      case SecureStore.ALWAYS:
+      case 'ALWAYS':
         return 'Always';
-      case SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY:
+      case 'WHEN_PASSCODE_SET_THIS_DEVICE_ONLY':
         return 'WhenPasscodeSetThisDeviceOnly';
-      case SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY:
+      case 'WHEN_UNLOCKED_THIS_DEVICE_ONLY':
         return 'WhenUnlockedThisDeviceOnly';
-      case SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:
+      case 'AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY':
         return 'AfterFirstUnlockThisDeviceOnly';
-      case SecureStore.ALWAYS_THIS_DEVICE_ONLY:
+      case 'ALWAYS_THIS_DEVICE_ONLY':
         return 'AlwaysThisDeviceOnly';
       default:
         return 'WhenUnlocked';

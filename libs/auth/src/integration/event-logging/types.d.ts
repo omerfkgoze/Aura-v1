@@ -2,7 +2,7 @@
  * Event Logging Types and Interfaces
  * Core types for authentication event logging system
  */
-import type { AuditContext } from '../types.js';
+import type { AuditContext } from '../types/index.js';
 export interface SecurityEventLogger {
   logAuthenticationEvent(event: AuthenticationEvent): Promise<LoggedEvent>;
   logSecurityEvent(event: SecurityEvent): Promise<LoggedEvent>;

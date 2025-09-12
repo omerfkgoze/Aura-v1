@@ -4,11 +4,11 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
-  // Static export for better compatibility
-  output: 'export',
-  trailingSlash: true,
+  // Build for server deployment (not static export)
+  // output: 'export', // Disabled to avoid Html import issues
+  trailingSlash: false,
   images: {
-    unoptimized: true,
+    unoptimized: false,
   },
 
   // Disable TypeScript build-time type checking for build issues
@@ -42,6 +42,9 @@ const nextConfig = {
   experimental: {
     // Removed esmExternals as it's deprecated in Next.js 15
   },
+
+  // Disable static generation completely
+  generateStaticParams: false,
 };
 
 module.exports = nextConfig;

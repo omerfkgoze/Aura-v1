@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "aura-app",
-  "buildCommand": "pnpm nx run web:build",
+  "buildCommand": "bash scripts/build-with-rust.sh",
   "outputDirectory": "apps/web/out",
   "installCommand": "pnpm install --no-frozen-lockfile",
 

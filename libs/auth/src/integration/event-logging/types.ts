@@ -10,7 +10,7 @@ import type {
   GeolocationData,
   RiskLevel,
   AuthenticationMethod,
-} from '../types.js';
+} from '../types/index.js';
 
 // Core Event Logging Interfaces
 export interface SecurityEventLogger {

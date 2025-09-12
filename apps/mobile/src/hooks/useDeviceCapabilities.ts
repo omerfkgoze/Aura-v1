@@ -37,7 +37,7 @@ export function useDeviceCapabilities(): UseDeviceCapabilitiesResult {
 
       // Detect capabilities using WASM module
       const wasmCapabilities = detector.detect_capabilities(
-        deviceInfo.availableMemoryMB,
+        BigInt(deviceInfo.availableMemoryMB),
         deviceInfo.cpuCores,
         deviceInfo.platform,
         deviceInfo.hasSecureEnclave
@@ -45,22 +45,22 @@ export function useDeviceCapabilities(): UseDeviceCapabilitiesResult {
 
       // Convert WASM types to TypeScript types
       const tsCapabilities: DeviceCapabilities = {
-        deviceClass: wasmCapabilities.device_class().toString() as DeviceClass,
-        availableMemory: wasmCapabilities.available_memory(),
-        cpuCores: wasmCapabilities.cpu_cores(),
-        hasSecureEnclave: wasmCapabilities.has_secure_enclave(),
-        platform: wasmCapabilities.platform(),
-        performanceScore: wasmCapabilities.performance_score(),
+        deviceClass: wasmCapabilities.device_class.toString() as DeviceClass,
+        availableMemory: Number(wasmCapabilities.available_memory),
+        cpuCores: wasmCapabilities.cpu_cores,
+        hasSecureEnclave: wasmCapabilities.has_secure_enclave,
+        platform: wasmCapabilities.platform,
+        performanceScore: wasmCapabilities.performance_score,
       };
 
       // Get optimal Argon2 parameters
       const wasmParams = detector.get_optimal_argon2_params(wasmCapabilities);
       const tsParams: Argon2Params = {
-        memoryKb: wasmParams.memory_kb(),
-        iterations: wasmParams.iterations(),
-        parallelism: wasmParams.parallelism(),
-        saltLength: wasmParams.salt_length(),
-        keyLength: wasmParams.key_length(),
+        memoryKb: wasmParams.memory_kb,
+        iterations: wasmParams.iterations,
+        parallelism: wasmParams.parallelism,
+        saltLength: wasmParams.salt_length,
+        keyLength: wasmParams.key_length,
       };
 
       // Cache the results
@@ -241,11 +241,11 @@ export function useArgon2Benchmark() {
     try {
       const detector = new DeviceCapabilityDetector();
       const wasmParams = {
-        memory_kb: () => testParams.memoryKb,
-        iterations: () => testParams.iterations,
-        parallelism: () => testParams.parallelism,
-        salt_length: () => testParams.saltLength,
-        key_length: () => testParams.keyLength,
+        memory_kb: testParams.memoryKb,
+        iterations: testParams.iterations,
+        parallelism: testParams.parallelism,
+        salt_length: testParams.saltLength,
+        key_length: testParams.keyLength,
       };
 
       const result = await detector.benchmark_argon2_performance(
@@ -254,11 +254,11 @@ export function useArgon2Benchmark() {
       );
 
       return {
-        durationMs: result.duration_ms(),
-        memoryUsedMb: result.memory_used_mb(),
-        iterationsTested: result.iterations_tested(),
-        success: result.success(),
-        errorMessage: result.error_message() || undefined,
+        durationMs: result.duration_ms,
+        memoryUsedMb: result.memory_used_mb,
+        iterationsTested: result.iterations_tested,
+        success: result.success,
+        errorMessage: result.error_message || undefined,
       };
     } finally {
       setIsRunning(false);

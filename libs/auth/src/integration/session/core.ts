@@ -4,8 +4,8 @@
 
 import type {
   EncryptedSession,
-  SessionValidationResult,
-  DataAccessResult,
+  SessionValidationResult as SessionValidationBase,
+  DataAccessResult as DataAccessBase,
   SessionDataKey,
   DataType,
   DataAccessPurpose,

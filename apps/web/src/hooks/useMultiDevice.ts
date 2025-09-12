@@ -9,19 +9,15 @@ import type {
   DeviceSyncStatus,
   CrossDeviceOperation,
   MultiDeviceKeyExchange,
-} from '@aura/shared-types/crypto';
+} from '@aura/shared-types';
 
 // Import the WASM crypto core functions
-declare global {
-  interface Window {
-    cryptoCore?: {
-      MultiDeviceProtocol: any;
-      DevicePairingRequest: any;
-      DevicePairingResponse: any;
-      DeviceRegistryEntry: any;
-    };
-  }
-}
+import {
+  MultiDeviceProtocol,
+  DevicePairingRequest as WasmDevicePairingRequest,
+  DevicePairingResponse as WasmDevicePairingResponse,
+  DeviceRegistryEntry as WasmDeviceRegistryEntry,
+} from '@aura/crypto-core';
 
 interface UseMultiDeviceState {
   isInitialized: boolean;
@@ -72,7 +68,7 @@ export function useMultiDevice(): UseMultiDeviceResult {
   useEffect(() => {
     const initializeCryptoCore = async () => {
       try {
-        if (typeof window !== 'undefined' && !window.cryptoCore) {
+        if (typeof window !== 'undefined') {
           // Try to dynamically import the WASM module
           try {
             // In a real implementation, this would load the actual WASM module

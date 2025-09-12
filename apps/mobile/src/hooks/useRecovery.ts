@@ -13,20 +13,16 @@ import type {
   RecoveryValidation,
   KeyRestoration,
   WordlistLanguage,
-} from '@aura/shared-types/crypto';
+} from '@aura/shared-types';
 
-// Import WASM crypto core
-declare global {
-  interface Window {
-    cryptoCore?: {
-      RecoverySystem: any;
-      RecoveryPhrase: any;
-      KeyBackup: any;
-      WordlistLanguage: any;
-      RecoveryValidationLevel: any;
-    };
-  }
-}
+// Import WASM crypto core for recovery operations
+import {
+  RecoverySystem,
+  RecoveryPhrase as WasmRecoveryPhrase,
+  KeyBackup as WasmKeyBackup,
+  WordlistLanguage as WasmWordlistLanguage,
+  RecoveryValidationLevel as WasmRecoveryValidationLevel,
+} from '@aura/crypto-core';
 
 interface UseRecoveryState {
   isInitialized: boolean;

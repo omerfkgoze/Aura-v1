@@ -10,7 +10,7 @@ import type {
   RecoveryStats,
   KeyRestoration,
   WordlistLanguage,
-} from '@aura/shared-types/crypto';
+} from '@aura/shared-types';
 
 // Web-specific recovery hook with QR code and local storage support
 interface UseWebRecoveryResult {

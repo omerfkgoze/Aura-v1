@@ -9,7 +9,7 @@ import type {
   DeviceSyncStatus,
   CrossDeviceOperation,
   MultiDeviceKeyExchange,
-} from '@aura/shared-types/crypto';
+} from '@aura/shared-types';
 
 // Import the WASM crypto core functions
 declare global {

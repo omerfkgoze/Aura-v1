@@ -31,7 +31,7 @@ export function useDeviceCapabilities(): UseDeviceCapabilitiesResult {
 
       // Detect capabilities using WASM module
       const wasmCapabilities = detector.detect_capabilities(
-        deviceInfo.availableMemoryMB,
+        BigInt(deviceInfo.availableMemoryMB),
         deviceInfo.cpuCores,
         'web',
         deviceInfo.hasSecureContext
@@ -39,22 +39,22 @@ export function useDeviceCapabilities(): UseDeviceCapabilitiesResult {
 
       // Convert WASM types to TypeScript types
       const tsCapabilities: DeviceCapabilities = {
-        deviceClass: wasmCapabilities.device_class().toString() as DeviceClass,
-        availableMemory: wasmCapabilities.available_memory(),
-        cpuCores: wasmCapabilities.cpu_cores(),
-        hasSecureEnclave: wasmCapabilities.has_secure_enclave(),
-        platform: wasmCapabilities.platform(),
-        performanceScore: wasmCapabilities.performance_score(),
+        deviceClass: wasmCapabilities.device_class.toString() as DeviceClass,
+        availableMemory: Number(wasmCapabilities.available_memory),
+        cpuCores: wasmCapabilities.cpu_cores,
+        hasSecureEnclave: wasmCapabilities.has_secure_enclave,
+        platform: wasmCapabilities.platform,
+        performanceScore: wasmCapabilities.performance_score,
       };
 
       // Get optimal Argon2 parameters
       const wasmParams = detector.get_optimal_argon2_params(wasmCapabilities);
       const tsParams: Argon2Params = {
-        memoryKb: wasmParams.memory_kb(),
-        iterations: wasmParams.iterations(),
-        parallelism: wasmParams.parallelism(),
-        saltLength: wasmParams.salt_length(),
-        keyLength: wasmParams.key_length(),
+        memoryKb: wasmParams.memory_kb,
+        iterations: wasmParams.iterations,
+        parallelism: wasmParams.parallelism,
+        saltLength: wasmParams.salt_length,
+        keyLength: wasmParams.key_length,
       };
 
       // Cache the results in localStorage
@@ -191,7 +191,7 @@ async function getPerformanceHints() {
     // WebGL capabilities (indicates GPU performance)
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (gl) {
+    if (gl && gl instanceof WebGLRenderingContext) {
       const renderer = gl.getParameter(gl.RENDERER);
       const vendor = gl.getParameter(gl.VENDOR);
       hints.webgl = { renderer, vendor };
@@ -259,11 +259,11 @@ export function useArgon2Benchmark() {
     try {
       const detector = new DeviceCapabilityDetector();
       const wasmParams = {
-        memory_kb: () => testParams.memoryKb,
-        iterations: () => testParams.iterations,
-        parallelism: () => testParams.parallelism,
-        salt_length: () => testParams.saltLength,
-        key_length: () => testParams.keyLength,
+        memory_kb: testParams.memoryKb,
+        iterations: testParams.iterations,
+        parallelism: testParams.parallelism,
+        salt_length: testParams.saltLength,
+        key_length: testParams.keyLength,
       };
 
       const result = await detector.benchmark_argon2_performance(
@@ -272,11 +272,11 @@ export function useArgon2Benchmark() {
       );
 
       return {
-        durationMs: result.duration_ms(),
-        memoryUsedMb: result.memory_used_mb(),
-        iterationsTested: result.iterations_tested(),
-        success: result.success(),
-        errorMessage: result.error_message() || undefined,
+        durationMs: result.duration_ms,
+        memoryUsedMb: result.memory_used_mb,
+        iterationsTested: result.iterations_tested,
+        success: result.success,
+        errorMessage: result.error_message || undefined,
       };
     } finally {
       setIsRunning(false);
@@ -316,11 +316,11 @@ export function useAdaptiveParameterOptimization() {
       );
 
       return {
-        memoryKb: optimizedParams.memory_kb(),
-        iterations: optimizedParams.iterations(),
-        parallelism: optimizedParams.parallelism(),
-        saltLength: optimizedParams.salt_length(),
-        keyLength: optimizedParams.key_length(),
+        memoryKb: optimizedParams.memory_kb,
+        iterations: optimizedParams.iterations,
+        parallelism: optimizedParams.parallelism,
+        saltLength: optimizedParams.salt_length,
+        keyLength: optimizedParams.key_length,
       };
     } catch (err) {
       console.error('Parameter optimization failed:', err);

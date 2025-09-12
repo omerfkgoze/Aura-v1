@@ -6,6 +6,6 @@ export * from './opaque';
 export * from './recovery';
 // Session Management
 export * from './session';
-// Integration exports for future stories
-export * from './integration';
+// Integration exports for future stories - temporarily disabled due to conflicts
+// export * from './integration';
 //# sourceMappingURL=index.js.map
