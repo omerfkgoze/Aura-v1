@@ -24,6 +24,8 @@ pub mod integration;
 pub mod device;
 pub mod secure_storage;
 pub mod derivation;
+pub mod multi_device;
+pub mod recovery;
 
 // Re-export main functions for JavaScript consumption
 pub use envelope::*;
@@ -36,6 +38,8 @@ pub use security::*;
 pub use integration::*;
 pub use device::*;
 pub use secure_storage::*;
+pub use multi_device::*;
+pub use recovery::*;
 
 // Initialize function called when WASM module is loaded
 #[wasm_bindgen(start)]
