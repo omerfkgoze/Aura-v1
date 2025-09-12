@@ -2,6 +2,9 @@ use wasm_bindgen::prelude::*;
 use std::collections::HashMap;
 use chrono::{DateTime, Duration, Utc};
 use crate::key_rotation::types::{SecurityEventType, RotationTrigger, RotationTiming, KeyRotationError};
+use crate::key_rotation::emergency::{EmergencyRotationManager, EmergencyTriggerType};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 /// Rotation policy configuration for automated key management
 #[wasm_bindgen]
@@ -309,6 +312,8 @@ pub struct KeyRotationScheduler {
     user_preferences: UserRotationPreferences,
     security_events: Vec<SecurityEvent>,
     usage_tracking: HashMap<String, u64>, // purpose -> usage count
+    emergency_manager: EmergencyRotationManager,
+    incident_detection: IncidentDetectionSystem,
 }
 
 #[wasm_bindgen]
@@ -322,6 +327,8 @@ impl KeyRotationScheduler {
             user_preferences: UserRotationPreferences::new(),
             security_events: Vec::new(),
             usage_tracking: HashMap::new(),
+            emergency_manager: EmergencyRotationManager::new(),
+            incident_detection: IncidentDetectionSystem::new(),
         }
     }
 
@@ -749,5 +756,312 @@ impl KeyRotationScheduler {
         }
         
         Ok(())
+    }
+
+    // Emergency rotation integration methods
+    #[wasm_bindgen(js_name = "triggerEmergencyIncident")]
+    pub fn trigger_emergency_incident(
+        &mut self,
+        trigger_type: &str,
+        description: &str,
+        affected_devices: Vec<String>,
+        severity: u8,
+    ) -> Result<String, JsValue> {
+        self.emergency_manager
+            .trigger_emergency_rotation(trigger_type, description, affected_devices, severity)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = "detectSecurityIncident")]
+    pub fn detect_security_incident(&mut self, 
+        device_id: &str, 
+        event_data: &str
+    ) -> Result<bool, JsValue> {
+        self.incident_detection
+            .detect_incident(device_id, event_data)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = "getActiveIncidents")]
+    pub fn get_active_incidents(&self) -> Result<String, JsValue> {
+        self.incident_detection
+            .get_active_incidents()
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = "updateIncidentDetectionThresholds")]
+    pub fn update_incident_detection_thresholds(&mut self, thresholds: &str) -> Result<(), JsValue> {
+        self.incident_detection
+            .update_thresholds(thresholds)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+}
+
+/// Automated security incident detection system
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IncidentDetectionSystem {
+    failed_auth_threshold: u32,
+    suspicious_activity_window_minutes: u32,
+    unusual_access_pattern_threshold: f64,
+    device_compromise_indicators: Vec<String>,
+    breach_attempt_patterns: Vec<String>,
+    auto_response_enabled: bool,
+    detection_sensitivity: DetectionSensitivity,
+    active_incidents: HashMap<String, DetectedIncident>,
+    device_behavior_baselines: HashMap<String, DeviceBehaviorBaseline>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum DetectionSensitivity {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DetectedIncident {
+    pub id: String,
+    pub incident_type: SecurityIncidentType,
+    pub detected_at: DateTime<Utc>,
+    pub confidence_score: f64,
+    pub affected_devices: Vec<String>,
+    pub indicators: Vec<String>,
+    pub auto_response_triggered: bool,
+    pub severity_score: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SecurityIncidentType {
+    FailedAuthenticationAttempts,
+    UnusualAccessPatterns,
+    SuspiciousDeviceActivity,
+    PotentialDataBreach,
+    MalwareIndicators,
+    UnauthorizedDeviceAccess,
+    KeyExposureRisk,
+    SystemCompromise,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DeviceBehaviorBaseline {
+    pub device_id: String,
+    pub typical_access_hours: Vec<u8>,
+    pub typical_usage_patterns: HashMap<String, f64>,
+    pub last_updated: DateTime<Utc>,
+    pub access_frequency: f64,
+    pub typical_locations: Vec<String>,
+}
+
+impl IncidentDetectionSystem {
+    pub fn new() -> Self {
+        Self {
+            failed_auth_threshold: 5,
+            suspicious_activity_window_minutes: 15,
+            unusual_access_pattern_threshold: 0.8,
+            device_compromise_indicators: vec![
+                "multiple_failed_biometric".to_string(),
+                "unknown_location_access".to_string(),
+                "unusual_timing".to_string(),
+                "modified_device_fingerprint".to_string(),
+                "suspicious_network_activity".to_string(),
+            ],
+            breach_attempt_patterns: vec![
+                "rapid_multiple_access_attempts".to_string(),
+                "access_from_impossible_location".to_string(),
+                "simultaneous_multi_device_access".to_string(),
+                "unusual_data_access_patterns".to_string(),
+            ],
+            auto_response_enabled: true,
+            detection_sensitivity: DetectionSensitivity::High,
+            active_incidents: HashMap::new(),
+            device_behavior_baselines: HashMap::new(),
+        }
+    }
+
+    pub fn detect_incident(&mut self, device_id: &str, event_data: &str) -> Result<bool, String> {
+        let event_json: serde_json::Value = serde_json::from_str(event_data)
+            .map_err(|e| format!("Invalid event data JSON: {}", e))?;
+
+        let mut incident_detected = false;
+        let mut detected_incidents = Vec::new();
+
+        // Check for failed authentication attempts
+        if let Some(auth_failures) = event_json.get("failed_auth_count").and_then(|v| v.as_u64()) {
+            if auth_failures as u32 >= self.failed_auth_threshold {
+                detected_incidents.push(self.create_incident(
+                    SecurityIncidentType::FailedAuthenticationAttempts,
+                    device_id,
+                    vec![format!("Failed authentication attempts: {}", auth_failures)],
+                    0.9,
+                    8,
+                ));
+                incident_detected = true;
+            }
+        }
+
+        // Check for unusual access patterns
+        if let Some(access_time) = event_json.get("access_time").and_then(|v| v.as_str()) {
+            if let Ok(access_dt) = DateTime::parse_from_rfc3339(access_time) {
+                if self.is_unusual_access_time(device_id, access_dt.hour() as u8) {
+                    detected_incidents.push(self.create_incident(
+                        SecurityIncidentType::UnusualAccessPatterns,
+                        device_id,
+                        vec!["Access at unusual time".to_string()],
+                        0.7,
+                        6,
+                    ));
+                    incident_detected = true;
+                }
+            }
+        }
+
+        // Check for device compromise indicators
+        if let Some(indicators) = event_json.get("compromise_indicators").and_then(|v| v.as_array()) {
+            for indicator in indicators {
+                if let Some(indicator_str) = indicator.as_str() {
+                    if self.device_compromise_indicators.contains(&indicator_str.to_string()) {
+                        detected_incidents.push(self.create_incident(
+                            SecurityIncidentType::SuspiciousDeviceActivity,
+                            device_id,
+                            vec![format!("Compromise indicator detected: {}", indicator_str)],
+                            0.8,
+                            9,
+                        ));
+                        incident_detected = true;
+                    }
+                }
+            }
+        }
+
+        // Check for potential data breach patterns
+        if let Some(data_access) = event_json.get("data_access_volume").and_then(|v| v.as_f64()) {
+            if self.is_unusual_data_access_volume(device_id, data_access) {
+                detected_incidents.push(self.create_incident(
+                    SecurityIncidentType::PotentialDataBreach,
+                    device_id,
+                    vec![format!("Unusual data access volume: {}", data_access)],
+                    0.6,
+                    7,
+                ));
+                incident_detected = true;
+            }
+        }
+
+        // Store detected incidents
+        for incident in detected_incidents {
+            self.active_incidents.insert(incident.id.clone(), incident);
+        }
+
+        // Update device behavior baseline
+        self.update_device_baseline(device_id, &event_json);
+
+        Ok(incident_detected)
+    }
+
+    pub fn get_active_incidents(&self) -> Result<String, String> {
+        serde_json::to_string(&self.active_incidents)
+            .map_err(|e| format!("Failed to serialize incidents: {}", e))
+    }
+
+    pub fn update_thresholds(&mut self, thresholds_json: &str) -> Result<(), String> {
+        let thresholds: serde_json::Value = serde_json::from_str(thresholds_json)
+            .map_err(|e| format!("Invalid thresholds JSON: {}", e))?;
+
+        if let Some(failed_auth) = thresholds.get("failed_auth_threshold").and_then(|v| v.as_u64()) {
+            self.failed_auth_threshold = failed_auth as u32;
+        }
+
+        if let Some(activity_window) = thresholds.get("suspicious_activity_window_minutes").and_then(|v| v.as_u64()) {
+            self.suspicious_activity_window_minutes = activity_window as u32;
+        }
+
+        if let Some(access_threshold) = thresholds.get("unusual_access_pattern_threshold").and_then(|v| v.as_f64()) {
+            self.unusual_access_pattern_threshold = access_threshold;
+        }
+
+        if let Some(sensitivity) = thresholds.get("detection_sensitivity").and_then(|v| v.as_str()) {
+            self.detection_sensitivity = match sensitivity {
+                "low" => DetectionSensitivity::Low,
+                "medium" => DetectionSensitivity::Medium,
+                "high" => DetectionSensitivity::High,
+                "critical" => DetectionSensitivity::Critical,
+                _ => DetectionSensitivity::High,
+            };
+        }
+
+        Ok(())
+    }
+
+    fn create_incident(
+        &self,
+        incident_type: SecurityIncidentType,
+        device_id: &str,
+        indicators: Vec<String>,
+        confidence: f64,
+        severity: u8,
+    ) -> DetectedIncident {
+        DetectedIncident {
+            id: Uuid::new_v4().to_string(),
+            incident_type,
+            detected_at: Utc::now(),
+            confidence_score: confidence,
+            affected_devices: vec![device_id.to_string()],
+            indicators,
+            auto_response_triggered: self.auto_response_enabled && severity >= 8,
+            severity_score: severity,
+        }
+    }
+
+    fn is_unusual_access_time(&self, device_id: &str, access_hour: u8) -> bool {
+        if let Some(baseline) = self.device_behavior_baselines.get(device_id) {
+            !baseline.typical_access_hours.contains(&access_hour)
+        } else {
+            // No baseline yet, assume normal business hours (9-17) are typical
+            !(9..=17).contains(&access_hour)
+        }
+    }
+
+    fn is_unusual_data_access_volume(&self, device_id: &str, volume: f64) -> bool {
+        if let Some(baseline) = self.device_behavior_baselines.get(device_id) {
+            if let Some(typical_volume) = baseline.typical_usage_patterns.get("data_access_volume") {
+                volume > typical_volume * 3.0 // 3x typical volume is suspicious
+            } else {
+                false
+            }
+        } else {
+            volume > 1000000.0 // 1MB default threshold for new devices
+        }
+    }
+
+    fn update_device_baseline(&mut self, device_id: &str, event_data: &serde_json::Value) {
+        let baseline = self.device_behavior_baselines.entry(device_id.to_string())
+            .or_insert_with(|| DeviceBehaviorBaseline {
+                device_id: device_id.to_string(),
+                typical_access_hours: Vec::new(),
+                typical_usage_patterns: HashMap::new(),
+                last_updated: Utc::now(),
+                access_frequency: 0.0,
+                typical_locations: Vec::new(),
+            });
+
+        // Update access hours
+        if let Some(access_time) = event_data.get("access_time").and_then(|v| v.as_str()) {
+            if let Ok(access_dt) = DateTime::parse_from_rfc3339(access_time) {
+                let hour = access_dt.hour() as u8;
+                if !baseline.typical_access_hours.contains(&hour) {
+                    baseline.typical_access_hours.push(hour);
+                }
+            }
+        }
+
+        // Update usage patterns
+        if let Some(volume) = event_data.get("data_access_volume").and_then(|v| v.as_f64()) {
+            let current_avg = baseline.typical_usage_patterns.get("data_access_volume").unwrap_or(&0.0);
+            let new_avg = (current_avg + volume) / 2.0;
+            baseline.typical_usage_patterns.insert("data_access_volume".to_string(), new_avg);
+        }
+
+        baseline.last_updated = Utc::now();
     }
 }
