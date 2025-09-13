@@ -1,0 +1,64 @@
+name: Build WASM
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'libs/crypto-core/**'
+      - '.github/workflows/build-wasm.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'libs/crypto-core/**'
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 'latest'
+
+      - name: Build WASM
+        run: |
+          cd libs/crypto-core
+          pnpm install
+          pnpm run build:release
+
+      - name: Check if WASM changed
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain libs/crypto-core/pkg/)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "WASM files have changed"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No WASM changes detected"
+          fi
+
+      - name: Commit WASM files
+        if: steps.verify-changed-files.outputs.changed == 'true' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add libs/crypto-core/pkg/
+          git commit -m "chore: update WASM build artifacts [skip ci]" || exit 0
+          git push

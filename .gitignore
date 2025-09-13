@@ -129,11 +129,11 @@ target/
 **/*.rs.bk
 Cargo.lock
 
-# WASM generated files
-pkg/
+# WASM generated files - but allow crypto-core pkg for Vercel
 pkg-web/
 pkg-node/
-*.wasm
+!libs/crypto-core/pkg/
+# *.wasm - Allow WASM files for deployment
 
 # Rust profiling
 perf.data

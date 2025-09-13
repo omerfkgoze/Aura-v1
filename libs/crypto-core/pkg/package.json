@@ -1,0 +1,17 @@
+{
+  "name": "crypto-core",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "crypto_core_bg.wasm",
+    "crypto_core.js",
+    "crypto_core_bg.js",
+    "crypto_core.d.ts"
+  ],
+  "main": "crypto_core.js",
+  "types": "crypto_core.d.ts",
+  "sideEffects": [
+    "./crypto_core.js",
+    "./snippets/*"
+  ]
+}
