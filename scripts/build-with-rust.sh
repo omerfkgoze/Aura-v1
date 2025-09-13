@@ -71,6 +71,11 @@ pnpm install --no-frozen-lockfile
 echo "🔧 Building shared dependencies..."
 pnpm nx build shared-types utils crypto-core
 
+# Copy WASM files to web app public directory for static serving
+echo "📁 Copying WASM files to web app..."
+mkdir -p apps/web/public/static/wasm
+cp libs/crypto-core/pkg/*.wasm apps/web/public/static/wasm/
+
 # Build web app directly (avoiding NX environment issues)
 echo "🔧 Building web application..."
 cd apps/web

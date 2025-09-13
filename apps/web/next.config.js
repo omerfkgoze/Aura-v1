@@ -20,6 +20,20 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
+  // Copy WASM files to static directory
+  async headers() {
+    return [
+      {
+        source: '/static/wasm/:path*',
+        headers: [
+          { key: 'Content-Type', value: 'application/wasm' },
+          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+        ],
+      },
+    ];
+  },
+
   // Webpack configuration to support WASM and ignore problematic files
   webpack: config => {
     // Enable WASM support
@@ -34,6 +48,13 @@ const nextConfig = {
       test: /\.wasm$/,
       type: 'webassembly/async',
     });
+
+    // Handle WASM files properly
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // Direct WASM file handling
+      '@/crypto-core-wasm': require.resolve('../../libs/crypto-core/pkg/crypto_core_bg.wasm'),
+    };
 
     // Ignore Vite-specific files during Next.js build
     config.module.rules.push({

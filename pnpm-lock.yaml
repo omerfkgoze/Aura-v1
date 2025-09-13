@@ -133,6 +133,9 @@ importers:
       react-dom:
         specifier: ^19.1.1
         version: 19.1.1(react@19.1.1)
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@nx/next':
         specifier: ^21.5.1
@@ -161,6 +164,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.6)
+      copy-webpack-plugin:
+        specifier: ^13.0.1
+        version: 13.0.1(webpack@5.101.3)
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -4237,6 +4243,12 @@ packages:
   copy-webpack-plugin@10.2.4:
     resolution: {integrity: sha512-xFVltahqlsRcyyJqQbDY6EYTtyQZF9rf+JPjwHObLdPFMEISqkFkr7mFoVOC6BfYS/dNThyoQKvziugm+OnwBg==}
     engines: {node: '>= 12.20.0'}
+    peerDependencies:
+      webpack: ^5.1.0
+
+  copy-webpack-plugin@13.0.1:
+    resolution: {integrity: sha512-J+YV3WfhY6W/Xf9h+J1znYuqTye2xkBUIGyTPWuBAT27qajBa5mR4f8WBmfDY3YjRftT2kqZZiLi1qf0H+UOFw==}
+    engines: {node: '>= 18.12.0'}
     peerDependencies:
       webpack: ^5.1.0
 
@@ -13755,7 +13767,7 @@ snapshots:
       sirv: 3.0.1
       tinyglobby: 0.2.14
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@18.16.9)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
+      vitest: 2.1.9(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
 
   '@vitest/utils@1.6.1':
     dependencies:
@@ -14718,6 +14730,15 @@ snapshots:
       serialize-javascript: 6.0.2
       webpack: 5.101.3
 
+  copy-webpack-plugin@13.0.1(webpack@5.101.3):
+    dependencies:
+      glob-parent: 6.0.2
+      normalize-path: 3.0.0
+      schema-utils: 4.3.2
+      serialize-javascript: 6.0.2
+      tinyglobby: 0.2.14
+      webpack: 5.101.3
+
   core-js-compat@3.45.1:
     dependencies:
       browserslist: 4.25.4
@@ -15639,9 +15660,9 @@ snapshots:
     dependencies:
       bser: 2.1.1
 
-  fdir@6.5.0(picomatch@4.0.2):
+  fdir@6.5.0(picomatch@4.0.3):
     optionalDependencies:
-      picomatch: 4.0.2
+      picomatch: 4.0.3
 
   fecha@4.2.3:
     optional: true
@@ -19907,8 +19928,8 @@ snapshots:
 
   tinyglobby@0.2.14:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.2)
-      picomatch: 4.0.2
+      fdir: 6.5.0(picomatch@4.0.3)
+      picomatch: 4.0.3
 
   tinypool@0.8.4: {}
 
