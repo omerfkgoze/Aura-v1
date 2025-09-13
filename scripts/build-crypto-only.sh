@@ -44,7 +44,7 @@ rustup target add wasm32-unknown-unknown
 
 # Build crypto-core WASM
 echo "🔧 Building crypto-core WASM module..."
-cd libs/crypto-core
+cd ../../libs/crypto-core
 wasm-pack build --target bundler --out-dir pkg
 cd ../..
 
