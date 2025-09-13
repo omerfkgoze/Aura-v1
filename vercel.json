@@ -1,10 +1,11 @@
 {
   "version": 2,
   "name": "aura-app",
-  "buildCommand": "bash scripts/build-crypto-only.sh",
-  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "cd apps/web && pnpm build",
+  "installCommand": "pnpm install --frozen-lockfile",
   "rootDirectory": "apps/web",
-
+  "framework": "nextjs",
+  "outputDirectory": "apps/web/.next",
   "env": {
     "NODE_ENV": "production",
     "SECURITY_AUDIT_ENABLED": "true",

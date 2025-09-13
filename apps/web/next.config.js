@@ -4,6 +4,10 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  // Monorepo configuration
+  transpilePackages: ['shared-types', 'utils', 'crypto-core'],
+  outputFileTracingRoot: require('path').join(__dirname, '../../'),
+
   // Vercel deployment with API routes support
   images: {
     formats: ['image/avif', 'image/webp'],
