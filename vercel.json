@@ -4,7 +4,7 @@
   "buildCommand": "bash scripts/build-with-rust.sh",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": null,
-  "outputDirectory": "apps/web/out",
+  "outputDirectory": "apps/web/.next",
 
   "env": {
     "NODE_ENV": "production",
