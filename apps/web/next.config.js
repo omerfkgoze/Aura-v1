@@ -6,7 +6,7 @@ const nextConfig = {
 
   // Monorepo configuration
   transpilePackages: ['shared-types', 'utils', 'crypto-core'],
-  outputFileTracingRoot: require('path').join(__dirname, '../../'),
+  // outputFileTracingRoot: require('path').join(__dirname, '../../'), // Removed for Vercel deployment
 
   // Vercel deployment with API routes support
   images: {
