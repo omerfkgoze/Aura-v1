@@ -6,6 +6,7 @@
   "targets": {
     "build": {
       "executor": "nx:run-commands",
+      "dependsOn": [],
       "outputs": ["{projectRoot}/.next"],
       "options": {
         "command": "next build --no-lint",
