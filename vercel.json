@@ -2,6 +2,7 @@
   "version": 2,
   "name": "aura-app",
   "buildCommand": "bash scripts/build-crypto-only.sh && cd apps/web && npm run build",
+  "outputDirectory": "apps/web/.next",
   "installCommand": "pnpm install --no-frozen-lockfile",
 
   "env": {
