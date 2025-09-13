@@ -53,12 +53,17 @@ const nextConfig = {
       type: 'webassembly/async',
     });
 
-    // Handle WASM files properly
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      // Direct WASM file handling
-      '@/crypto-core-wasm': require.resolve('../../libs/crypto-core/pkg/crypto_core_bg.wasm'),
-    };
+    // Handle WASM files properly - conditional loading
+    const cryptoWasmPath = '../../libs/crypto-core/pkg/crypto_core_bg.wasm';
+    try {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Direct WASM file handling (if exists)
+        '@/crypto-core-wasm': require.resolve(cryptoWasmPath),
+      };
+    } catch (err) {
+      console.log('WASM file not found, skipping alias:', cryptoWasmPath);
+    }
 
     // Ignore Vite-specific files during Next.js build
     config.module.rules.push({

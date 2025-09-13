@@ -27,7 +27,9 @@
   },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "pnpm run build:deps",
     "build": "next build",
+    "build:deps": "echo 'Checking crypto-core WASM...' && ls -la ../../libs/crypto-core/pkg/ || echo 'crypto-core pkg not found, skipping'",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
