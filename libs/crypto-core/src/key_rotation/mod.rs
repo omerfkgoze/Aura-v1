@@ -43,6 +43,7 @@ pub mod versioned_key;
 pub mod scheduler;
 pub mod manager;
 pub mod migration;
+pub mod emergency;
 
 // Re-export main types for convenience
 pub use types::{KeyVersion, KeyStatus, KeyRotationError};

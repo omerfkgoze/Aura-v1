@@ -279,39 +279,47 @@ impl ProgressiveMigrationManager {
     ) -> js_sys::Object {
         let result = js_sys::Object::new();
         
-        if let Some(checkpoint) = self.migration_state.get_mut(migration_id) {
+        let (current_batch, completion_rate, estimated_remaining, integrity_valid, is_complete) = if let Some(checkpoint) = self.migration_state.get_mut(migration_id) {
+            let start_time = checkpoint.last_checkpoint_time;
+            let integrity_hash = checkpoint.integrity_hash.clone();
+            
             // Update checkpoint
             checkpoint.current_batch += 1;
             checkpoint.processed_count += processed_count;
             checkpoint.failed_count += failed_count;
             checkpoint.last_checkpoint_time = Date::now();
             
-            // Validate data integrity
-            let integrity_valid = self.validate_batch_integrity(batch_data, &checkpoint.integrity_hash);
-            
             // Calculate progress
-            let total_processed = checkpoint.processed_count + checkpoint.failed_count;
+            let _total_processed = checkpoint.processed_count + checkpoint.failed_count;
             let completion_rate = if checkpoint.total_batches > 0 {
                 checkpoint.current_batch as f64 / checkpoint.total_batches as f64
             } else { 1.0 };
             
             // Estimate remaining time
-            let elapsed_time = checkpoint.last_checkpoint_time - 
-                self.migration_state.get(migration_id).unwrap().last_checkpoint_time;
+            let elapsed_time = checkpoint.last_checkpoint_time - start_time;
             let estimated_remaining = if completion_rate > 0.0 {
                 elapsed_time * (1.0 - completion_rate) / completion_rate
             } else { 0.0 };
             
-            js_sys::Reflect::set(&result, &JsValue::from_str("success"), &JsValue::from_bool(true)).unwrap();
-            js_sys::Reflect::set(&result, &JsValue::from_str("currentBatch"), &JsValue::from_f64(checkpoint.current_batch as f64)).unwrap();
-            js_sys::Reflect::set(&result, &JsValue::from_str("completionRate"), &JsValue::from_f64(completion_rate)).unwrap();
-            js_sys::Reflect::set(&result, &JsValue::from_str("integrityValid"), &JsValue::from_bool(integrity_valid)).unwrap();
-            js_sys::Reflect::set(&result, &JsValue::from_str("estimatedTimeRemaining"), &JsValue::from_f64(estimated_remaining)).unwrap();
-            js_sys::Reflect::set(&result, &JsValue::from_str("isComplete"), &JsValue::from_bool(checkpoint.current_batch >= checkpoint.total_batches)).unwrap();
+            let is_complete = checkpoint.current_batch >= checkpoint.total_batches;
+            let current_batch = checkpoint.current_batch;
+            
+            (current_batch, completion_rate, estimated_remaining, integrity_hash, is_complete)
         } else {
             js_sys::Reflect::set(&result, &JsValue::from_str("success"), &JsValue::from_bool(false)).unwrap();
             js_sys::Reflect::set(&result, &JsValue::from_str("error"), &JsValue::from_str("Migration not found")).unwrap();
-        }
+            return result;
+        };
+        
+        // Validate data integrity outside the borrow scope
+        let integrity_valid = self.validate_batch_integrity(batch_data, &integrity_valid);
+        
+        js_sys::Reflect::set(&result, &JsValue::from_str("success"), &JsValue::from_bool(true)).unwrap();
+        js_sys::Reflect::set(&result, &JsValue::from_str("currentBatch"), &JsValue::from_f64(current_batch as f64)).unwrap();
+        js_sys::Reflect::set(&result, &JsValue::from_str("completionRate"), &JsValue::from_f64(completion_rate)).unwrap();
+        js_sys::Reflect::set(&result, &JsValue::from_str("integrityValid"), &JsValue::from_bool(integrity_valid)).unwrap();
+        js_sys::Reflect::set(&result, &JsValue::from_str("estimatedTimeRemaining"), &JsValue::from_f64(estimated_remaining)).unwrap();
+        js_sys::Reflect::set(&result, &JsValue::from_str("isComplete"), &JsValue::from_bool(is_complete)).unwrap();
 
         result
     }
@@ -337,6 +345,8 @@ impl ProgressiveMigrationManager {
                     RotationTiming::Immediate => "immediate",
                     RotationTiming::Background => "background",
                     RotationTiming::Scheduled => "scheduled",
+                    RotationTiming::LowUsage => "lowusage",
+                    RotationTiming::UserControlled => "usercontrolled",
                 }
             )).unwrap();
             js_sys::Reflect::set(&result, &JsValue::from_str("lastCheckpoint"), &JsValue::from_f64(checkpoint.last_checkpoint_time)).unwrap();

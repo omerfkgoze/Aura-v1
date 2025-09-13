@@ -132,6 +132,7 @@ pub enum RotationTiming {
     LowUsage,
     Scheduled,
     UserControlled,
+    Background,
 }
 
 /// Error types for key rotation operations
@@ -168,3 +169,14 @@ impl std::fmt::Display for KeyRotationError {
 }
 
 impl std::error::Error for KeyRotationError {}
+
+/// Result type for key rotation operations
+#[wasm_bindgen]
+#[derive(Debug, Clone, PartialEq)]
+pub enum RotationResult {
+    Success,
+    Failed,
+    Pending,
+    RequiresUserConfirmation,
+    PolicyViolation,
+}

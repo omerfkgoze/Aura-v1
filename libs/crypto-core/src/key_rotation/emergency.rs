@@ -1,7 +1,6 @@
-use crate::key_rotation::types::{SecurityEventType, RotationResult};
+use crate::key_rotation::types::{RotationResult};
 use crate::key_rotation::scheduler::SecurityEvent;
 use crate::key_rotation::versioned_key::VersionedKey;
-use crate::key_rotation::audit::{AuditTrailManager, AuditEvent};
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -22,7 +21,7 @@ pub enum EmergencyTriggerType {
     ManualTrigger,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum EmergencyStatus {
     Detected,
     Responding,
@@ -139,7 +138,6 @@ pub struct EmergencyRotationManager {
     recovery_plans: HashMap<String, EmergencyRecoveryPlan>,
     isolated_devices: HashMap<String, DateTime<Utc>>,
     invalidated_keys: HashMap<String, DateTime<Utc>>,
-    audit_manager: AuditTrailManager,
     auto_response_enabled: bool,
     max_response_time: Duration,
     escalation_threshold: u8,
@@ -155,7 +153,6 @@ impl EmergencyRotationManager {
             recovery_plans: HashMap::new(),
             isolated_devices: HashMap::new(),
             invalidated_keys: HashMap::new(),
-            audit_manager: AuditTrailManager::new(),
             auto_response_enabled: true,
             max_response_time: Duration::minutes(15),
             escalation_threshold: 7,
@@ -175,7 +172,7 @@ impl EmergencyRotationManager {
         
         let incident = EmergencyIncident {
             id: incident_id.clone(),
-            trigger_type,
+            trigger_type: trigger_type.clone(),
             severity,
             detected_at: Utc::now(),
             status: EmergencyStatus::Detected,
@@ -190,22 +187,9 @@ impl EmergencyRotationManager {
             escalation_contacts: self.get_escalation_contacts(severity),
         };
 
-        // Log emergency incident
-        let audit_event = AuditEvent {
-            event_id: Uuid::new_v4().to_string(),
-            event_type: "emergency_incident_detected".to_string(),
-            timestamp: Utc::now(),
-            device_id: "system".to_string(),
-            user_id: "system".to_string(),
-            metadata: format!("trigger_type={:?}, severity={}, devices={}", 
-                trigger_type, severity, affected_devices.len()),
-            success: true,
-            error_message: None,
-        };
-        
-        if let Err(e) = self.audit_manager.log_event(audit_event) {
-            eprintln!("Failed to log emergency incident: {}", e);
-        }
+        // Log emergency incident (audit system removed for now)
+        println!("Emergency incident detected: trigger_type={:?}, severity={}, devices={}", 
+            trigger_type, severity, affected_devices.len());
 
         self.active_incidents.insert(incident_id.clone(), incident);
 
@@ -276,20 +260,8 @@ impl EmergencyRotationManager {
             response.status = EmergencyStatus::Isolating;
         }
 
-        // Log isolation action
-        let audit_event = AuditEvent {
-            event_id: Uuid::new_v4().to_string(),
-            event_type: "emergency_device_isolated".to_string(),
-            timestamp: Utc::now(),
-            device_id: device_id.to_string(),
-            user_id: "system".to_string(),
-            metadata: format!("incident_id={}, action_id={}", incident_id, action.id),
-            success: true,
-            error_message: None,
-        };
-
-        self.audit_manager.log_event(audit_event)
-            .map_err(|e| format!("Failed to log device isolation: {}", e))?;
+        // Log isolation action (audit system removed for now)
+        println!("Device {} isolated due to incident {}", device_id, incident_id);
 
         Ok(())
     }
@@ -315,21 +287,8 @@ impl EmergencyRotationManager {
             response.keys_invalidated.push(key_id.to_string());
         }
 
-        // Log key invalidation
-        let audit_event = AuditEvent {
-            event_id: Uuid::new_v4().to_string(),
-            event_type: "emergency_key_invalidated".to_string(),
-            timestamp: Utc::now(),
-            device_id: "system".to_string(),
-            user_id: "system".to_string(),
-            metadata: format!("key_id={}, incident_id={}, action_id={}", 
-                key_id, incident_id, action.id),
-            success: true,
-            error_message: None,
-        };
-
-        self.audit_manager.log_event(audit_event)
-            .map_err(|e| format!("Failed to log key invalidation: {}", e))?;
+        // Log key invalidation (audit system removed for now)
+        println!("Key {} invalidated due to incident {}", key_id, incident_id);
 
         Ok(())
     }
@@ -359,24 +318,9 @@ impl EmergencyRotationManager {
             }
         }
 
-        // Log emergency rotation completion
-        let audit_event = AuditEvent {
-            event_id: Uuid::new_v4().to_string(),
-            event_type: "emergency_rotation_completed".to_string(),
-            timestamp: Utc::now(),
-            device_id: "system".to_string(),
-            user_id: "system".to_string(),
-            metadata: format!("incident_id={}, keys_rotated={}", incident_id, rotated_keys.len()),
-            success: !rotated_keys.is_empty(),
-            error_message: if rotated_keys.is_empty() { 
-                Some("No keys were successfully rotated".to_string()) 
-            } else { 
-                None 
-            },
-        };
-
-        self.audit_manager.log_event(audit_event)
-            .map_err(|e| format!("Failed to log emergency rotation: {}", e))?;
+        // Log emergency rotation completion (audit system removed for now)
+        println!("Emergency rotation completed: incident_id={}, keys_rotated={}", 
+            incident_id, rotated_keys.len());
 
         Ok(rotated_keys)
     }
@@ -420,21 +364,9 @@ impl EmergencyRotationManager {
             response.data_accessibility = true;
         }
 
-        // Log recovery completion
-        let audit_event = AuditEvent {
-            event_id: Uuid::new_v4().to_string(),
-            event_type: "emergency_recovery_completed".to_string(),
-            timestamp: Utc::now(),
-            device_id: "system".to_string(),
-            user_id: "system".to_string(),
-            metadata: format!("incident_id={}, steps_completed={}", 
-                incident_id, recovery_plan.recovery_steps.len()),
-            success: true,
-            error_message: None,
-        };
-
-        self.audit_manager.log_event(audit_event)
-            .map_err(|e| format!("Failed to log recovery completion: {}", e))?;
+        // Log recovery completion (audit system removed for now)
+        println!("Emergency recovery completed: incident_id={}, steps_completed={}", 
+            incident_id, recovery_plan.recovery_steps.len());
 
         Ok(())
     }
@@ -486,20 +418,8 @@ impl EmergencyRotationManager {
             return Err("Device was not isolated".to_string());
         }
 
-        // Log access restoration
-        let audit_event = AuditEvent {
-            event_id: Uuid::new_v4().to_string(),
-            event_type: "device_access_restored".to_string(),
-            timestamp: Utc::now(),
-            device_id: device_id.to_string(),
-            user_id: "system".to_string(),
-            metadata: format!("incident_id={}", incident_id),
-            success: true,
-            error_message: None,
-        };
-
-        self.audit_manager.log_event(audit_event)
-            .map_err(|e| format!("Failed to log access restoration: {}", e))?;
+        // Log access restoration (audit system removed for now)
+        println!("Device access restored: device_id={}, incident_id={}", device_id, incident_id);
 
         Ok(())
     }

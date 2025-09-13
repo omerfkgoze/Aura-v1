@@ -200,8 +200,8 @@ impl VersionedKey {
         // Current version can always decrypt itself
         array.push(&JsValue::from_str(&self.version.to_string()));
         
-        // If we have a predecessor, we can decrypt that too
-        if let Some(predecessor) = &self.predecessor_version {
+        // If we have predecessors, we can decrypt those too
+        for predecessor in &self.predecessor_versions {
             array.push(&JsValue::from_str(&predecessor.to_string()));
         }
         
@@ -235,6 +235,11 @@ impl VersionedKey {
             array.push(&JsValue::from_str(&version.to_string()));
         }
         array
+    }
+
+    #[wasm_bindgen(js_name = setPredecessorVersion)]
+    pub fn set_predecessor_version(&mut self, version: KeyVersion) {
+        self.add_predecessor_version(version);
     }
 
     #[wasm_bindgen(js_name = getSupportedDecryptionVersions)]
@@ -355,13 +360,13 @@ impl VersionedKey {
         // In a real implementation, this would use a proper crypto hash
         let data = format!("{}{}{:?}{}", 
             self.version.to_string(),
-            self.purpose as u32,
+            self.purpose.clone() as u32,
             self.status,
             self.creation_time.timestamp()
         );
         
         // Simplified hash - in production use SHA-256 or similar
-        Ok(format!("{:x}", data.len() * 31 + data.chars().map(|c| c as u32).sum::<u32>()))
+        Ok(format!("{:x}", data.len() * 31 + data.chars().map(|c| c as usize).sum::<usize>()))
     }
 
     // Helper method for version compatibility checking

@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 use std::collections::HashMap;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Duration, Utc, Timelike};
 use crate::key_rotation::types::{SecurityEventType, RotationTrigger, RotationTiming, KeyRotationError};
 use crate::key_rotation::emergency::{EmergencyRotationManager, EmergencyTriggerType};
 use serde::{Deserialize, Serialize};
@@ -96,7 +96,7 @@ impl RotationPolicy {
 
     #[wasm_bindgen(js_name = removeSecurityEventTrigger)]
     pub fn remove_security_event_trigger(&mut self, event_type: SecurityEventType) {
-        self.security_event_triggers.retain(|&e| e != event_type);
+        self.security_event_triggers.retain(|e| *e != event_type);
     }
 
     #[wasm_bindgen(js_name = hasSecurityEventTrigger)]
@@ -131,8 +131,8 @@ impl RotationPolicy {
         security_event: Option<SecurityEventType>
     ) -> bool {
         // Check emergency security events
-        if let Some(event) = security_event {
-            if self.emergency_rotation_enabled && self.security_event_triggers.contains(&event) {
+        if let Some(ref event) = security_event {
+            if self.emergency_rotation_enabled && self.security_event_triggers.contains(event) {
                 return true;
             }
         }
@@ -556,7 +556,7 @@ impl KeyRotationScheduler {
             "pause_during_usage" => {
                 if let Ok(pause) = value.parse::<bool>() {
                     self.user_preferences.set_pause_during_active_usage(pause);
-                    Ok()
+                    Ok(())
                 } else {
                     Err(JsValue::from_str("Invalid boolean value"))
                 }
@@ -564,7 +564,7 @@ impl KeyRotationScheduler {
             "emergency_confirmation" => {
                 if let Ok(requires) = value.parse::<bool>() {
                     self.user_preferences.set_emergency_rotation_requires_confirmation(requires);
-                    Ok()
+                    Ok(())
                 } else {
                     Err(JsValue::from_str("Invalid boolean value"))
                 }
@@ -698,6 +698,7 @@ impl KeyRotationScheduler {
                     diff <= 2 || diff >= 22 // Handle wrap around (e.g., 23-1)
                 },
                 RotationTiming::UserControlled => false,
+                RotationTiming::Background => true, // Always allow background rotations
             }
         } else {
             false
