@@ -22,8 +22,21 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Webpack configuration to ignore problematic files
+  // Webpack configuration to support WASM and ignore problematic files
   webpack: config => {
+    // Enable WASM support
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+      syncWebAssembly: true,
+    };
+
+    // Add WASM rule
+    config.module.rules.push({
+      test: /\.wasm$/,
+      type: 'webassembly/async',
+    });
+
     // Ignore Vite-specific files during Next.js build
     config.module.rules.push({
       test: /vite-sri-plugin\.ts$/,
