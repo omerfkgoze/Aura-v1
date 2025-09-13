@@ -4,12 +4,10 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
-  // Static export for Vercel deployment
-  output: 'export',
-  distDir: 'out',
-  trailingSlash: true,
+  // Vercel deployment with API routes support
   images: {
-    unoptimized: true, // Required for static export
+    formats: ['image/avif', 'image/webp'],
+    domains: ['localhost'], // Add your image domains as needed
   },
 
   // Disable TypeScript build-time type checking for build issues

@@ -1,5 +1,5 @@
 // Promise-based async interface for TypeScript integration
-import init_wasm, * as wasm from '../pkg/crypto_core';
+import init, * as wasm from '../pkg/crypto_core';
 import type {
   CryptoEnvelope,
   CryptoKey,
@@ -59,7 +59,7 @@ export async function initializeCrypto(): Promise<ModuleIntegrity> {
     initPromise = (async () => {
       try {
         // Initialize WASM module
-        await init_wasm;
+        await init();
 
         // Perform integrity verification
         const integrity = wasm.init_crypto_core_with_verification();
