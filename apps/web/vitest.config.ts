@@ -30,6 +30,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@aura/crypto-core': path.resolve(__dirname, '../../libs/crypto-core/src'),
+      '@aura/shared-types': path.resolve(__dirname, '../../libs/shared-types/src'),
     },
   },
 });
