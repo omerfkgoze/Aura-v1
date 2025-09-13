@@ -383,11 +383,43 @@ pnpm nx run-many --target=build --all
 pnpm nx run-many --target=test:integration --all
 ```
 
+### Vercel Deployment (Web App)
+
+**⚠️ CRITICAL: Vercel Configuration for Monorepo**
+
+#### Required Vercel Dashboard Settings:
+
+1. **Project Settings** → **General** → **Root Directory**: `apps/web`
+2. **Build & Output Settings**: Let Vercel auto-detect (DO NOT override)
+3. **Framework Preset**: Next.js (should auto-detect)
+
+#### Common Deployment Issues:
+
+**❌ Problem**: Build succeeds but all pages return 404
+
+**✅ Solution**: Verify Root Directory is set to `apps/web` in Vercel Dashboard
+
+**❌ Problem**: "cargo metadata" errors during build
+
+**✅ Solution**: Pre-built WASM artifacts are included in git (libs/crypto-core/pkg/)
+
+**❌ Problem**: "outputDirectory not found" error
+
+**✅ Solution**: Remove explicit buildCommand/outputDirectory from vercel.json
+
+#### Deployment Checklist:
+
+- [ ] Root Directory: `apps/web` ✅
+- [ ] Build Command: Auto-detected ✅
+- [ ] Output Directory: Auto-detected ✅
+- [ ] Environment Variables: Set in Vercel Dashboard ✅
+- [ ] Custom Domain: Configure DNS (optional) ✅
+
 ### Environment Promotion
 
 1. **Development**: Local environment with Docker/Supabase
-2. **Staging**: Cloud deployment with Supabase staging project
-3. **Production**: Full cloud deployment with monitoring
+2. **Staging**: Vercel Preview + Supabase staging project
+3. **Production**: Vercel Production + Supabase production project
 
 ---
 

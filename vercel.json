@@ -1,5 +1,19 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  // =============================================================================
+  // VERCEL DEPLOYMENT CONFIGURATION - MONOREPO SETUP
+  // =============================================================================
+
+  // CRITICAL: Root Directory MUST be set to 'apps/web' in Vercel Dashboard
+  // Project Settings → General → Root Directory → 'apps/web'
+  // Without this, deployment will succeed but return 404 for all pages
+
+  // BUILD COMMANDS: Handled automatically by Vercel when Root Directory is correct
+  // - Vercel auto-detects Next.js and runs 'pnpm run build'
+  // - Dependencies are resolved from monorepo root automatically
+  // - DO NOT override build commands unless absolutely necessary
+
   "functions": {
     "src/app/api/internal/health-check/route.ts": {
       "maxDuration": 30

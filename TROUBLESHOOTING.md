@@ -547,4 +547,91 @@ echo "Supabase: $(supabase --version)"
 
 ---
 
+## 🌐 Vercel Deployment Issues
+
+### Build Succeeds but Pages Return 404
+
+**⚠️ CRITICAL ISSUE - Most Common Vercel Problem**
+
+**Symptoms:**
+
+- Vercel build completes successfully
+- All pages return "404: NOT_FOUND" or "Code: NOT_FOUND"
+- API routes might work but static/dynamic pages don't
+
+**Root Cause:**
+Vercel is serving from wrong directory due to monorepo configuration
+
+**✅ Solution - Vercel Dashboard Settings:**
+
+1. **Go to Vercel Dashboard** → **Your Project** → **Settings**
+2. **General** tab → **Root Directory** → **OVERRIDE**
+3. **Set to**: `apps/web`
+4. **Save** and **Redeploy**
+
+**🚨 Critical Settings Checklist:**
+
+- [ ] Root Directory: `apps/web` (NOT empty, NOT repo root)
+- [ ] Framework Preset: Next.js (auto-detected)
+- [ ] Build Command: Auto-detected (DO NOT override)
+- [ ] Output Directory: Auto-detected (DO NOT override)
+- [ ] Install Command: Auto-detected (DO NOT override)
+
+### "outputFileTracingRoot" 404 Issue
+
+**Symptoms:**
+
+- Build succeeds with correct Vercel settings
+- Still getting 404 on all pages
+- Build logs show: "Build Completed in /vercel/output"
+
+**Root Cause:**
+`outputFileTracingRoot` in `next.config.js` corrupts deployment structure
+
+**✅ Solution:**
+
+Check `apps/web/next.config.js`:
+
+```javascript
+// ❌ NEVER enable this for Vercel deployment:
+// outputFileTracingRoot: require('path').join(__dirname, '../../'),
+
+// ✅ Keep it commented out or remove it completely
+```
+
+**Why this happens:**
+
+- `outputFileTracingRoot` tells Next.js to reference monorepo root
+- Vercel can't properly serve pages when output structure != app structure
+- Build completes but pages are not accessible
+
+### Debugging Vercel Deployment
+
+**Check Build Logs:**
+
+1. Vercel Dashboard → Deployments → Click deployment
+2. Check "View Function Logs" for runtime issues
+3. Look for "Build" tab for build-time issues
+
+**Test Locally:**
+
+```bash
+# Test production build locally
+cd apps/web
+pnpm run build
+pnpm run start
+
+# Should work on http://localhost:3000
+```
+
+**Force Fresh Deploy:**
+
+1. Vercel Dashboard → Deployments
+2. Click "⋯" (three dots) → Redeploy
+3. **Uncheck "Use Existing Build Cache"**
+4. Click "Redeploy"
+
+---
+
 **Remember:** When in doubt, try the "Complete Reset" at the top of this guide! 🔄
+**For Vercel issues:** 99% of the time it's the Root Directory setting! 🎯

@@ -4,9 +4,20 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
-  // Monorepo configuration
+  // =============================================================================
+  // MONOREPO CONFIGURATION - CRITICAL FOR VERCEL DEPLOYMENT
+  // =============================================================================
+
+  // ✅ SAFE: Transpile packages from monorepo for proper bundling
   transpilePackages: ['shared-types', 'utils', 'crypto-core'],
-  // outputFileTracingRoot: require('path').join(__dirname, '../../'), // Removed for Vercel deployment
+
+  // ❌ DANGER: DO NOT UNCOMMENT THE LINE BELOW!
+  // outputFileTracingRoot causes 404 errors on Vercel deployment because:
+  // - It changes Next.js output structure to reference monorepo root
+  // - Vercel can't properly serve pages when output root != app root
+  // - Build completes successfully but all pages return 404
+  // ONLY use this for local development if needed, NEVER in production
+  // outputFileTracingRoot: require('path').join(__dirname, '../../'),
 
   // Vercel deployment with API routes support
   images: {
