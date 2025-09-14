@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { DeviceCapabilities, DeviceClass, Argon2Params } from '@aura/shared-types';
 
-// Import crypto core WASM bindings
-import { DeviceCapabilityDetector } from '@aura/crypto-core';
+// Import crypto core WASM bindings dynamically
+type DeviceCapabilityDetector = any;
 
 export interface UseDeviceCapabilitiesResult {
   capabilities: DeviceCapabilities | null;
@@ -26,7 +26,8 @@ export function useDeviceCapabilities(): UseDeviceCapabilitiesResult {
       // Get web device information
       const deviceInfo = await getWebDeviceInfo();
 
-      // Initialize WASM detector
+      // Initialize WASM detector with dynamic import
+      const { DeviceCapabilityDetector } = await import('@aura/crypto-core');
       const detector = new DeviceCapabilityDetector();
 
       // Detect capabilities using WASM module
@@ -257,6 +258,7 @@ export function useArgon2Benchmark() {
     setIsRunning(true);
 
     try {
+      const { DeviceCapabilityDetector } = await import('@aura/crypto-core');
       const detector = new DeviceCapabilityDetector();
       const wasmParams = {
         memory_kb: testParams.memoryKb,
@@ -300,6 +302,7 @@ export function useAdaptiveParameterOptimization() {
     setIsOptimizing(true);
 
     try {
+      const { DeviceCapabilityDetector } = await import('@aura/crypto-core');
       const detector = new DeviceCapabilityDetector();
       const wasmCapabilities = new (detector as any).DeviceCapabilities(
         capabilities.deviceClass,

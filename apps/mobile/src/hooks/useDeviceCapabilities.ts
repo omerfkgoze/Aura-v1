@@ -4,11 +4,9 @@ import * as Device from 'expo-device';
 import * as SecureStore from 'expo-secure-store';
 import { DeviceCapabilities, DeviceClass, Argon2Params } from '@aura/shared-types';
 
-// Import crypto core WASM bindings
-import {
-  DeviceCapabilityDetector,
-  DeviceCapabilities as WasmDeviceCapabilities,
-} from '@aura/crypto-core';
+// Import crypto core WASM bindings dynamically
+type DeviceCapabilityDetector = any;
+type WasmDeviceCapabilities = any;
 
 export interface UseDeviceCapabilitiesResult {
   capabilities: DeviceCapabilities | null;
@@ -32,7 +30,8 @@ export function useDeviceCapabilities(): UseDeviceCapabilitiesResult {
       // Get device information
       const deviceInfo = await getDeviceInfo();
 
-      // Initialize WASM detector
+      // Initialize WASM detector with dynamic import
+      const { DeviceCapabilityDetector } = await import('@aura/crypto-core');
       const detector = new DeviceCapabilityDetector();
 
       // Detect capabilities using WASM module
@@ -239,6 +238,7 @@ export function useArgon2Benchmark() {
     setIsRunning(true);
 
     try {
+      const { DeviceCapabilityDetector } = await import('@aura/crypto-core');
       const detector = new DeviceCapabilityDetector();
       const wasmParams = {
         memory_kb: testParams.memoryKb,

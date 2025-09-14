@@ -303,7 +303,7 @@ class NetworkSecurityValidator {
   private calculateMetadataMinimization(
     headers: Record<string, string>
   ): NetworkValidationResult['metadataMinimization'] {
-    const violations = [];
+    const violations: { field: string; issue: string; severity: 'low' | 'medium' | 'high' }[] = [];
     let score = 100;
 
     // Essential headers that should always be present

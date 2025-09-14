@@ -11,13 +11,11 @@ import type {
   MultiDeviceKeyExchange,
 } from '@aura/shared-types';
 
-// Import the WASM crypto core functions
-import {
-  MultiDeviceProtocol,
-  DevicePairingRequest as WasmDevicePairingRequest,
-  DevicePairingResponse as WasmDevicePairingResponse,
-  DeviceRegistryEntry as WasmDeviceRegistryEntry,
-} from '@aura/crypto-core';
+// Import the WASM crypto core functions dynamically
+type MultiDeviceProtocol = any;
+type WasmDevicePairingRequest = any;
+type WasmDevicePairingResponse = any;
+type WasmDeviceRegistryEntry = any;
 
 interface UseMultiDeviceState {
   isInitialized: boolean;

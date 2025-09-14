@@ -1,0 +1,28 @@
+[
+  {
+    "name": "@aura/crypto-core",
+    "version": "0.1.0",
+    "path": "/Users/omerfkgoze/Documents/GitHub/Aura/libs/crypto-core",
+    "private": false,
+    "devDependencies": {
+      "@types/node": {
+        "from": "@types/node",
+        "version": "20.19.11",
+        "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.11.tgz",
+        "path": "/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/.pnpm/@types+node@20.19.11/node_modules/@types/node"
+      },
+      "semver": {
+        "from": "semver",
+        "version": "7.7.2",
+        "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.2.tgz",
+        "path": "/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/.pnpm/semver@7.7.2/node_modules/semver"
+      },
+      "wasm-pack": {
+        "from": "wasm-pack",
+        "version": "0.13.1",
+        "resolved": "https://registry.npmjs.org/wasm-pack/-/wasm-pack-0.13.1.tgz",
+        "path": "/Users/omerfkgoze/Documents/GitHub/Aura/node_modules/.pnpm/wasm-pack@0.13.1/node_modules/wasm-pack"
+      }
+    }
+  }
+]

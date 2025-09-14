@@ -15,14 +15,12 @@ import type {
   WordlistLanguage,
 } from '@aura/shared-types';
 
-// Import WASM crypto core for recovery operations
-import {
-  RecoverySystem,
-  RecoveryPhrase as WasmRecoveryPhrase,
-  KeyBackup as WasmKeyBackup,
-  WordlistLanguage as WasmWordlistLanguage,
-  RecoveryValidationLevel as WasmRecoveryValidationLevel,
-} from '@aura/crypto-core';
+// Import WASM crypto core for recovery operations dynamically
+type RecoverySystem = any;
+type WasmRecoveryPhrase = any;
+type WasmKeyBackup = any;
+type WasmWordlistLanguage = any;
+type WasmRecoveryValidationLevel = any;
 
 interface UseRecoveryState {
   isInitialized: boolean;

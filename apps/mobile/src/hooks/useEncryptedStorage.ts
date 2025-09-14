@@ -3,7 +3,15 @@ import { EncryptedDataService, LocalStorageConfig } from '../services/encryptedD
 import type { EncryptedCycleData, PeriodDayData, Symptom } from '@aura/shared-types';
 
 // Lazy import for crypto core to avoid static import issues
-type CryptoOperationError = Error & { code?: string };
+class CryptoOperationError extends Error {
+  public code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = 'CryptoOperationError';
+    this.code = code;
+  }
+}
 
 export interface UseEncryptedStorageConfig extends LocalStorageConfig {
   autoInitialize?: boolean;
@@ -79,11 +87,9 @@ export function useEncryptedStorage(
         }));
 
         console.log('[useEncryptedStorage] Service initialized successfully');
-      } catch (error) {
+      } catch (error: unknown) {
         const errorMessage =
-          error instanceof CryptoOperationError
-            ? error.message
-            : 'Failed to initialize encrypted storage';
+          error instanceof Error ? error.message : 'Failed to initialize encrypted storage';
 
         setState(prev => ({
           ...prev,

@@ -1,10 +1,9 @@
-import {
-  PlatformSecureStorage,
-  SecureStorageConfig,
-  SecureStoragePlatform,
-  MasterKeyStorageInfo,
-  HSMCapabilities,
-} from '@aura/crypto-core';
+// Import crypto-core types dynamically
+type PlatformSecureStorage = any;
+type SecureStorageConfig = any;
+type SecureStoragePlatform = any;
+type MasterKeyStorageInfo = any;
+type HSMCapabilities = any;
 
 export interface WebSecureStorageConfig {
   indexedDBName: string;
@@ -27,21 +26,8 @@ export class WebSecureStorageService {
       ...config,
     };
 
-    // Initialize WASM secure storage
-    const platform = this.supportsWebCrypto()
-      ? SecureStoragePlatform.WebCryptoAPI
-      : SecureStoragePlatform.WebIndexedDB;
-
-    const wasmConfig = new SecureStorageConfig(
-      platform,
-      'aura-web-keys',
-      false,
-      false,
-      'WhenUnlocked',
-      'AES-256-GCM'
-    );
-
-    this.wasmStorage = new PlatformSecureStorage(wasmConfig);
+    // Initialize WASM secure storage will be done in initialize()
+    this.wasmStorage = null as any;
   }
 
   async initialize(): Promise<boolean> {
@@ -54,7 +40,25 @@ export class WebSecureStorageService {
       // Initialize IndexedDB
       await this.initializeIndexedDB();
 
-      // Initialize WASM storage
+      // Initialize WASM storage with dynamic import
+      const { PlatformSecureStorage, SecureStorageConfig, SecureStoragePlatform } = await import(
+        '@aura/crypto-core'
+      );
+
+      const platform = this.supportsWebCrypto()
+        ? SecureStoragePlatform.WebCryptoAPI
+        : SecureStoragePlatform.WebIndexedDB;
+
+      const wasmConfig = new SecureStorageConfig(
+        platform,
+        'aura-web-keys',
+        false,
+        false,
+        'WhenUnlocked',
+        'AES-256-GCM'
+      );
+
+      this.wasmStorage = new PlatformSecureStorage(wasmConfig);
       await this.wasmStorage.initialize();
 
       return true;

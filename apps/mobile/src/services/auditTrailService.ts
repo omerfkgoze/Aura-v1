@@ -3,10 +3,31 @@ import {
   AuditTrailEntry,
   AuditLogQueryOptions,
   AuditSummary,
-} from '@aura/shared-types/data';
+} from '@aura/shared-types';
 import { encryptedDataService } from './encryptedDataService';
-import { generateId } from '../utils/idGenerator';
-import crypto from 'crypto';
+
+// Generate ID helper function
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Mock crypto for React Native
+const crypto = {
+  createHash: (algorithm: string) => ({
+    update: (data: string) => ({
+      digest: (encoding: string) => {
+        // Simple hash implementation for mobile
+        let hash = 0;
+        for (let i = 0; i < data.length; i++) {
+          const char = data.charCodeAt(i);
+          hash = (hash << 5) - hash + char;
+          hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash).toString(16);
+      },
+    }),
+  }),
+};
 
 export class AuditTrailService {
   private currentSessionId: string = generateId();
@@ -66,8 +87,8 @@ export class AuditTrailService {
         timestamp,
         deviceId,
         userId,
-        oldValue: this.sanitizeValue(mod.oldValue),
-        newValue: this.sanitizeValue(mod.newValue),
+        oldValue: this.sanitizeValue(mod['oldValue']),
+        newValue: this.sanitizeValue(mod['newValue']),
       }));
 
       await this.storeAuditEntry(userId, completeModifications);

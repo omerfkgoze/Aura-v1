@@ -2,13 +2,12 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
-import {
-  PlatformSecureStorage,
-  SecureStorageConfig,
-  SecureStoragePlatform,
-  MasterKeyStorageInfo,
-  HSMCapabilities,
-} from '@aura/crypto-core';
+// Import crypto-core types dynamically
+type PlatformSecureStorage = any;
+type SecureStorageConfig = any;
+type SecureStoragePlatform = any;
+type MasterKeyStorageInfo = any;
+type HSMCapabilities = any;
 
 export interface SecureStorageServiceConfig {
   keychainService: string;
@@ -30,22 +29,26 @@ export class SecureStorageService {
       ...config,
     };
 
-    // Initialize WASM secure storage
-    const platform = this.getPlatform();
-    const wasmConfig = new SecureStorageConfig(
-      platform,
-      this.config.keychainService,
-      this.config.requireAuthentication,
-      this.config.requireBiometrics,
-      this.getAccessibilityLevel(),
-      'AES-256-GCM'
-    );
-
-    this.wasmStorage = new PlatformSecureStorage(wasmConfig);
+    // Initialize WASM secure storage will be done in initialize()
+    this.wasmStorage = null as any;
   }
 
   async initialize(): Promise<boolean> {
     try {
+      // Initialize WASM secure storage with dynamic import
+      const { PlatformSecureStorage, SecureStorageConfig } = await import('@aura/crypto-core');
+
+      const platform = await this.getPlatform();
+      const wasmConfig = new SecureStorageConfig(
+        platform,
+        this.config.keychainService,
+        this.config.requireAuthentication,
+        this.config.requireBiometrics,
+        this.getAccessibilityLevel(),
+        'AES-256-GCM'
+      );
+
+      this.wasmStorage = new PlatformSecureStorage(wasmConfig);
       await this.wasmStorage.initialize();
       return true;
     } catch (error) {
@@ -248,7 +251,9 @@ export class SecureStorageService {
     return combinedEntropy.slice(0, 32);
   }
 
-  private getPlatform(): SecureStoragePlatform {
+  private async getPlatform(): Promise<any> {
+    const { SecureStoragePlatform } = await import('@aura/crypto-core');
+
     if (Platform.OS === 'ios') {
       return SecureStoragePlatform.IOSKeychain;
     } else if (Platform.OS === 'android') {
