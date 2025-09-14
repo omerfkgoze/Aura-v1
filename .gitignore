@@ -148,3 +148,6 @@ debug-full-shamir.js
 debug-galois.js
 debug-shamir.js
 test-actual-shamir.js
+
+#  extra
+task.md
