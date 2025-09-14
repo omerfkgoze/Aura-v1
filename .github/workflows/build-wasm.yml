@@ -11,6 +11,10 @@ on:
     paths:
       - 'libs/crypto-core/**'
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build-wasm:
     runs-on: ubuntu-latest

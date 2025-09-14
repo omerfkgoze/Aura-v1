@@ -8,8 +8,6 @@
 import type {
   OpaqueClient,
   OpaqueServer,
-  OpaqueAuthenticationData,
-  OpaqueSessionResult,
   OpaqueError,
   LoginRequest,
   LoginResponse,

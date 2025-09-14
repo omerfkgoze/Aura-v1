@@ -3,14 +3,7 @@
  * Core types for authentication event logging system
  */
 
-import type {
-  AuthenticationContext,
-  AuditContext,
-  SessionSecurityContext,
-  GeolocationData,
-  RiskLevel,
-  AuthenticationMethod,
-} from '../types/index.js';
+import type { AuditContext } from '../types/index.js';
 
 // Core Event Logging Interfaces
 export interface SecurityEventLogger {
@@ -257,7 +250,24 @@ export type EventType =
   | 'correlation_identified'
   | 'incident_declared'
   | 'investigation_started'
-  | 'investigation_completed';
+  | 'investigation_completed'
+  | 'policy_violation'
+  | 'compliance_check'
+  | 'data_processing'
+  | 'audit_log_created'
+  | 'audit_log_accessed'
+  | 'audit_trail_verified'
+  | 'data_created'
+  | 'data_updated'
+  | 'data_deleted'
+  | 'data_accessed'
+  | 'data_update'
+  | 'session_created'
+  | 'session_terminated'
+  | 'session_expired'
+  | 'device_registered'
+  | 'device_removed'
+  | 'device_suspicious';
 
 // Enums
 export type SecuritySeverity = 'informational' | 'low' | 'medium' | 'high' | 'critical';

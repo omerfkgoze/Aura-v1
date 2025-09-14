@@ -3,22 +3,38 @@
  * Central exports for session management system
  */
 
-// Core session types and interfaces
-export * from './types.js';
-export * from './core.js';
-export * from './monitoring.js';
-
-// Re-export main interfaces for convenience
+// Core session types and interfaces - explicit exports to avoid conflicts
 export type {
   EncryptedDataSessionManager,
   EncryptedSession,
-  SessionValidationResult,
-  SessionDataKey,
-  DataAccessResult,
+  SessionValidationResult as SessionValidationResultFromTypes,
+  SessionDataKey as SessionDataKeyFromTypes,
+  DataAccessResult as DataAccessResultFromTypes,
+  DataType,
+  DataAccessPurpose,
+  DataOperation,
+  DataAccessLevel,
+  DataRetentionPolicy,
+  DataAccessRestriction,
 } from './types.js';
 
 export type {
+  SessionManager,
+  SessionValidationResult,
+  SessionDataKey,
+  DataAccessResult,
+  SessionTransferResult,
+  DeviceSessionSyncResult,
+  SessionSecurityContext,
+  KeyDerivationContext,
+} from './core.js';
+
+export type {
+  SessionMonitor,
+  SessionSecurityMetrics,
   SessionHealthStatus,
-  ActiveSessionInfo,
   SessionRiskAssessment,
+  RiskFactor,
+  LocationRiskFactor,
+  RiskFactorType,
 } from './monitoring.js';

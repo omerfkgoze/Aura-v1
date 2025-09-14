@@ -3,7 +3,40 @@
  * Defines data access, processing, and privacy-related events
  */
 
-import type { BaseEvent } from './types.js';
+import type { BaseEvent, LoggedEvent } from './types.js';
+
+// Data Event Logger Interface
+export interface DataEventLogger {
+  logDataEvent(event: DataEvent): Promise<LoggedEvent>;
+  logDataAccessEvent(event: DataAccessEvent): Promise<LoggedEvent>;
+  logDataModificationEvent(event: DataModificationEvent): Promise<LoggedEvent>;
+  getDataEvents(filters?: DataEventFilters): Promise<DataEvent[]>;
+}
+
+// Data Event Interface
+export interface DataEvent extends BaseEvent {
+  eventType: 'data_created' | 'data_updated' | 'data_deleted' | 'data_accessed';
+  dataType: string;
+  dataId: string;
+  operation: string;
+}
+
+// Data Modification Event Interface
+export interface DataModificationEvent extends BaseEvent {
+  eventType: 'data_write' | 'data_delete' | 'data_update';
+  dataType: string;
+  dataId: string;
+  oldValue?: any;
+  newValue?: any;
+  changeReason: string;
+}
+
+// Data Event Filters
+export interface DataEventFilters {
+  dataType?: string;
+  timeRange?: { start: Date; end: Date };
+  operations?: string[];
+}
 
 export interface DataAccessEvent extends BaseEvent {
   eventType:

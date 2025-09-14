@@ -3,13 +3,12 @@
  */
 
 import type {
-  EncryptedSession,
-  SessionValidationResult as SessionValidationBase,
-  DataAccessResult as DataAccessBase,
-  SessionDataKey,
   DataType,
   DataAccessPurpose,
   DataOperation,
+  DataAccessLevel,
+  DataRetentionPolicy,
+  DataAccessRestriction as DataAccessRestrictionBase,
 } from './types.js';
 
 export interface SessionValidationResult {
@@ -121,7 +120,7 @@ export interface DataAccessResult {
 
   // Authorization context
   authorizationLevel: DataAccessLevel;
-  restrictions: DataAccessRestriction[];
+  restrictions: DataAccessRestrictionBase[];
   conditions: AccessCondition[];
 
   // Compliance validation
@@ -156,12 +155,6 @@ export interface DeviceSyncFailure {
   lastAttempt: Date;
 }
 
-export interface DataAccessRestriction {
-  type: 'temporal' | 'conditional' | 'purpose' | 'geographic';
-  description: string;
-  enforced: boolean;
-}
-
 export interface AccessCondition {
   condition: string;
   satisfied: boolean;
@@ -187,8 +180,14 @@ export type SecurityWarningType =
   | 'elevated_risk'
   | 'compliance_concern';
 
+// Session Manager Interface
+export interface SessionManager {
+  createSession(authContext: any): Promise<SessionValidationResult>;
+  validateSession(sessionToken: string): Promise<SessionValidationResult>;
+  refreshSession(sessionId: string): Promise<SessionValidationResult>;
+  terminateSession(sessionId: string): Promise<void>;
+}
+
 // Forward declarations
 export interface SessionSecurityContext {}
 export interface KeyDerivationContext {}
-export interface DataAccessLevel {}
-export interface DataRetentionPolicy {}

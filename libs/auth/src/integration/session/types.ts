@@ -2,17 +2,7 @@
  * Session Management Types and Core Interfaces
  */
 
-import type {
-  AuthenticationContext,
-  SessionSecurityContext,
-  KeyDerivationContext,
-  MultiDeviceContext,
-  DeviceKeyInfo,
-  RiskLevel,
-  AuthenticationMethod,
-  AuditContext,
-  GeolocationData,
-} from '../types.js';
+import type { AuthenticationContext, RiskLevel, AuthenticationMethod } from '../types/index.js';
 
 // Core Session Management Interface
 export interface EncryptedDataSessionManager {
