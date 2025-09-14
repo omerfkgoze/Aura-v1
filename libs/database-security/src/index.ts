@@ -56,6 +56,49 @@ export {
   type SecurityEventLevel,
 } from './security-logger';
 
+// SQLCipher Integration (Story 2.1)
+export {
+  SQLCipherManager,
+  createSQLCipherManager,
+  PlatformConfigs,
+  type SQLCipherConfig,
+  type EncryptionParams,
+  type DatabaseKeyInfo,
+} from './sqlite-cipher';
+
+// Database Connection Manager (Story 2.1)
+export {
+  DatabaseConnectionManager,
+  type ConnectionConfig,
+  type DatabaseSchema,
+  type TableSchema,
+  type ColumnSchema,
+  type IndexSchema,
+  type TriggerSchema,
+} from './database-connection-manager';
+
+// Encryption Validator (Story 2.1)
+export {
+  EncryptionValidator,
+  validateMultipleDatabases,
+  createValidationReport,
+  type EncryptionValidationResult,
+  type FileIntegrityCheck,
+} from './encryption-validator';
+
+// Realm Encrypted Database (Story 2.1)
+export {
+  RealmEncryptedDatabase,
+  EncryptedCycleData,
+  EncryptedUserPrefs,
+  DeviceKeyMetadata,
+  createRealmEncryptedDatabase,
+  DefaultSchemas,
+  type RealmConfig,
+  type EncryptedRealmConfig,
+  type RealmKeyInfo,
+} from './realm-encrypted-db';
+
 /**
  * Initialize database security configuration
  */
