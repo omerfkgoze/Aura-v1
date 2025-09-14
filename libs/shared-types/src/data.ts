@@ -67,10 +67,48 @@ export interface EncryptedCycleData {
 export interface ModificationRecord {
   id: string;
   timestamp: string;
+  entityType: 'cycle' | 'period_day' | 'symptom' | 'preference';
+  entityId: string;
   field: string;
   oldValue: any;
   newValue: any;
   deviceId: string;
+  userId: string;
+  action: 'create' | 'update' | 'delete' | 'restore';
+  reason?: string; // Optional reason for modification
+}
+
+// Audit trail entry with encryption
+export interface AuditTrailEntry {
+  id: string;
+  userId: string;
+  timestamp: string;
+  modifications: ModificationRecord[];
+  sessionId: string;
+  encryptedEntry: string; // Encrypted audit data
+  checksum: string; // Data integrity verification
+  createdAt: string;
+}
+
+// Audit log query options
+export interface AuditLogQueryOptions {
+  userId: string;
+  startDate?: string;
+  endDate?: string;
+  entityType?: 'cycle' | 'period_day' | 'symptom' | 'preference';
+  entityId?: string;
+  action?: 'create' | 'update' | 'delete' | 'restore';
+  limit?: number;
+  offset?: number;
+}
+
+// Audit summary for dashboard
+export interface AuditSummary {
+  totalModifications: number;
+  recentModifications: ModificationRecord[];
+  modificationsByType: Record<string, number>;
+  modificationsByDate: Record<string, number>;
+  dataIntegrityStatus: 'valid' | 'warning' | 'error';
 }
 
 export interface CycleData {

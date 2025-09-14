@@ -16,5 +16,12 @@
     "jsx": "react-jsx"
   },
   "include": ["src/**/*", "App.tsx", "src/types/global.d.ts"],
-  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "src/config/env.ts"]
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "src/__tests__/**/*",
+    "src/config/env.ts"
+  ]
 }
