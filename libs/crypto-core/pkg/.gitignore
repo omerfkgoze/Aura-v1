@@ -1,4 +1,1 @@
-# Keep WASM artifacts for production deployment
-# Only ignore temporary/dev files
-*.log
-*.tmp
+*

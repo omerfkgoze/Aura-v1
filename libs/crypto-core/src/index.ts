@@ -65,12 +65,8 @@ export async function initializeCrypto(): Promise<ModuleIntegrity> {
         // Dynamic import for better compatibility
         const wasmModule = await import('../pkg/crypto_core');
 
-        // Initialize WASM module with explicit import
-        if (typeof wasmModule.init === 'function') {
-          await wasmModule.init();
-        } else if (typeof wasmModule.default === 'function') {
-          await wasmModule.default();
-        }
+        // Initialize WASM module - init() is available in the module
+        await wasmModule.init();
 
         // Perform integrity verification
         const integrity = wasm.init_crypto_core_with_verification();

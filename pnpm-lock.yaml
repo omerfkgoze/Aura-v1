@@ -7,6 +7,7 @@ settings:
 overrides:
   axios: '>=1.7.0'
   esbuild: '>=0.25.0'
+  react: ^19.1.1
 
 importers:
 
@@ -206,7 +207,7 @@ importers:
         version: 5.3.3
       vitest:
         specifier: ^1.0.0
-        version: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
+        version: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
 
   libs/crypto-core:
     devDependencies:
@@ -238,7 +239,7 @@ importers:
         specifier: ^16.0.8
         version: 16.0.8(expo@54.0.2(@babel/core@7.28.3)(react-native@0.73.11(@babel/core@7.28.3)(@babel/preset-env@7.28.3(@babel/core@7.28.3))(encoding@0.1.13)(react@19.1.1))(react@19.1.1))(react-native@0.73.11(@babel/core@7.28.3)(@babel/preset-env@7.28.3(@babel/core@7.28.3))(encoding@0.1.13)(react@19.1.1))(react@19.1.1)
       react:
-        specifier: ^18.0.0
+        specifier: ^19.1.1
         version: 19.1.1
       react-native:
         specifier: ^0.73.0
@@ -314,7 +315,7 @@ importers:
         version: 20.19.11
       '@vitest/coverage-v8':
         specifier: ^1.0.0
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0))
       eslint:
         specifier: ^8.0.0
         version: 8.57.1
@@ -326,7 +327,7 @@ importers:
         version: 5.3.3
       vitest:
         specifier: ^1.0.0
-        version: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
+        version: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
 
   libs/shared-types: {}
 
@@ -1400,7 +1401,7 @@ packages:
   '@expo/devtools@0.1.7':
     resolution: {integrity: sha512-dfIa9qMyXN+0RfU6SN4rKeXZyzKWsnz6xBSDccjL4IRiE+fQ0t84zg0yxgN4t/WK2JU5v6v4fby7W7Crv9gJvA==}
     peerDependencies:
-      react: '*'
+      react: ^19.1.1
       react-native: '*'
     peerDependenciesMeta:
       react:
@@ -1468,7 +1469,7 @@ packages:
     resolution: {integrity: sha512-IiBjg7ZikueuHNf40wSGCf0zS73a3guJLdZzKnDUxsauB8VWPLMeWnRIupc+7cFhLUkqyvyo0jLNlcxG5xPOuQ==}
     peerDependencies:
       expo-font: '>=14.0.4'
-      react: '*'
+      react: ^19.1.1
       react-native: '*'
 
   '@expo/ws-tunnel@1.0.6':
@@ -1831,7 +1832,7 @@ packages:
   '@module-federation/data-prefetch@0.18.3':
     resolution: {integrity: sha512-8nwoYRE7y2SAVOmoCifF9nHUDG2PU+Eh6D/vef1tZIlKFP8jFEN5FA1BIyWvfSz/MzewnVK0VIDh92yrda8BYg==}
     peerDependencies:
-      react: '>=16.9.0'
+      react: ^19.1.1
       react-dom: '>=16.9.0'
 
   '@module-federation/dts-plugin@0.18.3':
@@ -1879,7 +1880,7 @@ packages:
     resolution: {integrity: sha512-QUUObkCZO+l8Fh6gK4/I9D2AkWqU5X8UZ+5yB0d5iQA/FgjXVQv8o4JLSeSoyh3qy3Mzr952h46/PWzlFODAeQ==}
     peerDependencies:
       next: '*'
-      react: ^16||^17||^18||^19
+      react: ^19.1.1
       react-dom: ^16||^17||^18||^19
       webpack: ^5.40.0
     peerDependenciesMeta:
@@ -2478,7 +2479,7 @@ packages:
   '@realm/react@0.11.0':
     resolution: {integrity: sha512-ekS0j8ZyWr+Tjd4RmTCGOOiSACFVURMxpB1fyDSwQk5mWQtkeItYB4/bLvFvqspg0F9EQbgBoNEA7ahbH6BRNw==}
     peerDependencies:
-      react: '>=17.0.2'
+      react: ^19.1.1
       realm: '>=12.12.0'
 
   '@rolldown/pluginutils@1.0.0-beta.34':
@@ -2986,7 +2987,7 @@ packages:
       '@testing-library/dom': ^10.0.0
       '@types/react': ^18.0.0 || ^19.0.0
       '@types/react-dom': ^18.0.0 || ^19.0.0
-      react: ^18.0.0 || ^19.0.0
+      react: ^19.1.1
       react-dom: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       '@types/react':
@@ -4968,7 +4969,7 @@ packages:
     resolution: {integrity: sha512-jj2U8zw9+7orST2rlQGULYiqPoECOuUyffs2NguGrq84bYbkM041T7TOMXH2raPVJnM9lEAP54ezI6XL+GVYqw==}
     peerDependencies:
       expo: '*'
-      react: '*'
+      react: ^19.1.1
       react-native: '*'
 
   expo-constants@18.0.8:
@@ -4997,14 +4998,14 @@ packages:
     resolution: {integrity: sha512-bTUHaJWRZ7ywP8dg3f+wfOwv6RwMV3mWT2CDUIhsK70GjNGlCtiWOCoHsA5Od/esPaVxqc37cCBvQGQRFStRlA==}
     peerDependencies:
       expo: '*'
-      react: '*'
+      react: ^19.1.1
       react-native: '*'
 
   expo-keep-awake@15.0.7:
     resolution: {integrity: sha512-CgBNcWVPnrIVII5G54QDqoE125l+zmqR4HR8q+MQaCfHet+dYpS5vX5zii/RMayzGN4jPgA4XYIQ28ePKFjHoA==}
     peerDependencies:
       expo: '*'
-      react: '*'
+      react: ^19.1.1
 
   expo-modules-autolinking@3.0.10:
     resolution: {integrity: sha512-6pwaz9H7aK/iYraHbX7zjg8QFTUuMfGEs8Vyc6bAoBd8Rovtb91WX955Kq5sazwNrQjs3WePwQ23LEAmls3u5g==}
@@ -5013,7 +5014,7 @@ packages:
   expo-modules-core@3.0.15:
     resolution: {integrity: sha512-vGI7osd0/IjprldD08k4bckWSu7ID4HhZNP68l/UtilONQ8XZig8mWJd/Fm7i7KGvE3HyuF+HOXE9l671no42Q==}
     peerDependencies:
-      react: '*'
+      react: ^19.1.1
       react-native: '*'
 
   expo-secure-store@15.0.7:
@@ -5025,7 +5026,7 @@ packages:
     resolution: {integrity: sha512-xw776gFgH4ZM5oGs0spSLNmkHO/kJ/EuRXGzE4/22yII9EmG84vm7aM/M2aEb8taBTqwhSGYUpkwkRT5YFFmsg==}
     peerDependencies:
       expo: '*'
-      react: '*'
+      react: ^19.1.1
       react-native: '*'
 
   expo@54.0.2:
@@ -5034,7 +5035,7 @@ packages:
     peerDependencies:
       '@expo/dom-webview': '*'
       '@expo/metro-runtime': '*'
-      react: '*'
+      react: ^19.1.1
       react-native: '*'
       react-native-webview: '*'
     peerDependenciesMeta:
@@ -6765,7 +6766,7 @@ packages:
       '@opentelemetry/api': ^1.1.0
       '@playwright/test': ^1.51.1
       babel-plugin-react-compiler: '*'
-      react: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
+      react: ^19.1.1
       react-dom: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
       sass: ^1.3.0
     peerDependenciesMeta:
@@ -7790,7 +7791,7 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
-      react: 18.2.0
+      react: ^19.1.1
 
   react-refresh@0.14.2:
     resolution: {integrity: sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==}
@@ -7803,7 +7804,7 @@ packages:
   react-shallow-renderer@16.15.0:
     resolution: {integrity: sha512-oScf2FqQ9LFVQgA73vr86xl2NaOIX73rh+YFqcOp68CWj56tSfgtGKrEbyhCj0rSijyG9M1CYprTh39fBi5hzA==}
     peerDependencies:
-      react: ^16.0.0 || ^17.0.0 || ^18.0.0
+      react: ^19.1.1
 
   react@19.1.1:
     resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
@@ -8548,7 +8549,7 @@ packages:
     peerDependencies:
       '@babel/core': '*'
       babel-plugin-macros: '*'
-      react: '>= 16.8.0 || 17.x.x || ^18.0.0-0 || ^19.0.0-0'
+      react: ^19.1.1
     peerDependenciesMeta:
       '@babel/core':
         optional: true
@@ -13784,7 +13785,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0))':
+  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -13799,7 +13800,7 @@ snapshots:
       std-env: 3.9.0
       strip-literal: 2.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
+      vitest: 1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -20417,7 +20418,7 @@ snapshots:
       sass-embedded: 1.92.1
       terser: 5.44.0
 
-  vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9(vitest@2.1.9))(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0):
+  vitest@1.6.1(@types/node@20.19.11)(@vitest/ui@2.1.9)(jsdom@26.1.0)(less@4.4.1)(lightningcss@1.30.1)(sass-embedded@1.92.1)(sass@1.92.1)(terser@5.44.0):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
