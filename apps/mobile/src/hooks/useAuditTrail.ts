@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ModificationRecord, AuditLogQueryOptions, AuditSummary } from '@aura/shared-types/data';
+import { ModificationRecord, AuditLogQueryOptions, AuditSummary } from '@aura/shared-types';
 import { auditTrailService } from '../services/auditTrailService';
 
 export interface UseAuditTrailOptions {
@@ -67,6 +67,16 @@ export const useAuditTrail = ({
     setError(err.message || 'An unexpected error occurred');
     setIsLoading(false);
   }, []);
+
+  // Refresh summary
+  const refreshSummary = useCallback(async () => {
+    try {
+      const auditSummary = await auditTrailService.getAuditSummary(userId);
+      setSummary(auditSummary);
+    } catch (err) {
+      handleError(err, 'refreshSummary');
+    }
+  }, [userId, handleError]);
 
   // Record a single modification
   const recordModification = useCallback(
@@ -158,16 +168,6 @@ export const useAuditTrail = ({
     },
     [userId, batchSize, setLoadingState, handleError]
   );
-
-  // Refresh summary
-  const refreshSummary = useCallback(async () => {
-    try {
-      const auditSummary = await auditTrailService.getAuditSummary(userId);
-      setSummary(auditSummary);
-    } catch (err) {
-      handleError(err, 'refreshSummary');
-    }
-  }, [userId, handleError]);
 
   // Restore from audit
   const restoreFromAudit = useCallback(

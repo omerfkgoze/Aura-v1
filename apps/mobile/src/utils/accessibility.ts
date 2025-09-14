@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { FlowIntensity, PeriodDayData } from '@aura/shared-types';
 
 export interface AccessibilityLabels {
@@ -178,3 +179,63 @@ export class AccessibilityService {
     }
   }
 }
+
+export interface UseAccessibilityReturn {
+  stealthMode: boolean;
+  toggleStealthMode: () => void;
+  getCalendarDayLabel: (date: string, data?: PeriodDayData) => string;
+  getFlowIntensityLabel: (intensity: FlowIntensity) => string;
+  getDateSelectionLabel: (date: string, isSelected: boolean) => string;
+  getPeriodRangeLabel: (startDate: string, endDate?: string) => string;
+  announceToScreenReader: (
+    action: 'dateSelected' | 'rangeCompleted' | 'dataUpdated',
+    data: any
+  ) => void;
+}
+
+export const useAccessibility = (): UseAccessibilityReturn => {
+  const [stealthMode, setStealthMode] = useState(false);
+
+  const toggleStealthMode = useCallback(() => {
+    setStealthMode(prev => {
+      const newMode = !prev;
+      AccessibilityService.setStealthMode(newMode);
+      return newMode;
+    });
+  }, []);
+
+  const getCalendarDayLabel = useCallback((date: string, data?: PeriodDayData) => {
+    return AccessibilityService.getCalendarDayLabel(date, data);
+  }, []);
+
+  const getFlowIntensityLabel = useCallback((intensity: FlowIntensity) => {
+    return AccessibilityService.getFlowIntensityLabel(intensity);
+  }, []);
+
+  const getDateSelectionLabel = useCallback((date: string, isSelected: boolean) => {
+    return AccessibilityService.getDateSelectionLabel(date, isSelected);
+  }, []);
+
+  const getPeriodRangeLabel = useCallback((startDate: string, endDate?: string) => {
+    return AccessibilityService.getPeriodRangeLabel(startDate, endDate);
+  }, []);
+
+  const announceToScreenReader = useCallback(
+    (action: 'dateSelected' | 'rangeCompleted' | 'dataUpdated', data: any) => {
+      const announcement = AccessibilityService.getScreenReaderAnnouncement(action, data);
+      // In a real implementation, this would use AccessibilityInfo.announceForAccessibility
+      console.log('Screen Reader:', announcement);
+    },
+    []
+  );
+
+  return {
+    stealthMode,
+    toggleStealthMode,
+    getCalendarDayLabel,
+    getFlowIntensityLabel,
+    getDateSelectionLabel,
+    getPeriodRangeLabel,
+    announceToScreenReader,
+  };
+};
