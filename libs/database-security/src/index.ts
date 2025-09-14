@@ -135,6 +135,19 @@ export {
   type MigrationEvent,
 } from './encrypted-migration-manager';
 
+// Encrypted Backup Manager (Story 2.1)
+export { EncryptedBackupManager } from './encrypted-backup-manager';
+
+// Database Integrity Verifier (Story 2.1)
+export {
+  DatabaseIntegrityVerifier,
+  type DatabaseIntegrityResult,
+  type IntegrityCheckResult,
+  type IntegrityViolation,
+  type IntegrityRecovery,
+  type IntegrityMonitoringConfig,
+} from './database-integrity-verifier';
+
 /**
  * Initialize database security configuration
  */
