@@ -141,6 +141,7 @@ perf.data.old
 
 # Playwright test reports
 apps/web/playwright-report/
+.playwright-mcp
 
 # Debug files
 debug-full-shamir.js
