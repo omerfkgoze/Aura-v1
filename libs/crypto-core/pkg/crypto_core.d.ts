@@ -16,20 +16,8 @@ export function create_cycle_data_aad(user_id: string, timestamp: bigint): Uint8
 export function create_healthcare_share_aad(user_id: string, share_token: string): Uint8Array;
 export function create_derivation_path(path_str: string): DerivationPath;
 export function create_master_key_from_seed(seed: Uint8Array): ExtendedKey;
-export function create_envelope_with_metadata(
-  version: number,
-  algorithm: number,
-  salt: Uint8Array,
-  nonce: Uint8Array,
-  encrypted_data: Uint8Array,
-  tag: Uint8Array,
-  aad_hash: Uint8Array
-): CryptoEnvelope;
-export function create_envelope(
-  encrypted_data: Uint8Array,
-  nonce: Uint8Array,
-  tag: Uint8Array
-): CryptoEnvelope;
+export function create_envelope_with_metadata(version: number, algorithm: number, salt: Uint8Array, nonce: Uint8Array, encrypted_data: Uint8Array, tag: Uint8Array, aad_hash: Uint8Array): CryptoEnvelope;
+export function create_envelope(encrypted_data: Uint8Array, nonce: Uint8Array, tag: Uint8Array): CryptoEnvelope;
 export function serialize_envelope(envelope: CryptoEnvelope): string;
 export function deserialize_envelope(json_str: string): CryptoEnvelope;
 /**
@@ -184,13 +172,7 @@ export class AADValidator {
 }
 export class Argon2Params {
   free(): void;
-  constructor(
-    memory_kb: number,
-    iterations: number,
-    parallelism: number,
-    salt_length: number,
-    key_length: number
-  );
+  constructor(memory_kb: number, iterations: number, parallelism: number, salt_length: number, key_length: number);
   readonly memory_kb: number;
   readonly iterations: number;
   readonly parallelism: number;
@@ -206,11 +188,7 @@ export class AsyncCrypto {
   /**
    * Async envelope creation returning a Promise
    */
-  static create_envelope_async(
-    encrypted_data: Uint8Array,
-    nonce: Uint8Array,
-    tag: Uint8Array
-  ): Promise<any>;
+  static create_envelope_async(encrypted_data: Uint8Array, nonce: Uint8Array, tag: Uint8Array): Promise<any>;
   /**
    * Async key generation returning a Promise
    */
@@ -266,12 +244,7 @@ export class BatchConfig {
   /**
    * Create new batch configuration
    */
-  constructor(
-    size: number,
-    max_concurrent: number,
-    integrity_validation: boolean,
-    performance_monitoring: boolean
-  );
+  constructor(size: number, max_concurrent: number, integrity_validation: boolean, performance_monitoring: boolean);
   /**
    * Get batch size
    */
@@ -291,13 +264,7 @@ export class BatchConfig {
 }
 export class BenchmarkResult {
   free(): void;
-  constructor(
-    duration_ms: number,
-    memory_used_mb: number,
-    iterations_tested: number,
-    success: boolean,
-    error_message?: string | null
-  );
+  constructor(duration_ms: number, memory_used_mb: number, iterations_tested: number, success: boolean, error_message?: string | null);
   readonly duration_ms: number;
   readonly memory_used_mb: number;
   readonly iterations_tested: number;
@@ -376,14 +343,7 @@ export class DerivationPath {
 }
 export class DeviceCapabilities {
   free(): void;
-  constructor(
-    device_class: DeviceClass,
-    available_memory: bigint,
-    cpu_cores: number,
-    has_secure_enclave: boolean,
-    platform: string,
-    performance_score: number
-  );
+  constructor(device_class: DeviceClass, available_memory: bigint, cpu_cores: number, has_secure_enclave: boolean, platform: string, performance_score: number);
   readonly device_class: DeviceClass;
   readonly available_memory: bigint;
   readonly cpu_cores: number;
@@ -394,35 +354,17 @@ export class DeviceCapabilities {
 export class DeviceCapabilityDetector {
   free(): void;
   constructor();
-  detect_capabilities(
-    available_memory_mb: bigint,
-    cpu_cores: number,
-    platform: string,
-    has_secure_enclave: boolean
-  ): DeviceCapabilities;
+  detect_capabilities(available_memory_mb: bigint, cpu_cores: number, platform: string, has_secure_enclave: boolean): DeviceCapabilities;
   get_optimal_argon2_params(capabilities: DeviceCapabilities): Argon2Params;
-  benchmark_argon2_performance(
-    test_params: Argon2Params,
-    target_duration_ms: number
-  ): Promise<BenchmarkResult>;
-  select_adaptive_parameters(
-    capabilities: DeviceCapabilities,
-    target_duration_ms: number
-  ): Promise<Argon2Params>;
+  benchmark_argon2_performance(test_params: Argon2Params, target_duration_ms: number): Promise<BenchmarkResult>;
+  select_adaptive_parameters(capabilities: DeviceCapabilities, target_duration_ms: number): Promise<Argon2Params>;
 }
 /**
  * Device pairing request containing public key and device metadata
  */
 export class DevicePairingRequest {
   free(): void;
-  constructor(
-    device_id: string,
-    device_name: string,
-    device_type: string,
-    public_key: Uint8Array,
-    challenge_nonce: Uint8Array,
-    timestamp: bigint
-  );
+  constructor(device_id: string, device_name: string, device_type: string, public_key: Uint8Array, challenge_nonce: Uint8Array, timestamp: bigint);
   readonly device_id: string;
   readonly device_name: string;
   readonly device_type: string;
@@ -435,13 +377,7 @@ export class DevicePairingRequest {
  */
 export class DevicePairingResponse {
   free(): void;
-  constructor(
-    device_id: string,
-    response_signature: Uint8Array,
-    shared_secret_hash: Uint8Array,
-    device_trust_token: string,
-    timestamp: bigint
-  );
+  constructor(device_id: string, response_signature: Uint8Array, shared_secret_hash: Uint8Array, device_trust_token: string, timestamp: bigint);
   readonly device_id: string;
   readonly response_signature: Uint8Array;
   readonly shared_secret_hash: Uint8Array;
@@ -453,18 +389,7 @@ export class DevicePairingResponse {
  */
 export class DeviceRegistryEntry {
   free(): void;
-  constructor(
-    device_id: string,
-    device_name: string,
-    device_type: string,
-    status: number,
-    trust_token: string,
-    public_key: Uint8Array,
-    last_sync: bigint,
-    trust_score: number,
-    created_at: bigint,
-    updated_at: bigint
-  );
+  constructor(device_id: string, device_name: string, device_type: string, status: number, trust_token: string, public_key: Uint8Array, last_sync: bigint, trust_score: number, created_at: bigint, updated_at: bigint);
   /**
    * Check if device entry is expired based on timestamp
    */
@@ -491,12 +416,7 @@ export class DeviceRegistryEntry {
 export class EmergencyRotationManager {
   free(): void;
   constructor();
-  triggerEmergencyRotation(
-    trigger_type: string,
-    description: string,
-    affected_devices: string[],
-    severity: number
-  ): string;
+  triggerEmergencyRotation(trigger_type: string, description: string, affected_devices: string[], severity: number): string;
   initiateEmergencyResponse(incident_id: string): void;
   isolateDevice(device_id: string, incident_id: string): void;
   invalidateKey(key_id: string, incident_id: string): void;
@@ -509,13 +429,7 @@ export class EmergencyRotationManager {
 }
 export class EntropySource {
   free(): void;
-  constructor(
-    source_type: string,
-    entropy_bytes: number,
-    quality_score: number,
-    is_hardware_based: boolean,
-    timestamp: number
-  );
+  constructor(source_type: string, entropy_bytes: number, quality_score: number, is_hardware_based: boolean, timestamp: number);
   readonly source_type: string;
   readonly entropy_bytes: number;
   readonly quality_score: number;
@@ -532,14 +446,7 @@ export class ExtendedKey {
 }
 export class HSMCapabilities {
   free(): void;
-  constructor(
-    has_hsm: boolean,
-    hsm_type: string,
-    supports_key_generation: boolean,
-    supports_key_storage: boolean,
-    supports_attestation: boolean,
-    max_key_size: number
-  );
+  constructor(has_hsm: boolean, hsm_type: string, supports_key_generation: boolean, supports_key_storage: boolean, supports_attestation: boolean, max_key_size: number);
   supported_algorithms(): string[];
   readonly has_hsm: boolean;
   readonly hsm_type: string;
@@ -587,16 +494,7 @@ export class KDFParams {
  */
 export class KeyBackup {
   free(): void;
-  constructor(
-    backup_id: string,
-    device_id: string,
-    encrypted_master_key: Uint8Array,
-    recovery_phrase_hash: Uint8Array,
-    passkey_challenge: Uint8Array,
-    backup_timestamp: bigint,
-    version: number,
-    metadata: string
-  );
+  constructor(backup_id: string, device_id: string, encrypted_master_key: Uint8Array, recovery_phrase_hash: Uint8Array, passkey_challenge: Uint8Array, backup_timestamp: bigint, version: number, metadata: string);
   readonly backup_id: string;
   readonly device_id: string;
   readonly encrypted_master_key: Uint8Array;
@@ -623,11 +521,7 @@ export class KeyMigrationHelper {
   /**
    * Calculate migration progress based on data reencryption
    */
-  static calculate_migration_progress(
-    total_records: number,
-    migrated_records: number,
-    failed_records: number
-  ): object;
+  static calculate_migration_progress(total_records: number, migrated_records: number, failed_records: number): object;
   /**
    * Validate migration readiness
    */
@@ -635,11 +529,7 @@ export class KeyMigrationHelper {
   /**
    * Create migration batch for progressive processing
    */
-  static create_migration_batch(
-    data_identifiers: Array<any>,
-    batch_size: number,
-    start_index: number
-  ): object;
+  static create_migration_batch(data_identifiers: Array<any>, batch_size: number, start_index: number): object;
   /**
    * Validate migration rollback safety
    */
@@ -694,12 +584,7 @@ export class KeyRotationScheduler {
   resetUsageCount(purpose: string): void;
   scheduleRotationWithPreferences(purpose: string): number;
   isRotationAllowedNow(purpose: string, is_user_active: boolean): boolean;
-  triggerEmergencyIncident(
-    trigger_type: string,
-    description: string,
-    affected_devices: string[],
-    severity: number
-  ): string;
+  triggerEmergencyIncident(trigger_type: string, description: string, affected_devices: string[], severity: number): string;
   detectSecurityIncident(device_id: string, event_data: string): boolean;
   getActiveIncidents(): string;
   updateIncidentDetectionThresholds(thresholds: string): void;
@@ -733,16 +618,7 @@ export class LegacyKeyRetentionPolicy {
 }
 export class MasterKeyStorageInfo {
   free(): void;
-  constructor(
-    key_id: string,
-    device_id: string,
-    storage_location: string,
-    created_at: number,
-    last_accessed: number,
-    access_count: number,
-    platform: SecureStoragePlatform,
-    is_hardware_backed: boolean
-  );
+  constructor(key_id: string, device_id: string, storage_location: string, created_at: number, last_accessed: number, access_count: number, platform: SecureStoragePlatform, is_hardware_backed: boolean);
   readonly key_id: string;
   readonly device_id: string;
   readonly storage_location: string;
@@ -798,12 +674,7 @@ export class MigrationProgress {
   /**
    * Update progress with batch results
    */
-  update_progress(
-    processed: number,
-    failed: number,
-    batch_number: number,
-    processing_time_ms: number
-  ): void;
+  update_progress(processed: number, failed: number, batch_number: number, processing_time_ms: number): void;
   /**
    * Get current progress as percentage
    */
@@ -939,12 +810,7 @@ export class ProgressiveMigrationManager {
   /**
    * Process next batch with integrity validation
    */
-  process_next_batch(
-    migration_id: string,
-    batch_data: Array<any>,
-    processed_count: number,
-    failed_count: number
-  ): object;
+  process_next_batch(migration_id: string, batch_data: Array<any>, processed_count: number, failed_count: number): object;
   /**
    * Get migration progress status
    */
@@ -952,11 +818,7 @@ export class ProgressiveMigrationManager {
   /**
    * Validate migration can be safely rolled back
    */
-  validate_rollback_safety(
-    migration_id: string,
-    current_key: VersionedKey,
-    rollback_version: KeyVersion
-  ): object;
+  validate_rollback_safety(migration_id: string, current_key: VersionedKey, rollback_version: KeyVersion): object;
   /**
    * Clear completed migration state
    */
@@ -964,11 +826,7 @@ export class ProgressiveMigrationManager {
   /**
    * Get optimal batch size based on system performance
    */
-  calculate_optimal_batch_size(
-    total_records: number,
-    available_memory_mb: number,
-    target_processing_time_ms: number
-  ): number;
+  calculate_optimal_batch_size(total_records: number, available_memory_mb: number, target_processing_time_ms: number): number;
 }
 /**
  * Recovery phrase with BIP39 compatibility
@@ -978,13 +836,7 @@ export class RecoveryPhrase {
   /**
    * Create new recovery phrase from entropy
    */
-  constructor(
-    words: string[],
-    entropy_hex: string,
-    checksum: string,
-    language: number,
-    word_count: number
-  );
+  constructor(words: string[], entropy_hex: string, checksum: string, language: number, word_count: number);
   /**
    * Generate new recovery phrase with specified entropy
    */
@@ -1015,45 +867,23 @@ export class RecoverySystem {
   /**
    * Create new recovery system
    */
-  constructor(
-    device_id: string,
-    validation_level: number,
-    max_attempts: number,
-    lockout_duration_ms: bigint
-  );
+  constructor(device_id: string, validation_level: number, max_attempts: number, lockout_duration_ms: bigint);
   /**
    * Create key backup with recovery phrase and passkey integration
    */
-  create_backup(
-    hierarchical_key: CryptoKey,
-    recovery_phrase: RecoveryPhrase,
-    passkey_challenge: Uint8Array
-  ): KeyBackup;
+  create_backup(hierarchical_key: CryptoKey, recovery_phrase: RecoveryPhrase, passkey_challenge: Uint8Array): KeyBackup;
   /**
    * Initiate recovery process with Passkeys authentication
    */
-  initiate_recovery(
-    backup_id: string,
-    recovery_phrase: RecoveryPhrase,
-    passkey_response: Uint8Array
-  ): string;
+  initiate_recovery(backup_id: string, recovery_phrase: RecoveryPhrase, passkey_response: Uint8Array): string;
   /**
    * Complete recovery and restore hierarchical key
    */
-  complete_recovery(
-    backup_id: string,
-    recovery_token: string,
-    recovery_phrase: RecoveryPhrase
-  ): Uint8Array;
+  complete_recovery(backup_id: string, recovery_token: string, recovery_phrase: RecoveryPhrase): Uint8Array;
   /**
    * Emergency recovery with enhanced validation
    */
-  emergency_recovery(
-    backup_id: string,
-    recovery_phrase: RecoveryPhrase,
-    emergency_code: string,
-    passkey_response: Uint8Array
-  ): string;
+  emergency_recovery(backup_id: string, recovery_phrase: RecoveryPhrase, emergency_code: string, passkey_response: Uint8Array): string;
   /**
    * Validate emergency delay has passed
    */
@@ -1096,11 +926,7 @@ export class RotationPolicy {
   hasSecurityEventTrigger(event_type: SecurityEventType): boolean;
   setLowUsageThresholdHours(hours: number): void;
   setEmergencyRotationEnabled(enabled: boolean): void;
-  shouldTriggerRotation(
-    current_age_hours: number,
-    usage_count: bigint,
-    security_event?: SecurityEventType | null
-  ): boolean;
+  shouldTriggerRotation(current_age_hours: number, usage_count: bigint, security_event?: SecurityEventType | null): boolean;
   readonly max_age_days: number;
   set max_usage_count(value: bigint);
   requires_user_confirmation: boolean;
@@ -1119,14 +945,7 @@ export class SecureKDF {
   /**
    * Derive key using Argon2id with constant-time validation
    */
-  static derive_key(
-    password: Uint8Array,
-    salt: Uint8Array,
-    iterations: number,
-    memory_cost: number,
-    parallelism: number,
-    output_length: number
-  ): Uint8Array;
+  static derive_key(password: Uint8Array, salt: Uint8Array, iterations: number, memory_cost: number, parallelism: number, output_length: number): Uint8Array;
 }
 /**
  * Secure random number generator using platform entropy
@@ -1153,14 +972,7 @@ export class SecureRandom {
 }
 export class SecureStorageConfig {
   free(): void;
-  constructor(
-    platform: SecureStoragePlatform,
-    keychain_service: string,
-    require_authentication: boolean,
-    require_biometrics: boolean,
-    accessibility_level: string,
-    encryption_algorithm: string
-  );
+  constructor(platform: SecureStoragePlatform, keychain_service: string, require_authentication: boolean, require_biometrics: boolean, accessibility_level: string, encryption_algorithm: string);
   readonly platform: SecureStoragePlatform;
   readonly keychain_service: string;
   readonly require_authentication: boolean;
@@ -1219,11 +1031,7 @@ export class SideChannelProtection {
   /**
    * Constant-time array conditional select
    */
-  static conditional_select_array(
-    condition: boolean,
-    true_array: Uint8Array,
-    false_array: Uint8Array
-  ): Uint8Array;
+  static conditional_select_array(condition: boolean, true_array: Uint8Array, false_array: Uint8Array): Uint8Array;
   /**
    * Add timing noise to prevent timing analysis
    */
