@@ -3,7 +3,7 @@ import {
   AccuracyRecord,
   ModelCalibration,
   CalibrationPoint,
-} from '@shared-types/prediction';
+} from '@aura/shared-types';
 
 /**
  * Validates confidence intervals against historical data

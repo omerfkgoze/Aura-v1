@@ -2,7 +2,7 @@ import {
   ConfidenceInterval,
   ProbabilityDistribution,
   UncertaintyFactors,
-} from '@shared-types/prediction';
+} from '@aura/shared-types';
 
 /**
  * Advanced statistical computation engine for interval calculations

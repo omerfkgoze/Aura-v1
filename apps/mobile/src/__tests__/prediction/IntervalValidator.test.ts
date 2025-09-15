@@ -1,5 +1,5 @@
 import IntervalValidator from '../../components/prediction/models/IntervalValidator';
-import { ConfidenceInterval, AccuracyRecord } from '@shared-types/prediction';
+import { ConfidenceInterval, AccuracyRecord } from '@aura/shared-types';
 
 // Mock data interfaces for testing
 interface PredictionValidationData {

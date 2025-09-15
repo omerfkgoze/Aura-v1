@@ -4,7 +4,7 @@ import {
   ConfidenceInterval,
   BayesianInference,
   ProbabilityDistribution,
-} from '@aura/shared-types/prediction';
+} from '@aura/shared-types';
 import { EncryptedCycleData } from '@aura/shared-types';
 
 /**

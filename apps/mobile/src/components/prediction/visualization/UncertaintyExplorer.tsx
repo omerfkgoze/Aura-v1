@@ -4,7 +4,7 @@ import {
   ConfidenceInterval,
   UncertaintyFactors,
   PredictionVisualization,
-} from '@shared-types/prediction';
+} from '@aura/shared-types';
 
 interface UncertaintyExplorerProps {
   uncertaintyFactors: UncertaintyFactors;

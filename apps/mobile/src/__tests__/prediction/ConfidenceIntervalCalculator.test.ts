@@ -1,5 +1,5 @@
 import ConfidenceIntervalCalculator from '../../components/prediction/models/ConfidenceIntervalCalculator';
-import { UncertaintyFactors } from '@shared-types/prediction';
+import { UncertaintyFactors } from '@aura/shared-types';
 
 describe('ConfidenceIntervalCalculator', () => {
   let calculator: ConfidenceIntervalCalculator;

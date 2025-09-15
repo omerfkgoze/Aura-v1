@@ -3,7 +3,7 @@ import {
   DecisionRegret,
   RegretAnalysisInsights,
   RegretVisualization,
-} from '@aura/shared-types/prediction';
+} from '@aura/shared-types';
 import { DecisionRegretAnalyzer } from './DecisionRegretAnalyzer';
 import { ConfidenceLevelRegretAnalyzer } from './ConfidenceLevelRegretAnalyzer';
 import { UserDecisionTracker } from './UserDecisionTracker';

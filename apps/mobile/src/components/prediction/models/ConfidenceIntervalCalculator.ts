@@ -2,7 +2,7 @@ import {
   ConfidenceInterval,
   UncertaintyFactors,
   ProbabilityDistribution,
-} from '@shared-types/prediction';
+} from '@aura/shared-types';
 
 /**
  * Statistical confidence interval calculator for menstrual cycle predictions

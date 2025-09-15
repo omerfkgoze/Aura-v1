@@ -1,4 +1,4 @@
-import { ConfidenceInterval, UncertaintyFactors } from '@shared-types/prediction';
+import { ConfidenceInterval, UncertaintyFactors } from '@aura/shared-types';
 
 /**
  * Dynamically adjusts confidence intervals based on data quality

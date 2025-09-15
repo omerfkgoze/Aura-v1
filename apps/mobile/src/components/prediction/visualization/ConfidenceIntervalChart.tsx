@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, YStack, XStack, Text } from '@tamagui/core';
-import { ConfidenceInterval, PredictionVisualization } from '@shared-types/prediction';
+import { ConfidenceInterval, PredictionVisualization } from '@aura/shared-types';
 
 interface ConfidenceIntervalChartProps {
   intervals: ConfidenceInterval;

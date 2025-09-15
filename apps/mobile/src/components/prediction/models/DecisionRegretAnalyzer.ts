@@ -4,7 +4,7 @@ import {
   DecisionSupport,
   RegretAnalysisInsights,
   RegretVisualization,
-} from '@aura/shared-types/prediction';
+} from '@aura/shared-types';
 
 /**
  * Decision Regret Analysis Framework
