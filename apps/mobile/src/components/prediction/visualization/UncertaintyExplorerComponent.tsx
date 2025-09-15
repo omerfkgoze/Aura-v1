@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { YStack, XStack, Text, Button, Sheet, ScrollView, Card, Progress } from '@tamagui/core';
+import { YStack, XStack, Text, Button, ScrollView, View } from '@tamagui/core';
 import { ChevronDown, Info, TrendingUp, Calendar, AlertCircle } from '@tamagui/lucide-icons';
 import type {
   UncertaintyFactors,
@@ -152,7 +152,7 @@ export const UncertaintyExplorerComponent: React.FC<UncertaintyExplorerProps> = 
   return (
     <YStack space="$2" padding="$3">
       {/* Main uncertainty summary */}
-      <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+      <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
         <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
           <Text fontSize="$5" fontWeight="600" color={colorScheme.text}>
             {title}
@@ -173,20 +173,22 @@ export const UncertaintyExplorerComponent: React.FC<UncertaintyExplorerProps> = 
             <Text fontSize="$3" color={colorScheme.secondary} marginBottom="$1">
               Uncertainty Level
             </Text>
-            <Progress
-              value={
-                explanation.uncertaintyLevel === 'low'
-                  ? 25
-                  : explanation.uncertaintyLevel === 'medium'
-                    ? 50
-                    : explanation.uncertaintyLevel === 'high'
-                      ? 75
-                      : 100
-              }
-              backgroundColor={colorScheme.background}
-            >
-              <Progress.Indicator backgroundColor={uncertaintyLevelColor} />
-            </Progress>
+            <View height={8} backgroundColor={colorScheme.background} borderRadius="$2">
+              <View
+                height="100%"
+                width={`${
+                  explanation.uncertaintyLevel === 'low'
+                    ? 25
+                    : explanation.uncertaintyLevel === 'medium'
+                      ? 50
+                      : explanation.uncertaintyLevel === 'high'
+                        ? 75
+                        : 100
+                }%`}
+                backgroundColor={uncertaintyLevelColor}
+                borderRadius="$2"
+              />
+            </View>
           </YStack>
           <Text
             fontSize="$4"
@@ -223,13 +225,13 @@ export const UncertaintyExplorerComponent: React.FC<UncertaintyExplorerProps> = 
             {Math.round(explanation.confidenceRecommendation * 100)}%
           </Text>
         </XStack>
-      </Card>
+      </View>
 
       {/* Expanded details */}
       {isExpanded && (
         <YStack space="$3">
           {/* Data quality assessment */}
-          <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+          <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
             <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
               {stealthMode ? 'Data Quality' : 'Tracking Data Quality'}
             </Text>
@@ -271,11 +273,11 @@ export const UncertaintyExplorerComponent: React.FC<UncertaintyExplorerProps> = 
                 </Text>
               </XStack>
             </YStack>
-          </Card>
+          </View>
 
           {/* Primary uncertainty factors */}
           {explanation.primaryFactors.length > 0 && (
-            <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+            <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
               <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
                 {stealthMode ? 'Main Factors' : 'Primary Uncertainty Factors'}
               </Text>
@@ -316,12 +318,12 @@ export const UncertaintyExplorerComponent: React.FC<UncertaintyExplorerProps> = 
                   );
                 })}
               </YStack>
-            </Card>
+            </View>
           )}
 
           {/* Contributing factors */}
           {explanation.contributingFactors.length > 0 && (
-            <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+            <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
               <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
                 {stealthMode ? 'Other Factors' : 'Contributing Factors'}
               </Text>
@@ -344,12 +346,12 @@ export const UncertaintyExplorerComponent: React.FC<UncertaintyExplorerProps> = 
                   );
                 })}
               </YStack>
-            </Card>
+            </View>
           )}
 
           {/* Recommendations */}
           {explanation.recommendations.length > 0 && (
-            <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+            <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
               <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
                 {stealthMode ? 'Suggestions' : 'Improvement Recommendations'}
               </Text>
@@ -366,38 +368,27 @@ export const UncertaintyExplorerComponent: React.FC<UncertaintyExplorerProps> = 
                   </XStack>
                 ))}
               </YStack>
-            </Card>
+            </View>
           )}
         </YStack>
       )}
 
-      {/* Selected factor detail sheet */}
-      <Sheet
-        modal
-        open={selectedFactor !== null}
-        onOpenChange={open => !open && setSelectedFactor(null)}
-        snapPoints={[40]}
-        dismissOnSnapToBottom
-      >
-        <Sheet.Frame padding="$4">
-          <Sheet.Handle />
-          {selectedFactor && (
-            <ScrollView>
-              <YStack space="$3">
-                <Text fontSize="$5" fontWeight="600" color={colorScheme.text}>
-                  {selectedFactor.replace('_', ' ')}
-                </Text>
+      {/* Selected factor detail - simplified without Sheet */}
+      {selectedFactor && (
+        <View padding="$4" backgroundColor={colorScheme.cardBackground} borderRadius="$4">
+          <YStack space="$3">
+            <Text fontSize="$5" fontWeight="600" color={colorScheme.text}>
+              {selectedFactor.replace('_', ' ')}
+            </Text>
 
-                {/* Factor details would be rendered here */}
-                <Text fontSize="$3" color={colorScheme.text}>
-                  Detailed information about this uncertainty factor and how it affects your
-                  predictions.
-                </Text>
-              </YStack>
-            </ScrollView>
-          )}
-        </Sheet.Frame>
-      </Sheet>
+            {/* Factor details would be rendered here */}
+            <Text fontSize="$3" color={colorScheme.text}>
+              Detailed information about this uncertainty factor and how it affects your
+              predictions.
+            </Text>
+          </YStack>
+        </View>
+      )}
     </YStack>
   );
 };

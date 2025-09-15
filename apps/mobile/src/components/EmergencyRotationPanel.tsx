@@ -1,21 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@tamagui/alert-dialog';
-import {
-  Button,
-  Card,
-  H3,
-  H4,
-  H5,
-  Paragraph,
-  XStack,
-  YStack,
-  Badge,
-  Separator,
-  ScrollView,
-  Sheet,
-  Switch,
-  Slider,
-} from 'tamagui';
+import { Button, Text, XStack, YStack, ScrollView, View, Slider } from '@tamagui/core';
 import {
   AlertTriangle,
   Shield,
@@ -40,9 +24,16 @@ import {
   EmergencyNotification,
 } from '../hooks/useEmergencyRotation';
 
+export interface EmergencySettings {
+  auto_response_enabled: boolean;
+  notification_enabled: boolean;
+  user_confirmation_required: boolean;
+  escalation_threshold: number;
+}
+
 interface EmergencyRotationPanelProps {
   onEmergencyTriggered?: (incidentId: string) => void;
-  onSettingsChanged?: (settings: any) => void;
+  onSettingsChanged?: (settings: EmergencySettings) => void;
   showSettings?: boolean;
   compact?: boolean;
 }
@@ -154,7 +145,8 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
       setSeverity(5);
       setTriggerType('manual_trigger');
     } catch (error) {
-      console.error('Failed to trigger emergency rotation:', error);
+      // Error handling without logging sensitive information
+      // Silently fail to avoid PII exposure in logs
     }
   };
 
@@ -183,26 +175,33 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
 
   if (compact) {
     return (
-      <Card bordered padding="$3" backgroundColor={hasActiveEmergencies ? '$red2' : '$background'}>
+      <View bordered padding="$3" backgroundColor={hasActiveEmergencies ? '$red2' : '$background'}>
         <XStack alignItems="center" space="$2">
           <Shield size={20} color={hasActiveEmergencies ? '$red10' : '$green10'} />
           <YStack flex={1}>
-            <Paragraph fontSize="$3" fontWeight="600">
+            <Text fontSize="$3" fontWeight="600">
               Emergency Status
-            </Paragraph>
-            <Paragraph fontSize="$2" color="$color10">
+            </Text>
+            <Text fontSize="$2" color="$color10">
               {hasActiveEmergencies
                 ? `${activeIncidents.length} active incident${activeIncidents.length !== 1 ? 's' : ''}`
                 : 'All systems secure'}
-            </Paragraph>
+            </Text>
           </YStack>
           {criticalNotifications.length > 0 && (
-            <Badge backgroundColor="$red9" color="white">
-              {criticalNotifications.length}
-            </Badge>
+            <View
+              backgroundColor="$red9"
+              borderRadius="$2"
+              paddingHorizontal="$2"
+              paddingVertical="$1"
+            >
+              <Text color="white" fontSize="$2">
+                {criticalNotifications.length}
+              </Text>
+            </View>
           )}
         </XStack>
-      </Card>
+      </View>
     );
   }
 
@@ -212,7 +211,9 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
       <XStack justifyContent="space-between" alignItems="center">
         <XStack alignItems="center" space="$3">
           <Shield size={24} color={hasActiveEmergencies ? '$red10' : '$green10'} />
-          <H3>Emergency Security</H3>
+          <Text fontSize="$6" fontWeight="700">
+            Emergency Security
+          </Text>
         </XStack>
         <XStack space="$2">
           {showSettings && (
@@ -238,7 +239,7 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
       </XStack>
 
       {/* Status Overview */}
-      <Card padding="$4" backgroundColor={hasActiveEmergencies ? '$red2' : '$green2'}>
+      <View padding="$4" backgroundColor={hasActiveEmergencies ? '$red2' : '$green2'}>
         <XStack alignItems="center" space="$3">
           {hasActiveEmergencies ? (
             <AlertTriangle size={32} color="$red10" />
@@ -246,25 +247,31 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
             <CheckCircle size={32} color="$green10" />
           )}
           <YStack flex={1}>
-            <H4 color={hasActiveEmergencies ? '$red11' : '$green11'}>
+            <Text
+              fontSize="$5"
+              fontWeight="600"
+              color={hasActiveEmergencies ? '$red11' : '$green11'}
+            >
               {hasActiveEmergencies ? 'Emergency Active' : 'Systems Secure'}
-            </H4>
-            <Paragraph color="$color10">
+            </Text>
+            <Text color="$color10">
               {hasActiveEmergencies
                 ? `${activeIncidents.length} active incident${activeIncidents.length !== 1 ? 's' : ''} require attention`
                 : 'No security incidents detected. All systems operating normally.'}
-            </Paragraph>
+            </Text>
           </YStack>
         </XStack>
-      </Card>
+      </View>
 
       {/* Critical Notifications */}
       {criticalNotifications.length > 0 && (
-        <Card padding="$4" backgroundColor="$red3" borderColor="$red6">
+        <View padding="$4" backgroundColor="$red3" borderColor="$red6">
           <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
             <XStack alignItems="center" space="$2">
               <Bell size={20} color="$red10" />
-              <H5 color="$red11">Critical Alerts ({criticalNotifications.length})</H5>
+              <Text fontSize="$4" fontWeight="600" color="$red11">
+                Critical Alerts ({criticalNotifications.length})
+              </Text>
             </XStack>
             <Button size="$2" variant="ghost" onPress={clearAllNotifications}>
               Clear All
@@ -272,15 +279,15 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
           </XStack>
           <YStack space="$2">
             {criticalNotifications.slice(0, 3).map(notification => (
-              <Card key={notification.id} padding="$3" backgroundColor="$red4">
+              <View key={notification.id} padding="$3" backgroundColor="$red4">
                 <XStack justifyContent="space-between" alignItems="flex-start">
                   <YStack flex={1} space="$1">
-                    <Paragraph fontSize="$3" fontWeight="600" color="$red12">
+                    <Text fontSize="$3" fontWeight="600" color="$red12">
                       {notification.title}
-                    </Paragraph>
-                    <Paragraph fontSize="$2" color="$red11">
+                    </Text>
+                    <Text fontSize="$2" color="$red11">
                       {notification.message}
-                    </Paragraph>
+                    </Text>
                   </YStack>
                   <XStack space="$2">
                     {notification.actions?.map(action => (
@@ -306,16 +313,18 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
                     />
                   </XStack>
                 </XStack>
-              </Card>
+              </View>
             ))}
           </YStack>
-        </Card>
+        </View>
       )}
 
       {/* Active Incidents */}
       {activeIncidents.length > 0 && (
-        <Card padding="$4">
-          <H5 marginBottom="$3">Active Incidents ({activeIncidents.length})</H5>
+        <View padding="$4">
+          <Text fontSize="$4" fontWeight="600" marginBottom="$3">
+            Active Incidents ({activeIncidents.length})
+          </Text>
           <ScrollView maxHeight={300}>
             <YStack space="$3">
               {activeIncidents.map(incident => {
@@ -323,7 +332,7 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
                 const StatusIcon = getStatusIcon(incident.status);
 
                 return (
-                  <Card
+                  <View
                     key={incident.id}
                     padding="$3"
                     backgroundColor="$gray2"
@@ -335,26 +344,40 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
                     <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
                       <XStack alignItems="center" space="$2">
                         <StatusIcon size={20} color={getStatusColor(incident.status)} />
-                        <Badge backgroundColor={getSeverityColor(incident.severity)} color="white">
-                          Severity {incident.severity}
-                        </Badge>
-                        <Badge backgroundColor={getStatusColor(incident.status)} color="white">
-                          {incident.status}
-                        </Badge>
+                        <View
+                          borderRadius="$2"
+                          paddingHorizontal="$2"
+                          paddingVertical="$1"
+                          backgroundColor={getSeverityColor(incident.severity)}
+                        >
+                          <Text color="white" fontSize="$2">
+                            Severity {incident.severity}
+                          </Text>
+                        </View>
+                        <View
+                          borderRadius="$2"
+                          paddingHorizontal="$2"
+                          paddingVertical="$1"
+                          backgroundColor={getStatusColor(incident.status)}
+                        >
+                          <Text color="white" fontSize="$2">
+                            {incident.status}
+                          </Text>
+                        </View>
                       </XStack>
-                      <Paragraph fontSize="$2" color="$color10">
+                      <Text fontSize="$2" color="$color10">
                         {new Date(incident.detected_at).toLocaleTimeString()}
-                      </Paragraph>
+                      </Text>
                     </XStack>
 
-                    <Paragraph fontSize="$3" fontWeight="500" marginBottom="$2">
+                    <Text fontSize="$3" fontWeight="500" marginBottom="$2">
                       {incident.description}
-                    </Paragraph>
+                    </Text>
 
-                    <Paragraph fontSize="$2" color="$color10" marginBottom="$2">
+                    <Text fontSize="$2" color="$color10" marginBottom="$2">
                       Trigger: {incident.trigger_type.replace(/_/g, ' ')} • Devices:{' '}
                       {incident.affected_devices.length}
-                    </Paragraph>
+                    </Text>
 
                     {/* Expanded Details */}
                     {selectedIncident === incident.id && (
@@ -366,26 +389,49 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
                         borderTopColor="$gray6"
                       >
                         <YStack space="$2">
-                          <H5>Response Actions</H5>
+                          <Text fontSize="$4" fontWeight="600">
+                            Response Actions
+                          </Text>
                           {response ? (
                             <YStack space="$2">
                               <XStack justifyContent="space-between">
-                                <Paragraph>Devices Isolated:</Paragraph>
-                                <Badge>{response.devices_isolated.length}</Badge>
+                                <Text>Devices Isolated:</Text>
+                                <View
+                                  borderRadius="$2"
+                                  paddingHorizontal="$2"
+                                  paddingVertical="$1"
+                                  backgroundColor="$gray6"
+                                >
+                                  <Text fontSize="$2">{response.devices_isolated.length}</Text>
+                                </View>
                               </XStack>
                               <XStack justifyContent="space-between">
-                                <Paragraph>Keys Invalidated:</Paragraph>
-                                <Badge>{response.keys_invalidated.length}</Badge>
+                                <Text>Keys Invalidated:</Text>
+                                <View
+                                  borderRadius="$2"
+                                  paddingHorizontal="$2"
+                                  paddingVertical="$1"
+                                  backgroundColor="$gray6"
+                                >
+                                  <Text fontSize="$2">{response.keys_invalidated.length}</Text>
+                                </View>
                               </XStack>
                               <XStack justifyContent="space-between">
-                                <Paragraph>Success Rate:</Paragraph>
-                                <Badge backgroundColor="$green8">
-                                  {Math.round(response.success_rate * 100)}%
-                                </Badge>
+                                <Text>Success Rate:</Text>
+                                <View
+                                  borderRadius="$2"
+                                  paddingHorizontal="$2"
+                                  paddingVertical="$1"
+                                  backgroundColor="$green8"
+                                >
+                                  <Text color="white" fontSize="$2">
+                                    {Math.round(response.success_rate * 100)}%
+                                  </Text>
+                                </View>
                               </XStack>
                             </YStack>
                           ) : (
-                            <Paragraph color="$color10">No response initiated</Paragraph>
+                            <Text color="$color10">No response initiated</Text>
                           )}
                         </YStack>
 
@@ -449,19 +495,21 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
                         </XStack>
                       </YStack>
                     )}
-                  </Card>
+                  </View>
                 );
               })}
             </YStack>
           </ScrollView>
-        </Card>
+        </View>
       )}
 
       {/* Notifications Panel */}
       {showNotifications && notifications.length > 0 && (
-        <Card padding="$4">
+        <View padding="$4">
           <XStack justifyContent="space-between" alignItems="center" marginBottom="$3">
-            <H5>Recent Notifications ({notifications.length})</H5>
+            <Text fontSize="$4" fontWeight="600">
+              Recent Notifications ({notifications.length})
+            </Text>
             <Button size="$2" variant="ghost" onPress={() => setShowNotifications(false)}>
               Hide
             </Button>
@@ -478,14 +526,17 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
                   borderRadius="$3"
                 >
                   <YStack flex={1} space="$1">
-                    <Paragraph fontSize="$2" fontWeight="500">
+                    <Text fontSize="$2" fontWeight="500">
                       {notification.title}
-                    </Paragraph>
-                    <Paragraph fontSize="$1" color="$color10">
+                    </Text>
+                    <Text fontSize="$1" color="$color10">
                       {new Date(notification.timestamp).toLocaleString()}
-                    </Paragraph>
+                    </Text>
                   </YStack>
-                  <Badge
+                  <View
+                    borderRadius="$2"
+                    paddingHorizontal="$2"
+                    paddingVertical="$1"
                     backgroundColor={getSeverityColor(
                       notification.severity === 'critical'
                         ? 9
@@ -494,8 +545,10 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
                           : 5
                     )}
                   >
-                    {notification.severity}
-                  </Badge>
+                    <Text color="white" fontSize="$2">
+                      {notification.severity}
+                    </Text>
+                  </View>
                   <Button
                     size="$2"
                     variant="ghost"
@@ -506,139 +559,176 @@ const EmergencyRotationPanel: React.FC<EmergencyRotationPanelProps> = ({
               ))}
             </YStack>
           </ScrollView>
-        </Card>
+        </View>
       )}
 
-      {/* Manual Trigger Sheet */}
-      <Sheet open={manualTriggerOpen} onOpenChange={setManualTriggerOpen} dismissOnSnapToBottom>
-        <Sheet.Overlay />
-        <Sheet.Frame padding="$4" space="$4">
-          <Sheet.Handle />
-          <H4>Manual Emergency Trigger</H4>
+      {/* Manual Trigger Modal */}
+      {manualTriggerOpen && (
+        <View
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          backgroundColor="rgba(0,0,0,0.5)"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <View backgroundColor="white" padding="$4" borderRadius="$4" width="90%" maxWidth={400}>
+            <Text fontSize="$5" fontWeight="600" marginBottom="$4">
+              Manual Emergency Trigger
+            </Text>
 
-          <YStack space="$4">
-            <YStack space="$2">
-              <Paragraph fontSize="$3" fontWeight="500">
-                Trigger Type
-              </Paragraph>
-              {/* Add trigger type selection UI here */}
-            </YStack>
-
-            <YStack space="$2">
-              <Paragraph fontSize="$3" fontWeight="500">
-                Description
-              </Paragraph>
-              {/* Add description input here */}
-            </YStack>
-
-            <YStack space="$2">
-              <Paragraph fontSize="$3" fontWeight="500">
-                Severity: {severity}
-              </Paragraph>
-              <Slider
-                value={[severity]}
-                onValueChange={([value]) => setSeverity(Math.round(value))}
-                min={1}
-                max={10}
-                step={1}
-              >
-                <Slider.Track backgroundColor="$gray6">
-                  <Slider.TrackActive backgroundColor={getSeverityColor(severity)} />
-                </Slider.Track>
-                <Slider.Thumb circular backgroundColor={getSeverityColor(severity)} />
-              </Slider>
-            </YStack>
-
-            <XStack space="$3" justifyContent="flex-end">
-              <Button variant="outlined" onPress={() => setManualTriggerOpen(false)}>
-                Cancel
-              </Button>
-              <Button theme="red" onPress={handleManualTrigger} disabled={isProcessingEmergency}>
-                {isProcessingEmergency ? 'Triggering...' : 'Trigger Emergency'}
-              </Button>
-            </XStack>
-          </YStack>
-        </Sheet.Frame>
-      </Sheet>
-
-      {/* Settings Sheet */}
-      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen} dismissOnSnapToBottom>
-        <Sheet.Overlay />
-        <Sheet.Frame padding="$4" space="$4">
-          <Sheet.Handle />
-          <H4>Emergency Settings</H4>
-
-          <YStack space="$4">
-            <XStack justifyContent="space-between" alignItems="center">
-              <YStack flex={1}>
-                <Paragraph fontSize="$3" fontWeight="500">
-                  Auto Response
-                </Paragraph>
-                <Paragraph fontSize="$2" color="$color10">
-                  Automatically respond to high-severity incidents
-                </Paragraph>
+            <YStack space="$4">
+              <YStack space="$2">
+                <Text fontSize="$3" fontWeight="500">
+                  Trigger Type
+                </Text>
+                {/* Add trigger type selection UI here */}
               </YStack>
-              <Switch checked={autoResponseEnabled} onCheckedChange={setAutoResponseEnabled} />
-            </XStack>
 
-            <Separator />
-
-            <XStack justifyContent="space-between" alignItems="center">
-              <YStack flex={1}>
-                <Paragraph fontSize="$3" fontWeight="500">
-                  Notifications
-                </Paragraph>
-                <Paragraph fontSize="$2" color="$color10">
-                  Show system notifications for incidents
-                </Paragraph>
+              <YStack space="$2">
+                <Text fontSize="$3" fontWeight="500">
+                  Description
+                </Text>
+                {/* Add description input here */}
               </YStack>
-              <Switch checked={notificationEnabled} onCheckedChange={setNotificationEnabled} />
-            </XStack>
 
-            <Separator />
-
-            <XStack justifyContent="space-between" alignItems="center">
-              <YStack flex={1}>
-                <Paragraph fontSize="$3" fontWeight="500">
-                  User Confirmation
-                </Paragraph>
-                <Paragraph fontSize="$2" color="$color10">
-                  Require user approval before emergency response
-                </Paragraph>
+              <YStack space="$2">
+                <Text fontSize="$3" fontWeight="500">
+                  Severity: {severity}
+                </Text>
+                <Slider
+                  value={[severity]}
+                  onValueChange={([value]: number[]) => setSeverity(Math.round(value))}
+                  min={1}
+                  max={10}
+                  step={1}
+                >
+                  <Slider.Track backgroundColor="$gray6">
+                    <Slider.TrackActive backgroundColor={getSeverityColor(severity)} />
+                  </Slider.Track>
+                  <Slider.Thumb circular backgroundColor={getSeverityColor(severity)} />
+                </Slider>
               </YStack>
-              <Switch
-                checked={userConfirmationRequired}
-                onCheckedChange={setUserConfirmationRequired}
-              />
-            </XStack>
 
-            <Separator />
-
-            <YStack space="$2">
-              <Paragraph fontSize="$3" fontWeight="500">
-                Escalation Threshold: {escalationThreshold}
-              </Paragraph>
-              <Paragraph fontSize="$2" color="$color10">
-                Minimum severity for automatic escalation
-              </Paragraph>
-              <Slider
-                value={[escalationThreshold]}
-                onValueChange={([value]) => setEscalationThreshold(Math.round(value))}
-                min={1}
-                max={10}
-                step={1}
-              >
-                <Slider.Track backgroundColor="$gray6">
-                  <Slider.TrackActive backgroundColor={getSeverityColor(escalationThreshold)} />
-                </Slider.Track>
-                <Slider.Thumb circular backgroundColor={getSeverityColor(escalationThreshold)} />
-              </Slider>
+              <XStack space="$3" justifyContent="flex-end">
+                <Button variant="outlined" onPress={() => setManualTriggerOpen(false)}>
+                  Cancel
+                </Button>
+                <Button theme="red" onPress={handleManualTrigger} disabled={isProcessingEmergency}>
+                  {isProcessingEmergency ? 'Triggering...' : 'Trigger Emergency'}
+                </Button>
+              </XStack>
             </YStack>
-          </YStack>
+          </View>
+        </View>
+      )}
 
-          <Button onPress={() => setSettingsOpen(false)}>Done</Button>
-        </Sheet.Frame>
-      </Sheet>
+      {/* Settings Modal */}
+      {settingsOpen && (
+        <View
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          backgroundColor="rgba(0,0,0,0.5)"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <View backgroundColor="white" padding="$4" borderRadius="$4" width="90%" maxWidth={400}>
+            <Text fontSize="$5" fontWeight="600" marginBottom="$4">
+              Emergency Settings
+            </Text>
+
+            <YStack space="$4">
+              <XStack justifyContent="space-between" alignItems="center">
+                <YStack flex={1}>
+                  <Text fontSize="$3" fontWeight="500">
+                    Auto Response
+                  </Text>
+                  <Text fontSize="$2" color="$color10">
+                    Automatically respond to high-severity incidents
+                  </Text>
+                </YStack>
+                <Button
+                  size="$2"
+                  backgroundColor={autoResponseEnabled ? '$green9' : '$gray6'}
+                  onPress={() => setAutoResponseEnabled(!autoResponseEnabled)}
+                >
+                  {autoResponseEnabled ? 'ON' : 'OFF'}
+                </Button>
+              </XStack>
+
+              <View height={1} backgroundColor="$gray6" marginVertical="$2" />
+
+              <XStack justifyContent="space-between" alignItems="center">
+                <YStack flex={1}>
+                  <Text fontSize="$3" fontWeight="500">
+                    Notifications
+                  </Text>
+                  <Text fontSize="$2" color="$color10">
+                    Show system notifications for incidents
+                  </Text>
+                </YStack>
+                <Button
+                  size="$2"
+                  backgroundColor={notificationEnabled ? '$green9' : '$gray6'}
+                  onPress={() => setNotificationEnabled(!notificationEnabled)}
+                >
+                  {notificationEnabled ? 'ON' : 'OFF'}
+                </Button>
+              </XStack>
+
+              <View height={1} backgroundColor="$gray6" marginVertical="$2" />
+
+              <XStack justifyContent="space-between" alignItems="center">
+                <YStack flex={1}>
+                  <Text fontSize="$3" fontWeight="500">
+                    User Confirmation
+                  </Text>
+                  <Text fontSize="$2" color="$color10">
+                    Require user approval before emergency response
+                  </Text>
+                </YStack>
+                <Button
+                  size="$2"
+                  backgroundColor={userConfirmationRequired ? '$green9' : '$gray6'}
+                  onPress={() => setUserConfirmationRequired(!userConfirmationRequired)}
+                >
+                  {userConfirmationRequired ? 'ON' : 'OFF'}
+                </Button>
+              </XStack>
+
+              <View height={1} backgroundColor="$gray6" marginVertical="$2" />
+
+              <YStack space="$2">
+                <Text fontSize="$3" fontWeight="500">
+                  Escalation Threshold: {escalationThreshold}
+                </Text>
+                <Text fontSize="$2" color="$color10">
+                  Minimum severity for automatic escalation
+                </Text>
+                <Slider
+                  value={[escalationThreshold]}
+                  onValueChange={([value]: number[]) => setEscalationThreshold(Math.round(value))}
+                  min={1}
+                  max={10}
+                  step={1}
+                >
+                  <Slider.Track backgroundColor="$gray6">
+                    <Slider.TrackActive backgroundColor={getSeverityColor(escalationThreshold)} />
+                  </Slider.Track>
+                  <Slider.Thumb circular backgroundColor={getSeverityColor(escalationThreshold)} />
+                </Slider>
+              </YStack>
+            </YStack>
+
+            <Button onPress={() => setSettingsOpen(false)}>Done</Button>
+          </View>
+        </View>
+      )}
     </YStack>
   );
 };

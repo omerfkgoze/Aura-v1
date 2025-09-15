@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text, XStack, YStack, Button } from 'tamagui';
-import { OvulationPrediction } from '@aura/shared-types/prediction';
+import { Text, XStack, YStack, Button } from '@tamagui/core';
+import { OvulationPrediction } from '@aura/shared-types';
 
 interface OvulationChartProps {
   prediction: OvulationPrediction;

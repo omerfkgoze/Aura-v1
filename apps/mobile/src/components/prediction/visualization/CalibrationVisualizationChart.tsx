@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { YStack, XStack, Text, View, Card } from '@tamagui/core';
+import { YStack, XStack, Text, View } from '@tamagui/core';
 import {
   LineChart,
   ScatterChart,
@@ -132,7 +132,7 @@ export const CalibrationVisualizationChart: React.FC<CalibrationVisualizationPro
   return (
     <YStack space="$4" padding="$3" backgroundColor={colorScheme.background}>
       {/* Header with quality score */}
-      <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+      <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
         <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
           <Text fontSize="$5" fontWeight="600" color={colorScheme.text}>
             {title}
@@ -180,10 +180,10 @@ export const CalibrationVisualizationChart: React.FC<CalibrationVisualizationPro
             </Text>
           </YStack>
         </XStack>
-      </Card>
+      </View>
 
       {/* Main calibration plot */}
-      <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+      <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
         <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
           {stealthMode ? 'Accuracy vs Confidence' : 'Calibration Plot'}
         </Text>
@@ -246,10 +246,10 @@ export const CalibrationVisualizationChart: React.FC<CalibrationVisualizationPro
             ? 'Points on dashed line = perfect accuracy'
             : 'Points on dashed line indicate perfect calibration'}
         </Text>
-      </Card>
+      </View>
 
       {/* Reliability diagram */}
-      <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+      <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
         <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
           {stealthMode ? 'Confidence Band Performance' : 'Reliability Diagram'}
         </Text>
@@ -297,10 +297,10 @@ export const CalibrationVisualizationChart: React.FC<CalibrationVisualizationPro
             </AreaChart>
           </ResponsiveContainer>
         </View>
-      </Card>
+      </View>
 
       {/* Performance by confidence level */}
-      <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+      <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
         <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
           {stealthMode ? 'Performance by Confidence' : 'Performance by Confidence Level'}
         </Text>
@@ -352,11 +352,11 @@ export const CalibrationVisualizationChart: React.FC<CalibrationVisualizationPro
             </LineChart>
           </ResponsiveContainer>
         </View>
-      </Card>
+      </View>
 
       {/* Technical details (if enabled) */}
       {showTechnicalDetails && (
-        <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+        <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
           <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
             Technical Metrics
           </Text>
@@ -407,12 +407,12 @@ export const CalibrationVisualizationChart: React.FC<CalibrationVisualizationPro
               </Text>
             </XStack>
           </YStack>
-        </Card>
+        </View>
       )}
 
       {/* Recommendations */}
       {metricsReport.recommendations.length > 0 && (
-        <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+        <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
           <Text fontSize="$4" fontWeight="600" color={colorScheme.text} marginBottom="$3">
             {stealthMode ? 'Improvement Areas' : 'Calibration Recommendations'}
           </Text>
@@ -429,12 +429,12 @@ export const CalibrationVisualizationChart: React.FC<CalibrationVisualizationPro
               </XStack>
             ))}
           </YStack>
-        </Card>
+        </View>
       )}
 
       {/* Trend information */}
       {metricsReport.historicalTrend.significantChange && (
-        <Card backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
+        <View backgroundColor={colorScheme.cardBackground} padding="$3" borderRadius="$4">
           <XStack space="$3" alignItems="center">
             <YStack flex={1}>
               <Text fontSize="$4" fontWeight="600" color={colorScheme.text}>
@@ -453,7 +453,7 @@ export const CalibrationVisualizationChart: React.FC<CalibrationVisualizationPro
               {(metricsReport.historicalTrend.confidenceInTrend * 100).toFixed(0)}% confidence
             </Text>
           </XStack>
-        </Card>
+        </View>
       )}
     </YStack>
   );
