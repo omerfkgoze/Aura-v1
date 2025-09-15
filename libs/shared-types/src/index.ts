@@ -10,5 +10,8 @@ export * from './data';
 // Security Types
 export * from './security';
 
+// Prediction Types
+export * from './prediction';
+
 // Common utility types
 export * from './common';
