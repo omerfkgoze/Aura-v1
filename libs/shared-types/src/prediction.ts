@@ -78,6 +78,71 @@ export interface DecisionRegret {
   recommendations: string[];
 }
 
+// User decision tracking for regret analysis
+export interface UserDecision {
+  id: string;
+  timestamp: string;
+  decisionType: 'planning' | 'protection' | 'fertility' | 'health';
+  predictionUsed: {
+    date: string;
+    confidenceLevel: number;
+    probabilityEstimate: number;
+  };
+  actualOutcome: {
+    date: string;
+    wasCorrect: boolean;
+    errorDays: number;
+    consequenceLevel: 'low' | 'medium' | 'high';
+  };
+  regretMetrics: {
+    anticipatedRegret: number;
+    experiencedRegret: number;
+    regretIntensity: number;
+    learningValue: number;
+  };
+  contextFactors: {
+    timeHorizon: number;
+    stakesLevel: 'low' | 'medium' | 'high';
+    alternativesAvailable: boolean;
+    externalPressure: number;
+  };
+}
+
+// Decision support recommendation system
+export interface DecisionSupport {
+  recommendationType:
+    | 'confidence_adjustment'
+    | 'timing_buffer'
+    | 'alternative_strategy'
+    | 'data_improvement';
+  message: string;
+  actionItems: string[];
+  confidenceThreshold: number;
+  expectedRegretReduction: number;
+  applicableScenarios: string[];
+}
+
+// Regret analysis insights
+export interface RegretAnalysisInsights {
+  overallRegretScore: number;
+  regretTrends: {
+    byDecisionType: Record<string, number>;
+    byConfidenceLevel: Record<string, number>;
+    byTimeHorizon: Record<string, number>;
+  };
+  learningProgress: {
+    regretReduction: number;
+    decisionImprovement: number;
+    optimalConfidenceRange: [number, number];
+  };
+  personalizedRecommendations: DecisionSupport[];
+  riskTolerance: {
+    estimatedLevel: 'conservative' | 'moderate' | 'aggressive';
+    consistency: number;
+    adaptationRate: number;
+  };
+}
+
 // Model calibration data
 export interface ModelCalibration {
   calibrationCurve: CalibrationPoint[];
@@ -101,6 +166,8 @@ export interface ClientOnlyPredictionCache {
   ovulationPrediction?: OvulationPrediction;
   accuracy: PredictionAccuracy;
   calibration: ModelCalibration;
+  regretAnalysis?: RegretAnalysisInsights;
+  decisionHistory: UserDecision[];
   lastUpdated: string;
   modelVersion: string;
   confidenceIntervals: ConfidenceInterval;
@@ -174,4 +241,23 @@ export interface PredictionVisualization {
     color: string;
     opacity: number;
   }[];
+}
+
+// Regret analysis visualization
+export interface RegretVisualization {
+  regretHistory: {
+    dates: string[];
+    regretScores: number[];
+    decisionTypes: string[];
+  };
+  confidenceOptimization: {
+    confidenceLevels: number[];
+    expectedRegret: number[];
+    optimalRange: [number, number];
+  };
+  learningCurve: {
+    timePoints: string[];
+    cumulativeRegret: number[];
+    improvementRate: number[];
+  };
 }
