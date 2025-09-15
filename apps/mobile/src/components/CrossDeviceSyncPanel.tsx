@@ -1,8 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, ScrollView, Alert, ActivityIndicator, StyleSheet } from 'react-native';
-import { Card, XStack, YStack, H3, H4, Badge, Progress, Separator } from '@my/ui';
+import { View as RNView, ScrollView, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { XStack, YStack, useTheme as useTamaguiTheme } from '@tamagui/core';
+import { Text, H3, H4 } from '@tamagui/text';
+import { Card } from '@tamagui/card';
+import { Button } from '@tamagui/button';
+import { Progress } from '@tamagui/progress';
+import { Separator } from '@tamagui/separator';
 import { useCrossDeviceSync, ConflictInfo } from '../hooks/useCrossDeviceSync';
-import { useTheme } from '@tamagui/core';
+// Badge component'i için geçici olarak Text kullanacağız
+const Badge = ({ children, backgroundColor, ...props }: any) => (
+  <Text
+    fontSize="$2"
+    paddingHorizontal="$2"
+    paddingVertical="$1"
+    borderRadius="$2"
+    backgroundColor={backgroundColor}
+    color="white"
+    fontWeight="bold"
+    textAlign="center"
+    {...props}
+  >
+    {children}
+  </Text>
+);
 
 interface CrossDeviceSyncPanelProps {
   onRotationComplete?: (rotationId: string) => void;
@@ -15,7 +35,7 @@ export const CrossDeviceSyncPanel: React.FC<CrossDeviceSyncPanelProps> = ({
   onConflictResolved,
   showAdvancedOptions = false,
 }) => {
-  const theme = useTheme();
+  const theme = useTamaguiTheme();
   const {
     syncState,
     currentRotation,
@@ -244,7 +264,7 @@ export const CrossDeviceSyncPanel: React.FC<CrossDeviceSyncPanelProps> = ({
         <H4 color="$red11">Detected Conflicts ({detectedConflicts.length})</H4>
 
         {detectedConflicts.map((conflict, index) => (
-          <View key={index} style={styles.conflictItem}>
+          <RNView key={index} style={styles.conflictItem}>
             <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
               <Text fontSize="$4" fontWeight="bold">
                 {conflict.conflictType.replace('_', ' ').toUpperCase()}
@@ -290,7 +310,7 @@ export const CrossDeviceSyncPanel: React.FC<CrossDeviceSyncPanelProps> = ({
                 Manual Review
               </Button>
             </XStack>
-          </View>
+          </RNView>
         ))}
       </Card>
     );
@@ -409,10 +429,10 @@ export const CrossDeviceSyncPanel: React.FC<CrossDeviceSyncPanelProps> = ({
 
   if (isInitializing) {
     return (
-      <View style={styles.centered}>
+      <RNView style={styles.centered}>
         <ActivityIndicator size="large" />
         <Text marginTop="$4">Initializing cross-device sync...</Text>
-      </View>
+      </RNView>
     );
   }
 

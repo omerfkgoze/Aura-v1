@@ -54,8 +54,13 @@
   ],
   "dependencies": {
     "@tamagui/animations-react-native": "^1.132.24",
+    "@tamagui/button": "^1.132.24",
+    "@tamagui/card": "^1.132.24",
     "@tamagui/config": "^1.132.24",
     "@tamagui/core": "^1.132.24",
+    "@tamagui/progress": "^1.132.24",
+    "@tamagui/separator": "^1.132.24",
+    "@tamagui/text": "^1.132.24",
     "@typescript-eslint/project-service": "^8.42.0",
     "@typescript-eslint/tsconfig-utils": "^8.42.0",
     "expo-crypto": "^15.0.7",
