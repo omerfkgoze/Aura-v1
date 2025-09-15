@@ -61,10 +61,10 @@ export interface PredictionAccuracy {
 // Individual accuracy record
 export interface AccuracyRecord {
   predictionDate: string;
-  actualDate: string;
+  actualDate: string | null;
   confidenceLevel: number;
   wasAccurate: boolean;
-  errorDays: number;
+  errorDays: number | null;
   brierScore: number;
 }
 

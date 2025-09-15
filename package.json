@@ -53,13 +53,17 @@
     "libs/*"
   ],
   "dependencies": {
+    "@tamagui/animations-react-native": "^1.132.24",
+    "@tamagui/config": "^1.132.24",
+    "@tamagui/core": "^1.132.24",
     "@typescript-eslint/project-service": "^8.42.0",
     "@typescript-eslint/tsconfig-utils": "^8.42.0",
     "expo-crypto": "^15.0.7",
     "expo-device": "^8.0.7",
     "expo-secure-store": "^15.0.7",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "recharts": "^3.2.0"
   },
   "pnpm": {
     "overrides": {

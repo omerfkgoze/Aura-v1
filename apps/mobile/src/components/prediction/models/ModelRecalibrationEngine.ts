@@ -61,6 +61,7 @@ export class ModelRecalibrationEngine {
   assessRecalibrationNeed(
     accuracyHistory: AccuracyRecord[],
     currentParameters: BayesianModelParameters,
+    predictionType: 'period' | 'ovulation' = 'period',
     lastRecalibrationDate?: string
   ): RecalibrationTrigger {
     // Check if we have enough data
@@ -86,7 +87,10 @@ export class ModelRecalibrationEngine {
     }
 
     // Validate current calibration
-    const validation = this.calibrationValidator.validateCalibration(accuracyHistory);
+    const validation = this.calibrationValidator.validateCalibration(
+      accuracyHistory,
+      predictionType
+    );
     const ece = validation.analysis.expectedCalibrationError;
     const brierScore = this.calculateBrierScore(accuracyHistory);
 
@@ -144,6 +148,7 @@ export class ModelRecalibrationEngine {
   performRecalibration(
     accuracyHistory: AccuracyRecord[],
     currentParameters: BayesianModelParameters,
+    predictionType: 'period' | 'ovulation' = 'period',
     strategy?: RecalibrationStrategy
   ): RecalibrationResult {
     // Validate input data
@@ -152,7 +157,10 @@ export class ModelRecalibrationEngine {
     }
 
     // Select strategy if not provided
-    const validation = this.calibrationValidator.validateCalibration(accuracyHistory);
+    const validation = this.calibrationValidator.validateCalibration(
+      accuracyHistory,
+      predictionType
+    );
     const selectedStrategy =
       strategy || this.selectRecalibrationStrategy(validation, accuracyHistory);
 
@@ -359,11 +367,11 @@ export class ModelRecalibrationEngine {
     // Calculate recent prediction errors
     const recentHistory = accuracyHistory.slice(-20);
     const errorMagnitude =
-      recentHistory.reduce((sum, record) => sum + Math.abs(record.errorDays), 0) /
+      recentHistory.reduce((sum, record) => sum + Math.abs(record.errorDays || 0), 0) /
       recentHistory.length;
 
     // Update parameters based on recent errors
-    const learningRate = strategy.parameters.learning_rate || 0.1;
+    const learningRate = strategy.parameters['learning_rate'] || 0.1;
 
     return {
       ...currentParameters,
@@ -514,8 +522,9 @@ export class ModelRecalibrationEngine {
     const recent = accuracyHistory.slice(-10);
     const older = accuracyHistory.slice(-20, -10);
 
-    const recentError = recent.reduce((sum, r) => sum + Math.abs(r.errorDays), 0) / recent.length;
-    const olderError = older.reduce((sum, r) => sum + Math.abs(r.errorDays), 0) / older.length;
+    const recentError =
+      recent.reduce((sum, r) => sum + Math.abs(r.errorDays || 0), 0) / recent.length;
+    const olderError = older.reduce((sum, r) => sum + Math.abs(r.errorDays || 0), 0) / older.length;
 
     return Math.abs(recentError - olderError) > 1.0; // 1 day threshold
   }
@@ -592,9 +601,12 @@ export class ModelRecalibrationEngine {
     }));
   }
 
-  private calculateECEFromAccuracy(accuracyHistory: AccuracyRecord[]): number {
+  private calculateECEFromAccuracy(
+    accuracyHistory: AccuracyRecord[],
+    predictionType: 'period' | 'ovulation' = 'period'
+  ): number {
     // Reuse the ECE calculation from calibration validator
-    return this.calibrationValidator.validateCalibration(accuracyHistory).analysis
+    return this.calibrationValidator.validateCalibration(accuracyHistory, predictionType).analysis
       .expectedCalibrationError;
   }
 

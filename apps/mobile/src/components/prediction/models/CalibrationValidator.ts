@@ -568,7 +568,7 @@ export class CalibrationValidator {
     for (let i = 0; i < n; i++) {
       const empiricalPredicted = (i + 1) / n;
       const empiricalActual =
-        sortedActual.slice(0, i + 1).reduce((sum, val) => sum + val, 0) / (i + 1);
+        sortedActual.slice(0, i + 1).reduce((sum, val) => sum + val, 0 as number) / (i + 1);
       const difference = Math.abs(empiricalPredicted - empiricalActual);
       maxDifference = Math.max(maxDifference, difference);
     }

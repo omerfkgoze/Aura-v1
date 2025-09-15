@@ -322,11 +322,11 @@ export function createOpaqueClient(config?: Partial<OpaqueClientConfig>): Opaque
  */
 export function validateUsername(username: string): boolean {
   // Basic validation - can be extended based on requirements
-  return (
+  return Boolean(
     username &&
-    username.trim().length > 0 &&
-    username.length <= 255 &&
-    /^[a-zA-Z0-9._@-]+$/.test(username)
+      username.trim().length > 0 &&
+      username.length <= 255 &&
+      /^[a-zA-Z0-9._@-]+$/.test(username)
   );
 }
 

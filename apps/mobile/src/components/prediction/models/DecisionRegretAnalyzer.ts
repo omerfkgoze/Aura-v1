@@ -404,7 +404,7 @@ export class DecisionRegretAnalyzer {
     const riskSeekingScore = highStakesDecisions / decisions.length;
 
     // Estimate risk tolerance level
-    const estimatedLevel =
+    const estimatedLevel: 'conservative' | 'moderate' | 'aggressive' =
       avgConfidenceUsed > 0.8 && riskSeekingScore > 0.3
         ? 'aggressive'
         : avgConfidenceUsed < 0.6 || riskSeekingScore < 0.1

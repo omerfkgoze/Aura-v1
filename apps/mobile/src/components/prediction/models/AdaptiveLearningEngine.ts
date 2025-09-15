@@ -185,7 +185,7 @@ export class AdaptiveLearningEngine {
 
     // Calculate average error patterns
     const averageError =
-      recentErrors.reduce((sum, record) => sum + record.errorDays, 0) / recentErrors.length;
+      recentErrors.reduce((sum, record) => sum + (record.errorDays || 0), 0) / recentErrors.length;
     const errorVariance = this.calculateErrorVariance(recentErrors, averageError);
 
     // Extract actual cycle patterns from recent data
@@ -237,7 +237,7 @@ export class AdaptiveLearningEngine {
   private calculateErrorVariance(errors: AccuracyRecord[], meanError: number): number {
     if (errors.length <= 1) return 1;
 
-    const squaredDiffs = errors.map(record => Math.pow(record.errorDays - meanError, 2));
+    const squaredDiffs = errors.map(record => Math.pow((record.errorDays || 0) - meanError, 2));
     return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / (errors.length - 1);
   }
 
@@ -284,7 +284,7 @@ export class AdaptiveLearningEngine {
     recentErrors.forEach(record => {
       const month = new Date(record.predictionDate).getMonth();
       if (!monthlyErrors[month]) monthlyErrors[month] = [];
-      monthlyErrors[month].push(Math.abs(record.errorDays));
+      monthlyErrors[month].push(Math.abs(record.errorDays || 0));
     });
 
     // Check if certain months have consistently higher errors

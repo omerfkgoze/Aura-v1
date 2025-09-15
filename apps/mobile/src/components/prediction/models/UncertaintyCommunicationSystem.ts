@@ -328,7 +328,7 @@ export class UncertaintyCommunicationSystem {
       showRecommendations: style.uncertaintyEmphasis !== 'low',
       colorScheme: isStealthMode
         ? 'stealth'
-        : style.culturalAdaptation === 'minimal'
+        : style.culturalAdaptation === 'universal'
           ? 'minimal'
           : 'default',
       interactivityLevel: isMinimal

@@ -169,9 +169,10 @@ export class IntervalValidator {
     const correct = records.filter(r => r.wasAccurate).length;
     const coverage = correct / total;
 
-    const meanError = records.reduce((sum, r) => sum + r.errorDays, 0) / total;
+    const meanError = records.reduce((sum, r) => sum + (r.errorDays || 0), 0) / total;
     const errorVariance =
-      records.reduce((sum, r) => sum + Math.pow(r.errorDays - meanError, 2), 0) / (total - 1);
+      records.reduce((sum, r) => sum + Math.pow((r.errorDays || 0) - meanError, 2), 0) /
+      (total - 1);
 
     return {
       actualCoverage: coverage,
@@ -478,6 +479,17 @@ export class IntervalValidator {
   ): number {
     // Calculate prediction resolution
     return 0.82; // Placeholder
+  }
+
+  /**
+   * Create reliability diagram data for calibration visualization
+   */
+  private createReliabilityDiagram(calibrationBins: CalibrationBin[]): number[][] {
+    return calibrationBins.map(bin => [
+      bin.averagePredictedProbability,
+      bin.actualFrequency,
+      bin.sampleSize,
+    ]);
   }
 }
 

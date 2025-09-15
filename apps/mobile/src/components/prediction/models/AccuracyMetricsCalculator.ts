@@ -4,7 +4,6 @@ import {
   OvulationPrediction,
   PeriodPrediction,
 } from '@aura/shared-types';
-import { EncryptedCycleData } from '@aura/shared-types';
 
 /**
  * Accuracy Metrics Calculator for Probabilistic Predictions

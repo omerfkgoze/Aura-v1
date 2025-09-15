@@ -405,8 +405,10 @@ export class OvulationPredictor {
     cycleData.forEach(cycle => {
       if (cycle.periodStartDate) qualityScore += 0.5;
       if (cycle.periodEndDate) qualityScore += 0.3;
-      if (cycle.flowIntensity) qualityScore += 0.1;
-      if (cycle.symptoms && cycle.symptoms.length > 0) qualityScore += 0.1;
+      if (cycle.dayData && cycle.dayData.some(day => day.flowIntensity !== 'none'))
+        qualityScore += 0.1;
+      if (cycle.dayData && cycle.dayData.some(day => day.symptoms && day.symptoms.length > 0))
+        qualityScore += 0.1;
     });
 
     return qualityScore / totalCycles;
