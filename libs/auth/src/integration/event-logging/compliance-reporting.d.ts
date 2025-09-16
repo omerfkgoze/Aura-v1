@@ -2,7 +2,43 @@
  * Compliance Reporting and Data Retention
  * Defines compliance reporting, data retention, and export interfaces
  */
-import type { ComplianceFramework, ComplianceStatus, TimeRange, EventType } from './types.js';
+import type {
+  ComplianceFramework,
+  ComplianceStatus,
+  TimeRange,
+  EventType,
+  BaseEvent,
+  LoggedEvent,
+} from './types.js';
+export interface ComplianceEventLogger {
+  logComplianceEvent(event: ComplianceEvent): Promise<LoggedEvent>;
+  logAuditEvent(event: AuditEvent): Promise<LoggedEvent>;
+  generateComplianceReport(
+    framework: ComplianceFramework,
+    timeRange: TimeRange
+  ): Promise<ComplianceReport>;
+  exportCompliance(filters: ComplianceExportFilters): Promise<ComplianceExport>;
+}
+export interface ComplianceEvent extends BaseEvent {
+  eventType: 'compliance_check' | 'policy_violation' | 'data_processing' | 'consent_given';
+  framework: ComplianceFramework;
+  compliant: boolean;
+  details: any;
+}
+export interface AuditEvent extends BaseEvent {
+  eventType: 'audit_log_created' | 'audit_log_accessed' | 'audit_trail_verified';
+  auditType: string;
+  result: 'pass' | 'fail' | 'warning';
+  findings: string[];
+}
+export { ComplianceFramework } from './types.js';
+export interface ComplianceExport {
+  exportId: string;
+  framework: ComplianceFramework;
+  exportedAt: Date;
+  format: 'json' | 'csv' | 'pdf';
+  data: any;
+}
 export interface ComplianceReport {
   reportId: string;
   framework: ComplianceFramework;

@@ -199,7 +199,24 @@ export type EventType =
   | 'correlation_identified'
   | 'incident_declared'
   | 'investigation_started'
-  | 'investigation_completed';
+  | 'investigation_completed'
+  | 'policy_violation'
+  | 'compliance_check'
+  | 'data_processing'
+  | 'audit_log_created'
+  | 'audit_log_accessed'
+  | 'audit_trail_verified'
+  | 'data_created'
+  | 'data_updated'
+  | 'data_deleted'
+  | 'data_accessed'
+  | 'data_update'
+  | 'session_created'
+  | 'session_terminated'
+  | 'session_expired'
+  | 'device_registered'
+  | 'device_removed'
+  | 'device_suspicious';
 export type SecuritySeverity = 'informational' | 'low' | 'medium' | 'high' | 'critical';
 export type ComplianceFramework = 'gdpr' | 'hipaa' | 'ccpa' | 'pipeda' | 'sox' | 'pci_dss';
 export type ComplianceStatus = 'compliant' | 'partially_compliant' | 'non_compliant' | 'unknown';

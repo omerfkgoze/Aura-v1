@@ -2,7 +2,38 @@
  * Security Event Types and Context Data
  * Defines security-specific events, threats, and analysis context
  */
-import type { BaseEvent, SecuritySeverity } from './types.js';
+import type { BaseEvent, SecuritySeverity, LoggedEvent } from './types.js';
+export interface SecurityEventLogger {
+  logSecurityEvent(event: SecurityEvent): Promise<LoggedEvent>;
+  logAuthenticationEvent(event: AuthenticationEvent): Promise<LoggedEvent>;
+  logSessionEvent(event: SessionEvent): Promise<LoggedEvent>;
+  logDeviceEvent(event: DeviceEvent): Promise<LoggedEvent>;
+  getSecurityEvents(filters?: SecurityEventFilters): Promise<SecurityEvent[]>;
+}
+export interface AuthenticationEvent extends BaseEvent {
+  eventType: 'authentication_started' | 'authentication_completed' | 'authentication_failed';
+  method: string;
+  success: boolean;
+  failureReason?: string;
+}
+export interface SessionEvent extends BaseEvent {
+  eventType: 'session_created' | 'session_terminated' | 'session_expired';
+  sessionId: string;
+  duration?: number;
+}
+export interface DeviceEvent extends BaseEvent {
+  eventType: 'device_registered' | 'device_removed' | 'device_suspicious';
+  deviceId: string;
+  deviceInfo: any;
+}
+export interface SecurityEventFilters {
+  severity?: SecuritySeverity;
+  timeRange?: {
+    start: Date;
+    end: Date;
+  };
+  eventTypes?: string[];
+}
 export interface SecurityEvent extends BaseEvent {
   eventType:
     | 'security_violation'

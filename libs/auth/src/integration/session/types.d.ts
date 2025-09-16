@@ -1,7 +1,7 @@
 /**
  * Session Management Types and Core Interfaces
  */
-import type { AuthenticationContext, RiskLevel, AuthenticationMethod } from '../types.js';
+import type { AuthenticationContext, RiskLevel, AuthenticationMethod } from '../types/index.js';
 export interface EncryptedDataSessionManager {
   createEncryptedSession(authContext: AuthenticationContext): Promise<EncryptedSession>;
   validateEncryptedSession(sessionToken: string): Promise<SessionValidationResult>;

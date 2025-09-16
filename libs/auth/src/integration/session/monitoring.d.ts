@@ -1,7 +1,20 @@
 /**
  * Session Monitoring and Health Management
  */
-import type { RiskLevel } from '../types.js';
+import type { RiskLevel } from '../types/index.js';
+export interface SessionMonitor {
+  getSessionHealth(sessionId: string): Promise<SessionHealthStatus>;
+  monitorSessionRisk(sessionId: string): Promise<SessionRiskAssessment>;
+  trackSessionMetrics(sessionId: string): Promise<SessionSecurityMetrics>;
+}
+export interface SessionSecurityMetrics {
+  sessionId: string;
+  riskScore: number;
+  threatLevel: RiskLevel;
+  anomalyDetected: boolean;
+  lastRiskAssessment: Date;
+  securityEvents: number;
+}
 export interface SessionHealthStatus {
   sessionId: string;
   overall: HealthLevel;
@@ -75,9 +88,9 @@ export interface BehaviourHealthStatus {
 }
 export interface RiskFactor {
   type: RiskFactorType;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: RiskLevel;
   description: string;
-  detected: Date;
+  detectedAt: Date;
   mitigated: boolean;
 }
 export interface BehavioralBaseline {

@@ -1,7 +1,14 @@
 /**
  * Session Management Core Interfaces and Data Structures
  */
-import type { DataType, DataAccessPurpose, DataOperation } from './types.js';
+import type {
+  DataType,
+  DataAccessPurpose,
+  DataOperation,
+  DataAccessLevel,
+  DataRetentionPolicy,
+  DataAccessRestriction as DataAccessRestrictionBase,
+} from './types.js';
 export interface SessionValidationResult {
   valid: boolean;
   sessionId: string;
@@ -73,7 +80,7 @@ export interface DataAccessResult {
   expiresAt: Date;
   accessDuration: number;
   authorizationLevel: DataAccessLevel;
-  restrictions: DataAccessRestriction[];
+  restrictions: DataAccessRestrictionBase[];
   conditions: AccessCondition[];
   gdprCompliant: boolean;
   hipaaCompliant: boolean;
@@ -98,11 +105,6 @@ export interface DeviceSyncFailure {
   retryable: boolean;
   lastAttempt: Date;
 }
-export interface DataAccessRestriction {
-  type: 'temporal' | 'conditional' | 'purpose' | 'geographic';
-  description: string;
-  enforced: boolean;
-}
 export interface AccessCondition {
   condition: string;
   satisfied: boolean;
@@ -124,7 +126,11 @@ export type SecurityWarningType =
   | 'session_extended'
   | 'elevated_risk'
   | 'compliance_concern';
+export interface SessionManager {
+  createSession(authContext: any): Promise<SessionValidationResult>;
+  validateSession(sessionToken: string): Promise<SessionValidationResult>;
+  refreshSession(sessionId: string): Promise<SessionValidationResult>;
+  terminateSession(sessionId: string): Promise<void>;
+}
 export interface SessionSecurityContext {}
 export interface KeyDerivationContext {}
-export interface DataAccessLevel {}
-export interface DataRetentionPolicy {}
