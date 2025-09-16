@@ -353,7 +353,7 @@ const IntervalLegend: React.FC<{
               {item.label}
             </Text>
             <Text fontSize="$1" color="$color10">
-              ±{Math.floor(item.value / 2)}g
+              ±{Math.floor(item.value / 2)} gün
             </Text>
           </YStack>
         ))}
