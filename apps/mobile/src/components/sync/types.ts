@@ -139,3 +139,167 @@ export interface P2PAuditLog {
   dataSize?: number; // bytes transferred (no content)
   error?: string;
 }
+
+// Synchronization Status Monitoring Types (Task 5)
+
+export interface SyncStatusDetails {
+  readonly deviceId: string;
+  readonly status: 'synced' | 'syncing' | 'pending' | 'error' | 'offline';
+  readonly lastSyncTime: Date | null;
+  readonly progress: number; // 0-100
+  readonly pendingOperations: number;
+  readonly error: SyncErrorDetails | null;
+}
+
+export interface SyncErrorDetails {
+  readonly code: string;
+  readonly message: string;
+  readonly timestamp: Date;
+  readonly retryCount: number;
+  readonly recoverable: boolean;
+  readonly category: 'network' | 'crypto' | 'data' | 'permission' | 'storage';
+}
+
+export interface DeviceSyncState {
+  readonly deviceId: string;
+  readonly deviceName: string;
+  readonly platform: 'ios' | 'android' | 'web';
+  readonly isOnline: boolean;
+  readonly lastSeen: Date;
+  readonly syncStatus: SyncStatusDetails;
+  readonly dataConsistency: ConsistencyState;
+  readonly networkCondition: NetworkCondition;
+}
+
+export interface ConsistencyState {
+  readonly isConsistent: boolean;
+  readonly lastVerified: Date;
+  readonly inconsistencies: InconsistencyReport[];
+  readonly verificationProgress: number; // 0-100
+  readonly recordsChecked: number;
+  readonly totalRecords: number;
+}
+
+export interface InconsistencyReport {
+  readonly recordId: string;
+  readonly recordType: 'cycle_data' | 'user_prefs' | 'device_keys';
+  readonly conflictType: 'version_mismatch' | 'data_corruption' | 'missing_record';
+  readonly timestamp: Date;
+  readonly affectedDevices: string[];
+  readonly severity: 'low' | 'medium' | 'high';
+  readonly autoResolvable: boolean;
+}
+
+export interface SyncProgress {
+  readonly sessionId: string;
+  readonly totalOperations: number;
+  readonly completedOperations: number;
+  readonly currentOperation: string;
+  readonly operationType: 'upload' | 'download' | 'verify' | 'resolve';
+  readonly estimatedTimeRemaining: number; // milliseconds
+  readonly dataTransferred: number; // bytes
+  readonly totalDataSize: number; // bytes
+  readonly currentFileIndex: number;
+  readonly totalFiles: number;
+  readonly speed: number; // bytes per second
+}
+
+export interface SyncNotification {
+  readonly id: string;
+  readonly type: 'success' | 'warning' | 'error' | 'info';
+  readonly title: string;
+  readonly message: string;
+  readonly timestamp: Date;
+  readonly deviceId?: string;
+  readonly action?: {
+    readonly label: string;
+    readonly handler: () => void;
+  };
+  readonly dismissible: boolean;
+  readonly autoHide: boolean;
+  readonly priority: 'high' | 'medium' | 'low';
+  readonly category: 'sync' | 'conflict' | 'network' | 'security';
+}
+
+export interface RetryConfig {
+  readonly maxRetries: number;
+  readonly baseDelay: number; // milliseconds
+  readonly maxDelay: number; // milliseconds
+  readonly backoffFactor: number;
+  readonly jitterFactor: number; // 0-1
+  readonly retryableErrors: string[]; // error codes that can be retried
+}
+
+export interface NetworkCondition {
+  readonly type: 'wifi' | 'cellular' | 'ethernet' | 'offline';
+  readonly quality: 'excellent' | 'good' | 'poor' | 'unusable';
+  readonly bandwidth: number; // Mbps
+  readonly latency: number; // milliseconds
+  readonly isMetered: boolean;
+  readonly isReachable: boolean;
+  readonly lastChecked: Date;
+}
+
+// Status monitoring callback types
+export type SyncStatusListener = (status: SyncStatusDetails) => void;
+export type DeviceStateListener = (devices: DeviceSyncState[]) => void;
+export type SyncProgressListener = (progress: SyncProgress) => void;
+export type SyncNotificationListener = (notification: SyncNotification) => void;
+export type NetworkConditionListener = (condition: NetworkCondition) => void;
+export type ConsistencyCheckListener = (result: ConsistencyCheckResult) => void;
+
+// Operation result types
+export interface SyncOperationResult {
+  readonly success: boolean;
+  readonly error?: SyncErrorDetails;
+  readonly syncedRecords: number;
+  readonly conflicts: number;
+  readonly duration: number; // milliseconds
+  readonly bytesTransferred: number;
+  readonly retryAttempts: number;
+}
+
+export interface ConsistencyCheckResult {
+  readonly isConsistent: boolean;
+  readonly checkedRecords: number;
+  readonly inconsistencies: InconsistencyReport[];
+  readonly duration: number; // milliseconds
+  readonly devicesCovered: string[];
+  readonly completionPercentage: number;
+}
+
+// Event types for sync monitoring
+export interface SyncEvent {
+  readonly type:
+    | 'sync_started'
+    | 'sync_progress'
+    | 'sync_completed'
+    | 'sync_failed'
+    | 'conflict_detected'
+    | 'device_connected'
+    | 'device_disconnected'
+    | 'consistency_check_started'
+    | 'consistency_check_completed';
+  readonly deviceId: string;
+  readonly timestamp: Date;
+  readonly sessionId?: string;
+  readonly data: any;
+  readonly priority: 'high' | 'medium' | 'low';
+}
+
+// Configuration types
+export interface SyncMonitoringConfig {
+  readonly updateInterval: number; // milliseconds
+  readonly consistencyCheckInterval: number; // milliseconds
+  readonly progressUpdateInterval: number; // milliseconds
+  readonly maxNotifications: number;
+  readonly enableDetailedLogging: boolean;
+  readonly retryConfig: RetryConfig;
+  readonly networkCheckInterval: number; // milliseconds
+  readonly enableRealTimeUpdates: boolean;
+  readonly notificationThreshold: {
+    readonly errorCount: number;
+    readonly slowSyncDuration: number; // milliseconds
+    readonly lowDataConsistency: number; // percentage
+  };
+}
