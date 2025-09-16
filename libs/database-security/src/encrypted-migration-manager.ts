@@ -473,7 +473,9 @@ export class EncryptedMigrationManager {
 
       return backupPath;
     } catch (error) {
-      throw new Error(`Failed to create backup: ${error}`);
+      throw new Error(
+        `Failed to create backup: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -487,7 +489,9 @@ export class EncryptedMigrationManager {
         to: `${FileSystem.documentDirectory}${this.config.databasePath}`,
       });
     } catch (error) {
-      throw new Error(`Failed to restore from backup: ${error}`);
+      throw new Error(
+        `Failed to restore from backup: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -527,7 +531,9 @@ export class EncryptedMigrationManager {
       // Record migration in metadata
       await this.recordMigrationExecution(migration, startTime);
     } catch (error) {
-      throw new Error(`Migration ${migration.name} failed: ${error}`);
+      throw new Error(
+        `Migration ${migration.name} failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -546,7 +552,9 @@ export class EncryptedMigrationManager {
       // Remove migration from metadata
       await this.removeMigrationRecord(migration.version);
     } catch (error) {
-      throw new Error(`Rollback ${migration.name} failed: ${error}`);
+      throw new Error(
+        `Rollback ${migration.name} failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -859,7 +867,7 @@ export class EncryptedMigrationManager {
           }
         }
       } catch (error) {
-        const message = `Validation rule execution failed: ${error}`;
+        const message = `Validation rule execution failed: ${error instanceof Error ? error.message : String(error)}`;
         if (rule.required) {
           errors.push(message);
         } else {

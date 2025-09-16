@@ -13,7 +13,7 @@ export interface RealmConfig {
   schemas: ObjectSchema[];
   path?: string;
   deleteRealmIfMigrationNeeded?: boolean;
-  migration?: Realm.MigrationCallback;
+  onMigration?: Realm.MigrationCallback;
   shouldCompactOnLaunch?: (totalBytes: number, usedBytes: number) => boolean;
 }
 
@@ -152,7 +152,7 @@ export class RealmEncryptedDatabase {
         encryptionKey: new Uint8Array(this.encryptionKey),
         path: this.config.path,
         deleteRealmIfMigrationNeeded: this.config.deleteRealmIfMigrationNeeded,
-        migration: this.config.migration,
+        onMigration: this.config.onMigration,
         shouldCompactOnLaunch: this.config.shouldCompactOnLaunch,
       };
 
@@ -164,7 +164,9 @@ export class RealmEncryptedDatabase {
 
       console.log('Realm encrypted database initialized successfully');
     } catch (error) {
-      throw new Error(`Realm initialization failed: ${error.message}`);
+      throw new Error(
+        `Realm initialization failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -210,7 +212,9 @@ export class RealmEncryptedDatabase {
 
       return this.base64ToArrayBuffer(keyBase64);
     } catch (error) {
-      throw new Error(`Realm key derivation failed: ${error.message}`);
+      throw new Error(
+        `Realm key derivation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -245,7 +249,9 @@ export class RealmEncryptedDatabase {
         this.realm!.delete(testData);
       });
     } catch (error) {
-      throw new Error(`Encryption validation failed: ${error.message}`);
+      throw new Error(
+        `Encryption validation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -283,7 +289,11 @@ export class RealmEncryptedDatabase {
           resolve(cycleData);
         });
       } catch (error) {
-        reject(new Error(`Failed to create cycle data: ${error.message}`));
+        reject(
+          new Error(
+            `Failed to create cycle data: ${error instanceof Error ? error.message : String(error)}`
+          )
+        );
       }
     });
   }
@@ -310,7 +320,11 @@ export class RealmEncryptedDatabase {
         });
         resolve();
       } catch (error) {
-        reject(new Error(`Failed to update cycle data: ${error.message}`));
+        reject(
+          new Error(
+            `Failed to update cycle data: ${error instanceof Error ? error.message : String(error)}`
+          )
+        );
       }
     });
   }
@@ -355,7 +369,11 @@ export class RealmEncryptedDatabase {
         });
         resolve();
       } catch (error) {
-        reject(new Error(`Failed to delete cycle data: ${error.message}`));
+        reject(
+          new Error(
+            `Failed to delete cycle data: ${error instanceof Error ? error.message : String(error)}`
+          )
+        );
       }
     });
   }
@@ -389,7 +407,11 @@ export class RealmEncryptedDatabase {
         });
         resolve();
       } catch (error) {
-        reject(new Error(`Failed to set preference: ${error.message}`));
+        reject(
+          new Error(
+            `Failed to set preference: ${error instanceof Error ? error.message : String(error)}`
+          )
+        );
       }
     });
   }
@@ -416,7 +438,9 @@ export class RealmEncryptedDatabase {
     try {
       return this.realm.compact();
     } catch (error) {
-      console.warn(`Database compaction failed: ${error.message}`);
+      console.warn(
+        `Database compaction failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
   }
@@ -432,7 +456,9 @@ export class RealmEncryptedDatabase {
       const usedSize = this.realm.size; // Realm doesn't distinguish used vs total
       return { fileSize, usedSize };
     } catch (error) {
-      console.warn(`Failed to get database size: ${error.message}`);
+      console.warn(
+        `Failed to get database size: ${error instanceof Error ? error.message : String(error)}`
+      );
       return { fileSize: 0, usedSize: 0 };
     }
   }
@@ -493,7 +519,9 @@ export class RealmEncryptedDatabase {
 
       console.log('Realm encryption key rotated successfully');
     } catch (error) {
-      throw new Error(`Key rotation failed: ${error.message}`);
+      throw new Error(
+        `Key rotation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 

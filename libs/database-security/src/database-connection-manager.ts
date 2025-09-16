@@ -105,7 +105,9 @@ export class DatabaseConnectionManager {
       this.initialized = true;
       console.log('Database connection manager initialized successfully');
     } catch (error) {
-      throw new Error(`Database initialization failed: ${error.message}`);
+      throw new Error(
+        `Database initialization failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -234,7 +236,9 @@ export class DatabaseConnectionManager {
       console.log(`Schema v${this.schema.version} initialized successfully`);
     } catch (error) {
       await database.execAsync('ROLLBACK');
-      throw new Error(`Schema initialization failed: ${error.message}`);
+      throw new Error(
+        `Schema initialization failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 

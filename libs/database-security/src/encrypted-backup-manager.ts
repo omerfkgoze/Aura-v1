@@ -30,7 +30,9 @@ export class EncryptedBackupManager {
       await this.ensureBackupKeyExists();
       this.isInitialized = true;
     } catch (error) {
-      throw new Error(`Backup manager initialization failed: ${error.message}`);
+      throw new Error(
+        `Backup manager initialization failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -82,7 +84,9 @@ export class EncryptedBackupManager {
       await this.storeBackupKeyMetadata(metadata);
       return metadata;
     } catch (error) {
-      throw new Error(`Backup key generation failed: ${error.message}`);
+      throw new Error(
+        `Backup key generation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -156,7 +160,9 @@ export class EncryptedBackupManager {
       await this.storeBackupMetadata(backupMetadata);
       return backupMetadata;
     } catch (error) {
-      throw new Error(`Backup creation failed: ${error.message}`);
+      throw new Error(
+        `Backup creation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -213,7 +219,9 @@ export class EncryptedBackupManager {
           details.keyAccessibility = true;
         }
       } catch (error) {
-        errors.push(`Key accessibility error: ${error.message}`);
+        errors.push(
+          `Key accessibility error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
 
       if (details.fileIntegrity && details.keyAccessibility) {
@@ -227,7 +235,9 @@ export class EncryptedBackupManager {
             details.encryptionIntegrity = true;
           }
         } catch (error) {
-          errors.push(`Encryption envelope validation failed: ${error.message}`);
+          errors.push(
+            `Encryption envelope validation failed: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
 
@@ -249,14 +259,18 @@ export class EncryptedBackupManager {
             }
           }
         } catch (error) {
-          errors.push(`Data integrity verification failed: ${error.message}`);
+          errors.push(
+            `Data integrity verification failed: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
 
       const isValid = errors.length === 0 && Object.values(details).every(Boolean);
       return { isValid, errors, warnings, details };
     } catch (error) {
-      errors.push(`Integrity verification failed: ${error.message}`);
+      errors.push(
+        `Integrity verification failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return { isValid: false, errors, warnings, details };
     }
   }
@@ -302,7 +316,9 @@ export class EncryptedBackupManager {
             'Pre-restoration backup creation skipped - current database interface not available'
           );
         } catch (error) {
-          warnings.push(`Pre-restoration backup failed: ${error.message}`);
+          warnings.push(
+            `Pre-restoration backup failed: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
 
@@ -339,10 +355,12 @@ export class EncryptedBackupManager {
         backupId,
         timestamp: new Date().toISOString(),
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       });
 
-      throw new Error(`Backup restoration failed: ${error.message}`);
+      throw new Error(
+        `Backup restoration failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -408,7 +426,9 @@ export class EncryptedBackupManager {
       const activeKey = backupKeys.find(key => key.isActive);
       return activeKey || null;
     } catch (error) {
-      throw new Error(`Failed to retrieve active backup key: ${error.message}`);
+      throw new Error(
+        `Failed to retrieve active backup key: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -434,7 +454,9 @@ export class EncryptedBackupManager {
         }
       );
     } catch (error) {
-      throw new Error(`Failed to store backup key metadata: ${error.message}`);
+      throw new Error(
+        `Failed to store backup key metadata: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -446,7 +468,9 @@ export class EncryptedBackupManager {
         keychainService: 'AuraBackupKeystore',
       });
     } catch (error) {
-      throw new Error(`Failed to store backup metadata: ${error.message}`);
+      throw new Error(
+        `Failed to store backup metadata: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -460,7 +484,9 @@ export class EncryptedBackupManager {
       const fileContent = await FileSystem.readAsStringAsync(filePath);
       return createHash('sha256').update(fileContent, 'utf8').digest('hex');
     } catch (error) {
-      throw new Error(`Failed to calculate file hash: ${error.message}`);
+      throw new Error(
+        `Failed to calculate file hash: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -521,7 +547,9 @@ export class EncryptedBackupManager {
       const decryptedJson = decryptedBuffer.toString('utf-8');
       return JSON.parse(decryptedJson);
     } catch (error) {
-      throw new Error(`Backup decryption failed: ${error.message}`);
+      throw new Error(
+        `Backup decryption failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 

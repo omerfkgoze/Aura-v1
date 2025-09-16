@@ -75,7 +75,9 @@ export class SQLCipherManager {
 
       console.log(`SQLCipher database initialized with ${this.config.cipher} encryption`);
     } catch (error) {
-      throw new Error(`SQLCipher initialization failed: ${error.message}`);
+      throw new Error(
+        `SQLCipher initialization failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -118,7 +120,9 @@ export class SQLCipherManager {
 
       return encryptionKey;
     } catch (error) {
-      throw new Error(`Key derivation failed: ${error.message}`);
+      throw new Error(
+        `Key derivation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -194,7 +198,9 @@ export class SQLCipherManager {
       // Cleanup verification table
       await this.db.execAsync('DROP TABLE verification_table');
     } catch (error) {
-      throw new Error(`Encryption verification failed: ${error.message}`);
+      throw new Error(
+        `Encryption verification failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -281,7 +287,9 @@ export class SQLCipherManager {
 
       console.log('Database encryption key rotated successfully');
     } catch (error) {
-      throw new Error(`Key rotation failed: ${error.message}`);
+      throw new Error(
+        `Key rotation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 }

@@ -83,7 +83,9 @@ export class EncryptionValidator {
         result.validationErrors.push(...accessibilityCheck.errors);
       }
     } catch (error) {
-      result.validationErrors.push(`Validation error: ${error.message}`);
+      result.validationErrors.push(
+        `Validation error: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     return result;
@@ -147,7 +149,9 @@ export class EncryptionValidator {
         errors,
       };
     } catch (error) {
-      errors.push(`File encryption check failed: ${error.message}`);
+      errors.push(
+        `File encryption check failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return { isEncrypted: false, algorithm: null, keyStrength: null, errors };
     }
   }
@@ -195,7 +199,9 @@ export class EncryptionValidator {
 
       return { isValid: errors.length === 0, errors };
     } catch (error) {
-      errors.push(`Integrity check failed: ${error.message}`);
+      errors.push(
+        `Integrity check failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return { isValid: false, errors };
     }
   }
@@ -226,7 +232,9 @@ export class EncryptionValidator {
 
       return { isAccessible: true, errors };
     } catch (error) {
-      errors.push(`Database accessibility test failed: ${error.message}`);
+      errors.push(
+        `Database accessibility test failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return { isAccessible: false, errors };
     }
   }
@@ -272,7 +280,9 @@ export class EncryptionValidator {
         encoding: FileSystem.EncodingType.UTF8,
       });
     } catch (error) {
-      console.warn(`Failed to store checksum: ${error.message}`);
+      console.warn(
+        `Failed to store checksum: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -361,7 +371,9 @@ export class EncryptionValidator {
         isCorrupted,
       };
     } catch (error) {
-      throw new Error(`Integrity check failed: ${error.message}`);
+      throw new Error(
+        `Integrity check failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 

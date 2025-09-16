@@ -1,3 +1,4 @@
+import React from 'react';
 export declare function AuthProvider({
   children,
   storage,
@@ -8,7 +9,7 @@ export declare function AuthProvider({
   storage: any;
   config: any;
   enablePersistence?: boolean | undefined;
-}): any;
+}): React.JSX.Element;
 export declare function useAuth(): never;
 export declare function useAuthState(): {
   user: any;
@@ -35,6 +36,6 @@ export declare function withAuthProtection(
   WrappedComponent: any,
   fallback: any
 ): {
-  (props: any): any;
+  (props: any): React.JSX.Element;
   displayName: string;
 };

@@ -103,7 +103,10 @@ export class RLSPolicyEnforcer {
 
         if (error) {
           // RLS policy correctly denied access
-          if (error.code === 'PGRST116' || error.message?.includes('permission denied')) {
+          if (
+            error.code === 'PGRST116' ||
+            (error instanceof Error && error.message?.includes('permission denied'))
+          ) {
             continue; // This is expected for negative tests
           }
 
@@ -113,7 +116,7 @@ export class RLSPolicyEnforcer {
             tableName,
             operation,
             userId,
-            errorMessage: `RLS validation error: ${error.message}`,
+            errorMessage: `RLS validation error: ${error instanceof Error ? error.message : String(error)}`,
             violationType: 'policy_bypass',
           };
         }

@@ -1,8 +1,8 @@
 use wasm_bindgen::prelude::*;
 use std::collections::HashMap;
 use chrono::{DateTime, Duration, Utc, Timelike};
-use crate::key_rotation::types::{SecurityEventType, RotationTrigger, RotationTiming, KeyRotationError};
-use crate::key_rotation::emergency::{EmergencyRotationManager, EmergencyTriggerType};
+use crate::key_rotation::types::{SecurityEventType, RotationTrigger, RotationTiming}; // KeyRotationError removed - unused
+use crate::key_rotation::emergency::EmergencyRotationManager; // EmergencyTriggerType removed - unused
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

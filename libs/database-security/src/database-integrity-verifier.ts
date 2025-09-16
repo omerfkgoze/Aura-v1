@@ -40,7 +40,9 @@ export class DatabaseIntegrityVerifier {
 
       this.isInitialized = true;
     } catch (error) {
-      throw new Error(`Integrity verifier initialization failed: ${error.message}`);
+      throw new Error(
+        `Integrity verifier initialization failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -108,9 +110,9 @@ export class DatabaseIntegrityVerifier {
       validationResult.violations.push({
         type: 'validation_error',
         severity: 'critical',
-        description: `Integrity validation failed: ${error.message}`,
+        description: `Integrity validation failed: ${error instanceof Error ? error.message : String(error)}`,
         timestamp: new Date().toISOString(),
-        evidence: { error: error.message },
+        evidence: { error: error instanceof Error ? error.message : String(error) },
       });
 
       await this.logIntegrityValidation(validationResult);
@@ -184,9 +186,9 @@ export class DatabaseIntegrityVerifier {
       result.violations.push({
         type: 'file_integrity_error',
         severity: 'critical',
-        description: `File integrity validation failed: ${error.message}`,
+        description: `File integrity validation failed: ${error instanceof Error ? error.message : String(error)}`,
         timestamp: new Date().toISOString(),
-        evidence: { error: error.message },
+        evidence: { error: error instanceof Error ? error.message : String(error) },
       });
 
       return result;
@@ -220,9 +222,9 @@ export class DatabaseIntegrityVerifier {
       result.violations.push({
         type: 'structure_integrity_error',
         severity: 'critical',
-        description: `Database structure validation failed: ${error.message}`,
+        description: `Database structure validation failed: ${error instanceof Error ? error.message : String(error)}`,
         timestamp: new Date().toISOString(),
-        evidence: { error: error.message },
+        evidence: { error: error instanceof Error ? error.message : String(error) },
       });
 
       return result;
@@ -256,9 +258,9 @@ export class DatabaseIntegrityVerifier {
       result.violations.push({
         type: 'record_integrity_error',
         severity: 'high',
-        description: `Record integrity validation failed: ${error.message}`,
+        description: `Record integrity validation failed: ${error instanceof Error ? error.message : String(error)}`,
         timestamp: new Date().toISOString(),
-        evidence: { error: error.message },
+        evidence: { error: error instanceof Error ? error.message : String(error) },
       });
 
       return result;
@@ -292,9 +294,9 @@ export class DatabaseIntegrityVerifier {
       result.violations.push({
         type: 'cross_reference_error',
         severity: 'medium',
-        description: `Cross-reference validation failed: ${error.message}`,
+        description: `Cross-reference validation failed: ${error instanceof Error ? error.message : String(error)}`,
         timestamp: new Date().toISOString(),
-        evidence: { error: error.message },
+        evidence: { error: error instanceof Error ? error.message : String(error) },
       });
 
       return result;
@@ -416,7 +418,9 @@ export class DatabaseIntegrityVerifier {
 
       this.integrityKey = Buffer.from(keyData, 'base64');
     } catch (error) {
-      throw new Error(`Failed to initialize integrity key: ${error.message}`);
+      throw new Error(
+        `Failed to initialize integrity key: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -432,7 +436,9 @@ export class DatabaseIntegrityVerifier {
 
       return createHmac('sha256', this.integrityKey).update(fileData, 'base64').digest('hex');
     } catch (error) {
-      throw new Error(`Failed to calculate file checksum: ${error.message}`);
+      throw new Error(
+        `Failed to calculate file checksum: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -535,7 +541,9 @@ export class DatabaseIntegrityVerifier {
       });
     } catch (error) {
       recovery.success = false;
-      recovery.actions.push(`recovery_failed: ${error.message}`);
+      recovery.actions.push(
+        `recovery_failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 

@@ -1,10 +1,10 @@
 use wasm_bindgen::prelude::*;
-use std::collections::HashMap;
+// use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use crate::derivation::DataCategory;
 use crate::keys::CryptoKey;
 use crate::memory::{track_secret_allocation, track_secret_zeroization};
-use super::types::{KeyVersion, KeyStatus, KeyRotationError};
+use super::types::{KeyVersion, KeyStatus}; // KeyRotationError removed - unused
 
 /// Legacy key retention policy for cleanup management
 #[wasm_bindgen]
@@ -84,7 +84,7 @@ impl VersionedKey {
         track_secret_allocation();
         
         let creation_time = Utc::now();
-        let mut supported_versions = vec![version.clone()];
+        let supported_versions = vec![version.clone()];
         
         Self {
             key,
