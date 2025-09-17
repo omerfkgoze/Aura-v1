@@ -9,8 +9,8 @@
       "dependsOn": [],
       "outputs": ["{projectRoot}/.next"],
       "options": {
-        "command": "next build --no-lint",
-        "cwd": "apps/web"
+        "commands": ["cd apps/web && rm -rf .next && pnpm exec next build --no-lint"],
+        "parallel": false
       }
     },
     "dev": {

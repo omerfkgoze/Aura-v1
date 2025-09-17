@@ -96,8 +96,11 @@ const nextConfig = {
     // Removed esmExternals as it's deprecated in Next.js 15
   },
 
-  // Static generation disabled via output mode
-  // generateStaticParams removed - deprecated in Next.js 15
+  // External packages for server components (moved from experimental)
+  serverExternalPackages: [],
+
+  // Disable static optimization that causes Html import issues
+  output: 'standalone',
 
   // TODO: Known Next.js 15 compatibility issue with Html import
   // The build fails with "Html should not be imported outside of pages/_document"
