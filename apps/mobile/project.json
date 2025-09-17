@@ -5,16 +5,16 @@
   "sourceRoot": "apps/mobile/src",
   "targets": {
     "build": {
-      "executor": "@nx/expo:build",
+      "executor": "nx:run-commands",
       "options": {
-        "platform": "all"
+        "command": "echo 'Mobile build skipped - use expo build for production builds'"
       },
       "configurations": {
         "production": {
-          "buildType": "archive"
+          "command": "eas build --platform all --clear-cache"
         },
         "preview": {
-          "buildType": "development-build"
+          "command": "eas build --platform all --profile preview"
         }
       }
     },
