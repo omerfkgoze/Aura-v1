@@ -5,7 +5,20 @@
  * Author: Dev Agent (Story 2.1)
  */
 
-import { Platform, AppState, AppStateStatus } from 'react-native';
+import { Platform } from 'react-native';
+
+// Conditional imports for React Native environment
+let AppState: any = null;
+let AppStateStatus: any = null;
+
+try {
+  const ReactNative = require('react-native');
+  AppState = ReactNative.AppState;
+  AppStateStatus = ReactNative.AppStateStatus;
+} catch (error) {
+  // AppState not available in non-React Native environment
+  console.warn('AppState not available - auto-lock will use fallback mechanisms');
+}
 import * as SecureStore from 'expo-secure-store';
 import { securityLogger, type SecurityEvent } from './security-logger';
 
@@ -30,7 +43,7 @@ export interface AutoLockConfig {
 export interface LockStatus {
   isLocked: boolean; // Current lock state
   lockedAt?: number; // Timestamp when locked
-  lockReason?: 'idle' | 'background' | 'manual' | 'security';
+  lockReason?: 'idle' | 'background' | 'manual' | 'security' | 'auto';
   timeRemaining?: number; // Time until auto-unlock (if applicable)
   requiresAuthentication: boolean; // Requires auth to unlock
   unlockAttempts: number; // Failed unlock attempts
@@ -52,7 +65,12 @@ export interface UnlockAuthConfig {
  * Auto-lock event types
  */
 export interface AutoLockEvent extends SecurityEvent {
-  type: 'auto_lock' | 'manual_lock' | 'unlock_attempt' | 'unlock_success' | 'lockout_activated';
+  eventType:
+    | 'auto_lock'
+    | 'manual_lock'
+    | 'unlock_attempt'
+    | 'unlock_success'
+    | 'lockout_activated';
   metadata: {
     reason?: string;
     success?: boolean;
@@ -65,11 +83,11 @@ export interface AutoLockEvent extends SecurityEvent {
  * Application state monitoring data
  */
 interface AppStateData {
-  currentState: AppStateStatus;
+  currentState: string;
   lastActiveTime: number;
   lastBackgroundTime: number;
   stateHistory: Array<{
-    state: AppStateStatus;
+    state: string;
     timestamp: number;
   }>;
 }
@@ -82,9 +100,9 @@ export class AutoLockManager {
   private config: AutoLockConfig;
   private lockStatus: LockStatus;
   private appStateData: AppStateData;
-  private idleTimer?: NodeJS.Timeout;
-  private backgroundTimer?: NodeJS.Timeout;
-  private lockoutTimer?: NodeJS.Timeout;
+  private idleTimer?: number;
+  private backgroundTimer?: number;
+  private lockoutTimer?: number;
   private lastActivityTime: number;
   private eventListeners: Map<string, Function[]> = new Map();
 
@@ -110,7 +128,7 @@ export class AutoLockManager {
     };
 
     this.appStateData = {
-      currentState: AppState.currentState,
+      currentState: AppState?.currentState || 'active',
       lastActiveTime: Date.now(),
       lastBackgroundTime: Date.now(),
       stateHistory: [],
@@ -208,7 +226,7 @@ export class AutoLockManager {
   /**
    * Manually lock the database
    */
-  async lock(reason: 'manual' | 'security' = 'manual'): Promise<void> {
+  async lock(reason: 'manual' | 'security' | 'auto' = 'manual'): Promise<void> {
     if (this.lockStatus.isLocked) {
       return;
     }
@@ -228,14 +246,19 @@ export class AutoLockManager {
     this.stopIdleMonitoring();
 
     const lockEvent: AutoLockEvent = {
-      type: reason === 'manual' ? 'manual_lock' : 'auto_lock',
+      eventType: reason === 'manual' ? 'manual_lock' : 'auto_lock',
       level: 'info',
       message: `Database locked (${reason})`,
-      timestamp,
+      timestamp: new Date(timestamp),
       metadata: { reason },
     };
 
-    await securityLogger.logEvent(lockEvent);
+    await securityLogger.logEvent({
+      type: lockEvent.eventType,
+      level: lockEvent.level,
+      message: lockEvent.message,
+      metadata: lockEvent.metadata,
+    });
     this.emitEvent('lock-changed', this.lockStatus);
 
     if (this.config.enableNotifications) {
@@ -365,7 +388,9 @@ export class AutoLockManager {
     this.stopIdleMonitoring();
     this.stopBackgroundMonitoring();
     this.clearLockoutTimer();
-    AppState.removeEventListener('change', this.handleAppStateChange);
+    if (AppState && AppState.removeEventListener) {
+      AppState.removeEventListener('change', this.handleAppStateChange);
+    }
     this.eventListeners.clear();
   }
 
@@ -373,8 +398,15 @@ export class AutoLockManager {
    * Set up application state monitoring
    */
   private setupAppStateMonitoring(): void {
+    if (!AppState) {
+      console.warn('AppState not available - skipping app state monitoring');
+      return;
+    }
+
     // Listen for app state changes
-    AppState.addEventListener('change', this.handleAppStateChange);
+    if (AppState && AppState.addEventListener) {
+      AppState.addEventListener('change', this.handleAppStateChange);
+    }
 
     // Initialize current state
     this.appStateData.currentState = AppState.currentState;
@@ -384,7 +416,7 @@ export class AutoLockManager {
   /**
    * Handle app state changes
    */
-  private handleAppStateChange = (nextAppState: AppStateStatus): void => {
+  private handleAppStateChange = (nextAppState: string): void => {
     const timestamp = Date.now();
     const previousState = this.appStateData.currentState;
 
@@ -435,8 +467,8 @@ export class AutoLockManager {
     }
 
     this.idleTimer = setTimeout(() => {
-      this.lock('idle');
-    }, this.config.idleTimeout);
+      this.lock('auto');
+    }, this.config.idleTimeout) as unknown as number;
   }
 
   /**
@@ -458,8 +490,8 @@ export class AutoLockManager {
     }
 
     this.backgroundTimer = setTimeout(() => {
-      this.lock('background');
-    }, this.config.backgroundTimeout);
+      this.lock('auto');
+    }, this.config.backgroundTimeout) as unknown as number;
   }
 
   /**
@@ -559,7 +591,7 @@ export class AutoLockManager {
 
     this.lockoutTimer = setTimeout(() => {
       this.clearLockout();
-    }, this.config.lockoutDuration);
+    }, this.config.lockoutDuration) as unknown as number;
 
     await securityLogger.logEvent({
       type: 'lockout_activated',

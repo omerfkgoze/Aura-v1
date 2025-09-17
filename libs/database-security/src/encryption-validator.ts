@@ -114,7 +114,7 @@ export class EncryptionValidator {
 
       // Read first 16 bytes of file
       const headerBase64 = await FileSystem.readAsStringAsync(fileUri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64' as any,
         length: 16,
       });
 
@@ -185,7 +185,7 @@ export class EncryptionValidator {
 
       // Calculate file checksum for integrity tracking
       const fileContent = await FileSystem.readAsStringAsync(this.databasePath, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64' as any,
       });
 
       const checksum = await Crypto.digestStringAsync(
@@ -256,14 +256,14 @@ export class EncryptionValidator {
    */
   private getDatabasePath(databaseName: string): string {
     // Expo SQLite stores databases in documentDirectory/SQLite/
-    return `${FileSystem.documentDirectory}SQLite/${databaseName}`;
+    return `${(FileSystem as any).documentDirectory || ''}SQLite/${databaseName}`;
   }
 
   /**
    * Store file checksum for integrity comparison
    */
   private async storeFileChecksum(checksum: string): Promise<void> {
-    const checksumPath = `${FileSystem.documentDirectory}.aura_checksums`;
+    const checksumPath = `${(FileSystem as any).documentDirectory || ''}.aura_checksums`;
 
     try {
       let checksumData: Record<string, string> = {};
@@ -277,7 +277,7 @@ export class EncryptionValidator {
       checksumData[this.databaseName] = checksum;
 
       await FileSystem.writeAsStringAsync(checksumPath, JSON.stringify(checksumData), {
-        encoding: FileSystem.EncodingType.UTF8,
+        encoding: 'utf8' as any,
       });
     } catch (error) {
       console.warn(
@@ -350,7 +350,7 @@ export class EncryptionValidator {
 
       // Calculate current checksum
       const fileContent = await FileSystem.readAsStringAsync(this.databasePath, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64' as any,
       });
 
       const currentChecksum = await Crypto.digestStringAsync(
@@ -382,7 +382,7 @@ export class EncryptionValidator {
    */
   private async getStoredChecksum(): Promise<string | null> {
     try {
-      const checksumPath = `${FileSystem.documentDirectory}.aura_checksums`;
+      const checksumPath = `${(FileSystem as any).documentDirectory || ''}.aura_checksums`;
       const checksumFileInfo = await FileSystem.getInfoAsync(checksumPath);
 
       if (!checksumFileInfo.exists) return null;

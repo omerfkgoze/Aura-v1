@@ -5,6 +5,9 @@
  */
 
 import * as SQLite from 'expo-sqlite';
+
+// Type for WebSQL database
+type WebSQLDatabase = any;
 import * as FileSystem from 'expo-file-system';
 import * as SecureStore from 'expo-secure-store';
 import { securityLogger, type SecurityEvent } from './security-logger';
@@ -102,7 +105,7 @@ export interface MigrationEvent extends SecurityEvent {
  * Handles database schema versioning with encrypted data support
  */
 export class EncryptedMigrationManager {
-  private database: SQLite.WebSQLDatabase | null = null;
+  private database: WebSQLDatabase | null = null;
   private migrations: Map<number, MigrationDefinition> = new Map();
   private config: {
     databasePath: string;
@@ -128,7 +131,7 @@ export class EncryptedMigrationManager {
   /**
    * Initialize migration manager
    */
-  async initialize(database: SQLite.WebSQLDatabase): Promise<void> {
+  async initialize(database: WebSQLDatabase): Promise<void> {
     try {
       this.database = database;
 
@@ -463,11 +466,11 @@ export class EncryptedMigrationManager {
    */
   async createBackup(): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupPath = `${FileSystem.documentDirectory}backup_${timestamp}.db`;
+    const backupPath = `${(FileSystem as any).documentDirectory || ''}backup_${timestamp}.db`;
 
     try {
       await FileSystem.copyAsync({
-        from: `${FileSystem.documentDirectory}${this.config.databasePath}`,
+        from: `${(FileSystem as any).documentDirectory || ''}${this.config.databasePath}`,
         to: backupPath,
       });
 
@@ -486,7 +489,7 @@ export class EncryptedMigrationManager {
     try {
       await FileSystem.copyAsync({
         from: backupPath,
-        to: `${FileSystem.documentDirectory}${this.config.databasePath}`,
+        to: `${(FileSystem as any).documentDirectory || ''}${this.config.databasePath}`,
       });
     } catch (error) {
       throw new Error(
@@ -501,14 +504,14 @@ export class EncryptedMigrationManager {
   private async executeInTransaction(operation: () => Promise<void>): Promise<void> {
     return new Promise((resolve, reject) => {
       this.database!.transaction(
-        async tx => {
+        async (tx: any) => {
           try {
             await operation();
           } catch (error) {
             throw error;
           }
         },
-        error => reject(error),
+        (error: any) => reject(error),
         () => resolve()
       );
     });
@@ -564,7 +567,7 @@ export class EncryptedMigrationManager {
   private async executeSQLScript(script: string): Promise<void> {
     return new Promise((resolve, reject) => {
       this.database!.transaction(
-        tx => {
+        (tx: any) => {
           // Split script into individual statements
           const statements = script
             .split(';')
@@ -575,7 +578,7 @@ export class EncryptedMigrationManager {
             tx.executeSql(statement, []);
           }
         },
-        error => reject(error),
+        (error: any) => reject(error),
         () => resolve()
       );
     });
@@ -635,12 +638,12 @@ export class EncryptedMigrationManager {
    */
   private async getTableBatch(table: string, offset: number, limit: number): Promise<any[]> {
     return new Promise((resolve, reject) => {
-      this.database!.readTransaction(tx => {
+      this.database!.readTransaction((tx: any) => {
         tx.executeSql(
           `SELECT * FROM ${table} LIMIT ? OFFSET ?`,
           [limit, offset],
-          (_, result) => resolve(result.rows._array || []),
-          (_, error) => {
+          (_: any, result: any) => resolve(result.rows._array || []),
+          (_: any, error: any) => {
             reject(error);
             return false;
           }
@@ -667,14 +670,14 @@ export class EncryptedMigrationManager {
 
     return new Promise((resolve, reject) => {
       this.database!.transaction(
-        tx => {
+        (tx: any) => {
           for (const row of batch) {
             // This would need to be implemented based on table structure
             // Placeholder implementation
             console.log(`[Migration] Updating row in ${table}:`, row.id);
           }
         },
-        error => reject(error),
+        (error: any) => reject(error),
         () => resolve()
       );
     });
@@ -733,15 +736,15 @@ export class EncryptedMigrationManager {
    */
   private async getCurrentSchemaVersion(): Promise<number> {
     return new Promise((resolve, reject) => {
-      this.database!.readTransaction(tx => {
+      this.database!.readTransaction((tx: any) => {
         tx.executeSql(
           'SELECT MAX(version) as version FROM schema_migrations',
           [],
-          (_, result) => {
+          (_: any, result: any) => {
             const version = result.rows._array[0]?.version || 0;
             resolve(version);
           },
-          (_, error) => {
+          (_: any, error: any) => {
             reject(error);
             return false;
           }
@@ -755,12 +758,12 @@ export class EncryptedMigrationManager {
    */
   private async getAppliedMigrations(): Promise<SchemaVersion[]> {
     return new Promise((resolve, reject) => {
-      this.database!.readTransaction(tx => {
+      this.database!.readTransaction((tx: any) => {
         tx.executeSql(
           'SELECT * FROM schema_migrations ORDER BY version',
           [],
-          (_, result) => {
-            const migrations: SchemaVersion[] = result.rows._array.map(row => ({
+          (_: any, result: any) => {
+            const migrations: SchemaVersion[] = result.rows._array.map((row: any) => ({
               version: row.version,
               appliedAt: row.applied_at,
               migrationName: row.name,
@@ -770,7 +773,7 @@ export class EncryptedMigrationManager {
             }));
             resolve(migrations);
           },
-          (_, error) => {
+          (_: any, error: any) => {
             reject(error);
             return false;
           }
@@ -791,10 +794,10 @@ export class EncryptedMigrationManager {
 
     return new Promise((resolve, reject) => {
       this.database!.transaction(
-        tx => {
+        (tx: any) => {
           tx.executeSql(
-            `INSERT INTO schema_migrations 
-             (version, name, applied_at, checksum, rollback_available) 
+            `INSERT INTO schema_migrations
+             (version, name, applied_at, checksum, rollback_available)
              VALUES (?, ?, ?, ?, ?)`,
             [
               migration.version,
@@ -805,7 +808,7 @@ export class EncryptedMigrationManager {
             ]
           );
         },
-        error => reject(error),
+        (error: any) => reject(error),
         () => resolve()
       );
     });
@@ -817,10 +820,10 @@ export class EncryptedMigrationManager {
   private async removeMigrationRecord(version: number): Promise<void> {
     return new Promise((resolve, reject) => {
       this.database!.transaction(
-        tx => {
+        (tx: any) => {
           tx.executeSql('DELETE FROM schema_migrations WHERE version = ?', [version]);
         },
-        error => reject(error),
+        (error: any) => reject(error),
         () => resolve()
       );
     });

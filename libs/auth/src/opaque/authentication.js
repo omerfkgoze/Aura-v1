@@ -73,13 +73,12 @@ export class OpaqueAuthenticationFlow {
           `OPAQUE authentication completed in ${totalTime}ms for user ${this.state.username}`
         );
         const expiresAt = new Date(Date.now() + this.config.sessionTimeout);
-        return {
-          success: true,
-          sessionKey: sessionResult.sessionKey,
-          userId: sessionResult.userId,
-          exportKey,
-          expiresAt,
-        };
+        const result = { success: true };
+        if (sessionResult.sessionKey) result.sessionKey = sessionResult.sessionKey;
+        if (sessionResult.userId) result.userId = sessionResult.userId;
+        if (exportKey) result.exportKey = exportKey;
+        result.expiresAt = expiresAt;
+        return result;
       } catch (error) {
         this.state.step = 'error';
         this.state.error =
@@ -289,11 +288,14 @@ export class OpaqueSessionManager {
       );
       const errors = results.filter(result => !result.success).map(result => result.error);
       const revokedCount = results.filter(result => result.success).length;
-      return {
+      const result = {
         success: errors.length === 0,
         revokedCount,
-        errors: errors.length > 0 ? errors : undefined,
       };
+      if (errors.length > 0) {
+        result.errors = errors;
+      }
+      return result;
     });
   }
   /**

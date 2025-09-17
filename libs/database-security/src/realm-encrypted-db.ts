@@ -153,7 +153,6 @@ export class RealmEncryptedDatabase {
         path: this.config.path,
         deleteRealmIfMigrationNeeded: this.config.deleteRealmIfMigrationNeeded,
         onMigration: this.config.onMigration,
-        shouldCompactOnLaunch: this.config.shouldCompactOnLaunch,
       };
 
       // Open encrypted Realm
@@ -285,8 +284,8 @@ export class RealmEncryptedDatabase {
             encryptedData,
             dataType,
             version: 1,
-          }) as EncryptedCycleData;
-          resolve(cycleData);
+          });
+          resolve(cycleData as unknown as EncryptedCycleData);
         });
       } catch (error) {
         reject(
@@ -313,9 +312,9 @@ export class RealmEncryptedDatabase {
         this.realm!.write(() => {
           const data = this.realm!.objectForPrimaryKey('EncryptedCycleData', id);
           if (data) {
-            data.encryptedData = encryptedData;
-            data.version = version;
-            data.updatedAt = new Date();
+            (data as any)['encryptedData'] = encryptedData;
+            (data as any)['version'] = version;
+            (data as any)['updatedAt'] = new Date();
           }
         });
         resolve();
@@ -332,11 +331,7 @@ export class RealmEncryptedDatabase {
   /**
    * Query encrypted cycle data
    */
-  queryCycleData(
-    userId: string,
-    dataType?: string,
-    limit?: number
-  ): Realm.Results<EncryptedCycleData> {
+  queryCycleData(userId: string, dataType?: string, limit?: number): any {
     if (!this.realm) throw new Error('Realm not initialized');
 
     let query = `userId = "${userId}" AND isDeleted = false`;
@@ -363,8 +358,8 @@ export class RealmEncryptedDatabase {
         this.realm!.write(() => {
           const data = this.realm!.objectForPrimaryKey('EncryptedCycleData', id);
           if (data) {
-            data.isDeleted = true;
-            data.updatedAt = new Date();
+            (data as any)['isDeleted'] = true;
+            (data as any)['updatedAt'] = new Date();
           }
         });
         resolve();
@@ -393,9 +388,9 @@ export class RealmEncryptedDatabase {
           )[0];
 
           if (existing) {
-            existing.encryptedValue = encryptedValue;
-            existing.version += 1;
-            existing.updatedAt = new Date();
+            (existing as any)['encryptedValue'] = encryptedValue;
+            (existing as any)['version'] = ((existing as any)['version'] as number) + 1;
+            (existing as any)['updatedAt'] = new Date();
           } else {
             this.realm!.create('EncryptedUserPrefs', {
               userId,
@@ -426,7 +421,7 @@ export class RealmEncryptedDatabase {
       .objects('EncryptedUserPrefs')
       .filtered(`userId = "${userId}" AND prefKey = "${prefKey}"`)[0];
 
-    return pref ? pref.encryptedValue : null;
+    return pref ? (pref as any)['encryptedValue'] : null;
   }
 
   /**
@@ -452,8 +447,9 @@ export class RealmEncryptedDatabase {
     if (!this.realm) return { fileSize: 0, usedSize: 0 };
 
     try {
-      const fileSize = this.realm.size;
-      const usedSize = this.realm.size; // Realm doesn't distinguish used vs total
+      // Use type assertion to access size property
+      const fileSize = (this.realm as any).size || 0;
+      const usedSize = (this.realm as any).size || 0; // Realm doesn't distinguish used vs total
       return { fileSize, usedSize };
     } catch (error) {
       console.warn(

@@ -23,6 +23,14 @@ export interface SecurityEvent {
   tags?: Record<string, string>;
 }
 
+export interface SecurityEventInput {
+  type: string;
+  level: SecurityEventLevel;
+  message: string;
+  metadata?: Record<string, any>;
+  timestamp?: Date;
+}
+
 export interface SecurityEventFilter {
   level?: SecurityEventLevel;
   eventType?: string;
@@ -73,23 +81,50 @@ export class SecurityEventLogger {
   /**
    * Log a security event
    */
+  public logEvent(event: SecurityEventInput): void;
   public logEvent(
     eventType: string,
     level: SecurityEventLevel,
     message: string,
+    context?: Record<string, any>
+  ): void;
+  public logEvent(
+    eventTypeOrEvent: string | SecurityEventInput,
+    level?: SecurityEventLevel,
+    message?: string,
     context: Record<string, any> = {}
   ): void {
+    // Handle both API signatures
+    let eventType: string;
+    let eventLevel: SecurityEventLevel;
+    let eventMessage: string;
+    let eventContext: Record<string, any> = {};
+
+    if (typeof eventTypeOrEvent === 'object') {
+      // Object-based API
+      eventType = eventTypeOrEvent.type;
+      eventLevel = eventTypeOrEvent.level;
+      eventMessage = eventTypeOrEvent.message;
+      eventContext = eventTypeOrEvent.metadata || {};
+    } else {
+      // Parameter-based API
+      eventType = eventTypeOrEvent;
+      eventLevel = level!;
+      eventMessage = message!;
+      eventContext = context;
+    }
+
     const event: SecurityEvent = {
       eventType,
-      level,
-      message,
+      level: eventLevel,
+      message: eventMessage,
       timestamp: new Date(),
-      userId: context['userId'],
-      sessionId: context['sessionId'],
-      clientInfo: this.sanitizeClientInfo(context['clientInfo']),
-      context: this.sanitizeContext(context),
-      fingerprint: this.generateFingerprint(eventType, level, context),
-      tags: this.generateTags(eventType, level, context),
+      userId: eventContext['userId'],
+      sessionId: eventContext['sessionId'],
+      clientInfo: this.sanitizeClientInfo(eventContext['clientInfo']),
+      context: this.sanitizeContext(eventContext),
+      fingerprint: this.generateFingerprint(eventType, eventLevel, eventContext),
+      tags: this.generateTags(eventType, eventLevel, eventContext),
     };
 
     // Add to local event store
@@ -106,7 +141,7 @@ export class SecurityEventLogger {
     }
 
     // Handle critical events immediately
-    if (level === 'critical') {
+    if (eventLevel === 'critical') {
       this.handleCriticalEvent(event);
     }
   }

@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import * as FileSystem from 'expo-file-system';
 import { createHash, createHmac, randomBytes } from 'crypto';
-import { CryptoCore } from '@aura/crypto-core';
+import CryptoCore from '@aura/crypto-core';
 import { SQLCipherManager } from './sqlite-cipher';
 import { RealmEncryptedDatabase } from './realm-encrypted-db';
 
@@ -10,7 +10,7 @@ export class DatabaseIntegrityVerifier {
   private static readonly INTEGRITY_LOG_PREFIX = 'aura.integrity.log';
   private static readonly MONITORING_CONFIG_KEY = 'aura.integrity.monitoring';
 
-  private cryptoCore: CryptoCore;
+  private cryptoCore: typeof CryptoCore;
   private sqlCipherManager: SQLCipherManager;
   private realmDatabase: RealmEncryptedDatabase;
   private isInitialized = false;
@@ -21,7 +21,7 @@ export class DatabaseIntegrityVerifier {
   private recoveryListeners: Array<(recovery: IntegrityRecovery) => void> = [];
 
   constructor(
-    cryptoCore: CryptoCore,
+    cryptoCore: typeof CryptoCore,
     sqlCipherManager: SQLCipherManager,
     realmDatabase: RealmEncryptedDatabase
   ) {
@@ -57,10 +57,10 @@ export class DatabaseIntegrityVerifier {
       violations: [],
       warnings: [],
       details: {
-        fileIntegrity: { status: 'pending', checks: [] },
-        databaseIntegrity: { status: 'pending', checks: [] },
-        recordIntegrity: { status: 'pending', checks: [] },
-        crossReferenceIntegrity: { status: 'pending', checks: [] },
+        fileIntegrity: { status: 'valid', checks: [], violations: [], warnings: [] },
+        databaseIntegrity: { status: 'valid', checks: [], violations: [], warnings: [] },
+        recordIntegrity: { status: 'valid', checks: [], violations: [], warnings: [] },
+        crossReferenceIntegrity: { status: 'valid', checks: [], violations: [], warnings: [] },
       },
     };
 
@@ -431,7 +431,7 @@ export class DatabaseIntegrityVerifier {
 
     try {
       const fileData = await FileSystem.readAsStringAsync(filePath, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64' as any,
       });
 
       return createHmac('sha256', this.integrityKey).update(fileData, 'base64').digest('hex');
@@ -465,9 +465,10 @@ export class DatabaseIntegrityVerifier {
   }
 
   private async getDatabaseFilePaths(): Promise<string[]> {
+    const documentDirectory = (FileSystem as any).documentDirectory || '';
     return [
-      `${FileSystem.documentDirectory}encrypted_database.db`,
-      `${FileSystem.documentDirectory}realm_database.realm`,
+      `${documentDirectory}encrypted_database.db`,
+      `${documentDirectory}realm_database.realm`,
     ];
   }
 

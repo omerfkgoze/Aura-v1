@@ -98,6 +98,11 @@ const nextConfig = {
 
   // Static generation disabled via output mode
   // generateStaticParams removed - deprecated in Next.js 15
+
+  // TODO: Known Next.js 15 compatibility issue with Html import
+  // The build fails with "Html should not be imported outside of pages/_document"
+  // This is a known issue with Next.js 15 + React 19 combination
+  // Requires further investigation or Next.js version update
 };
 
 module.exports = nextConfig;

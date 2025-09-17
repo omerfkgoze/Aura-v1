@@ -73,6 +73,55 @@ export interface OpaqueClientConfig {
 }
 
 /**
+ * OPAQUE server configuration
+ */
+export interface OpaqueServerConfig {
+  database: any; // Database connection
+  sessionTimeout: number;
+  maxAttempts: number;
+}
+
+/**
+ * OPAQUE registration configuration
+ */
+export interface OpaqueRegistrationConfig {
+  allowDuplicateUsernames: boolean;
+  requireEmailVerification: boolean;
+  minPasswordStrength: number;
+}
+
+/**
+ * OPAQUE authentication configuration
+ */
+export interface OpaqueAuthenticationConfig {
+  maxFailedAttempts: number;
+  lockoutDuration: number;
+  requireMFA: boolean;
+}
+
+/**
+ * Registration flow result
+ */
+export interface RegistrationFlowResult {
+  success: boolean;
+  userId?: string;
+  username?: string;
+  exportKey?: string;
+  error?: string;
+}
+
+/**
+ * Authentication flow result
+ */
+export interface AuthenticationFlowResult {
+  success: boolean;
+  sessionKey?: string;
+  userId?: string;
+  exportKey?: string;
+  expiresAt?: Date;
+}
+
+/**
  * OPAQUE registration flow status
  */
 export type OpaqueRegistrationStatus =
@@ -194,4 +243,23 @@ export interface OpaqueServer {
     username: string,
     serverState: ServerLoginState
   ): Promise<OpaqueSessionResult>;
+
+  /**
+   * Validate session
+   */
+  validateSession(sessionKey: string): Promise<{
+    isValid: boolean;
+    userId?: string;
+    username?: string;
+  }>;
+
+  /**
+   * Revoke session
+   */
+  revokeSession(sessionKey: string): Promise<void>;
+
+  /**
+   * Delete user
+   */
+  deleteUser(userId: string): Promise<void>;
 }

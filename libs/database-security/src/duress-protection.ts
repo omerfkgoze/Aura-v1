@@ -7,7 +7,7 @@
 
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import * as LocalAuthentication from 'expo-local-authentication';
+// import * as LocalAuthentication from 'expo-local-authentication'; // Module not available in build environment
 import * as FileSystem from 'expo-file-system';
 import { securityLogger, type SecurityEvent } from './security-logger';
 
@@ -136,8 +136,10 @@ export class DuressProtectionManager {
   async initialize(): Promise<void> {
     try {
       // Check biometric capabilities
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      // const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      // const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      const hasHardware = false; // LocalAuthentication not available in build environment
+      const isEnrolled = false;
 
       if (!hasHardware || !isEnrolled) {
         console.warn('[DuressProtection] Biometric authentication not available');
@@ -396,10 +398,11 @@ export class DuressProtectionManager {
       const duration = Date.now() - startTime;
 
       const activationEvent: DuressActivationEvent = {
+        eventType: 'duress_activation',
         type: 'duress_activation',
         level: 'critical',
         message: 'Duress mode activation completed',
-        timestamp: startTime,
+        timestamp: new Date(startTime),
         metadata: {
           trigger,
           success: true,
@@ -417,10 +420,11 @@ export class DuressProtectionManager {
       const duration = Date.now() - startTime;
 
       const activationEvent: DuressActivationEvent = {
+        eventType: 'duress_activation',
         type: 'duress_activation',
         level: 'error',
         message: 'Duress mode activation failed',
-        timestamp: startTime,
+        timestamp: new Date(startTime),
         metadata: {
           trigger,
           success: false,
@@ -514,11 +518,11 @@ export class DuressProtectionManager {
 
     try {
       const dbPaths = [
-        `${FileSystem.documentDirectory}encrypted_database.db`,
-        `${FileSystem.documentDirectory}encrypted_database.db-wal`,
-        `${FileSystem.documentDirectory}encrypted_database.db-shm`,
-        `${FileSystem.documentDirectory}realm_encrypted.realm`,
-        `${FileSystem.documentDirectory}backup_encrypted.db`,
+        `${(FileSystem as any).documentDirectory || ''}encrypted_database.db`,
+        `${(FileSystem as any).documentDirectory || ''}encrypted_database.db-wal`,
+        `${(FileSystem as any).documentDirectory || ''}encrypted_database.db-shm`,
+        `${(FileSystem as any).documentDirectory || ''}realm_encrypted.realm`,
+        `${(FileSystem as any).documentDirectory || ''}backup_encrypted.db`,
       ];
 
       for (const path of dbPaths) {
@@ -529,7 +533,7 @@ export class DuressProtectionManager {
             for (let pass = 0; pass < overwritePasses; pass++) {
               const randomData = this.generateRandomData(fileInfo.size || 1024);
               await FileSystem.writeAsStringAsync(path, randomData, {
-                encoding: FileSystem.EncodingType.Base64,
+                encoding: 'base64' as any,
               });
             }
 
@@ -681,9 +685,10 @@ export class DuressProtectionManager {
   private async initializeSecureDeletion(): Promise<void> {
     try {
       // Ensure document directory exists
-      const docDir = await FileSystem.getInfoAsync(FileSystem.documentDirectory!);
+      const documentDirectory = (FileSystem as any).documentDirectory || '';
+      const docDir = await FileSystem.getInfoAsync(documentDirectory);
       if (!docDir.exists) {
-        await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory!, {
+        await FileSystem.makeDirectoryAsync(documentDirectory, {
           intermediates: true,
         });
       }

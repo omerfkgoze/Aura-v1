@@ -278,7 +278,7 @@ export class DatabaseConnectionManager {
     const database = await this.getConnection();
 
     try {
-      const result = (await database.getAllAsync(query, params)) as T[];
+      const result = (await database.getAllAsync(query, params || [])) as T[];
       await this.releaseConnection(database);
       return result;
     } catch (error) {
@@ -294,7 +294,7 @@ export class DatabaseConnectionManager {
     const database = await this.getConnection();
 
     try {
-      const result = (await database.getFirstAsync(query, params)) as T | null;
+      const result = (await database.getFirstAsync(query, params || [])) as T | null;
       await this.releaseConnection(database);
       return result;
     } catch (error) {
@@ -310,7 +310,7 @@ export class DatabaseConnectionManager {
     const database = await this.getConnection();
 
     try {
-      const result = await database.runAsync(query, params);
+      const result = await database.runAsync(query, params || []);
       await this.releaseConnection(database);
       return result;
     } catch (error) {
