@@ -22,10 +22,9 @@ import type {
  * OPAQUE protocol client implementation
  */
 export declare class OpaqueClientImpl implements OpaqueClient {
-  private config;
   private registrationStatus;
   private authenticationStatus;
-  constructor(config?: Partial<OpaqueClientConfig>);
+  constructor(_config?: Partial<OpaqueClientConfig>);
   /**
    * Start OPAQUE registration flow
    * Generates initial registration request without exposing password to server
@@ -90,10 +89,6 @@ export declare class OpaqueClientImpl implements OpaqueClient {
    * Convert ArrayBuffer to Base64 string for serialization
    */
   private arrayBufferToBase64;
-  /**
-   * Convert Base64 string back to ArrayBuffer
-   */
-  private base64ToArrayBuffer;
   /**
    * Create standardized OPAQUE error
    */

@@ -32,13 +32,6 @@ export interface AuditEvent extends BaseEvent {
   findings: string[];
 }
 export { ComplianceFramework } from './types.js';
-export interface ComplianceExport {
-  exportId: string;
-  framework: ComplianceFramework;
-  exportedAt: Date;
-  format: 'json' | 'csv' | 'pdf';
-  data: any;
-}
 export interface ComplianceReport {
   reportId: string;
   framework: ComplianceFramework;

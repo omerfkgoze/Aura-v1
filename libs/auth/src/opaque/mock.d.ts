@@ -17,14 +17,14 @@ import type {
 /**
  * Mock client registration creation
  */
-export declare const createClientRegistration: (options: { password: Uint8Array }) => Promise<{
+export declare const createClientRegistration: (_options: { password: Uint8Array }) => Promise<{
   request: RegistrationRequest;
   state: ClientRegistrationState;
 }>;
 /**
  * Mock client registration completion
  */
-export declare const finishClientRegistration: (options: {
+export declare const finishClientRegistration: (_options: {
   state: ClientRegistrationState;
   response: RegistrationResponse;
 }) => Promise<{
@@ -34,14 +34,14 @@ export declare const finishClientRegistration: (options: {
 /**
  * Mock client login creation
  */
-export declare const createClientLogin: (options: { password: Uint8Array }) => Promise<{
+export declare const createClientLogin: (_options: { password: Uint8Array }) => Promise<{
   request: LoginRequest;
   state: ClientLoginState;
 }>;
 /**
  * Mock client login completion
  */
-export declare const finishClientLogin: (options: {
+export declare const finishClientLogin: (_options: {
   state: ClientLoginState;
   response: LoginResponse;
 }) => Promise<{
@@ -51,7 +51,7 @@ export declare const finishClientLogin: (options: {
 /**
  * Mock server registration creation
  */
-export declare const createServerRegistration: (options: {
+export declare const createServerRegistration: (_options: {
   request: RegistrationRequest;
   serverIdentity: Uint8Array;
 }) => Promise<{
@@ -61,13 +61,13 @@ export declare const createServerRegistration: (options: {
 /**
  * Mock server registration completion
  */
-export declare const finishServerRegistration: (options: {
+export declare const finishServerRegistration: (_options: {
   state: ServerRegistrationState;
 }) => Promise<ArrayBuffer>;
 /**
  * Mock server login creation
  */
-export declare const createServerLogin: (options: {
+export declare const createServerLogin: (_options: {
   request: LoginRequest;
   record: ArrayBuffer;
   serverIdentity: Uint8Array;
@@ -78,7 +78,7 @@ export declare const createServerLogin: (options: {
 /**
  * Mock server login completion
  */
-export declare const finishServerLogin: (options: {
+export declare const finishServerLogin: (_options: {
   state: ServerLoginState;
 }) => Promise<ArrayBuffer>;
 /**

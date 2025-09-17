@@ -22,7 +22,7 @@ function getOpaqueModule() {
       // Fall back to mock implementation in test environment
       if (
         typeof process !== 'undefined' &&
-        (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
+        (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
       ) {
         opaqueModule = yield import('./mock');
         return opaqueModule;
@@ -32,21 +32,13 @@ function getOpaqueModule() {
   });
 }
 /**
- * Default OPAQUE client configuration
- */
-const DEFAULT_CONFIG = {
-  serverUrl: '/api/auth/opaque',
-  timeout: 10000, // 10 seconds
-  retryAttempts: 3,
-};
-/**
  * OPAQUE protocol client implementation
  */
 export class OpaqueClientImpl {
-  constructor(config) {
+  constructor(_config) {
     this.registrationStatus = 'idle';
     this.authenticationStatus = 'idle';
-    this.config = Object.assign(Object.assign({}, DEFAULT_CONFIG), config);
+    // Configuration merging removed as config was not being used
   }
   /**
    * Start OPAQUE registration flow
@@ -206,17 +198,6 @@ export class OpaqueClientImpl {
       binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary);
-  }
-  /**
-   * Convert Base64 string back to ArrayBuffer
-   */
-  base64ToArrayBuffer(base64) {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes.buffer;
   }
   /**
    * Create standardized OPAQUE error

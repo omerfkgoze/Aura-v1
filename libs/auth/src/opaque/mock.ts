@@ -30,7 +30,7 @@ function generateRandomBytes(length: number): ArrayBuffer {
 /**
  * Mock client registration creation
  */
-export const createClientRegistration = async (options: {
+export const createClientRegistration = async (_options: {
   password: Uint8Array;
 }): Promise<{
   request: RegistrationRequest;
@@ -49,7 +49,7 @@ export const createClientRegistration = async (options: {
 /**
  * Mock client registration completion
  */
-export const finishClientRegistration = async (options: {
+export const finishClientRegistration = async (_options: {
   state: ClientRegistrationState;
   response: RegistrationResponse;
 }): Promise<{
@@ -66,7 +66,7 @@ export const finishClientRegistration = async (options: {
 /**
  * Mock client login creation
  */
-export const createClientLogin = async (options: {
+export const createClientLogin = async (_options: {
   password: Uint8Array;
 }): Promise<{
   request: LoginRequest;
@@ -85,7 +85,7 @@ export const createClientLogin = async (options: {
 /**
  * Mock client login completion
  */
-export const finishClientLogin = async (options: {
+export const finishClientLogin = async (_options: {
   state: ClientLoginState;
   response: LoginResponse;
 }): Promise<{
@@ -102,7 +102,7 @@ export const finishClientLogin = async (options: {
 /**
  * Mock server registration creation
  */
-export const createServerRegistration = async (options: {
+export const createServerRegistration = async (_options: {
   request: RegistrationRequest;
   serverIdentity: Uint8Array;
 }): Promise<{
@@ -122,7 +122,7 @@ export const createServerRegistration = async (options: {
 /**
  * Mock server registration completion
  */
-export const finishServerRegistration = async (options: {
+export const finishServerRegistration = async (_options: {
   state: ServerRegistrationState;
 }): Promise<ArrayBuffer> => {
   // Mock implementation
@@ -132,7 +132,7 @@ export const finishServerRegistration = async (options: {
 /**
  * Mock server login creation
  */
-export const createServerLogin = async (options: {
+export const createServerLogin = async (_options: {
   request: LoginRequest;
   record: ArrayBuffer;
   serverIdentity: Uint8Array;
@@ -153,7 +153,7 @@ export const createServerLogin = async (options: {
 /**
  * Mock server login completion
  */
-export const finishServerLogin = async (options: {
+export const finishServerLogin = async (_options: {
   state: ServerLoginState;
 }): Promise<ArrayBuffer> => {
   // Mock implementation
@@ -167,6 +167,6 @@ export function isTestEnvironment(): boolean {
   return (
     typeof process !== 'undefined' &&
     process.env &&
-    (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
+    (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
   );
 }

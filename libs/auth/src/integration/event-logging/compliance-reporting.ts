@@ -42,15 +42,6 @@ export interface AuditEvent extends BaseEvent {
 // Re-export ComplianceFramework for convenience
 export { ComplianceFramework } from './types.js';
 
-// Compliance Export Interface
-export interface ComplianceExport {
-  exportId: string;
-  framework: ComplianceFramework;
-  exportedAt: Date;
-  format: 'json' | 'csv' | 'pdf';
-  data: any;
-}
-
 export interface ComplianceReport {
   reportId: string;
   framework: ComplianceFramework;

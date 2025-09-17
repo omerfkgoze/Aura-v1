@@ -18,7 +18,7 @@ function generateRandomBytes(length) {
 /**
  * Mock client registration creation
  */
-export const createClientRegistration = options =>
+export const createClientRegistration = _options =>
   __awaiter(void 0, void 0, void 0, function* () {
     // Mock implementation - generates fake data for testing
     const mockRequest = new Uint8Array(generateRandomBytes(32));
@@ -31,7 +31,7 @@ export const createClientRegistration = options =>
 /**
  * Mock client registration completion
  */
-export const finishClientRegistration = options =>
+export const finishClientRegistration = _options =>
   __awaiter(void 0, void 0, void 0, function* () {
     // Mock implementation
     return {
@@ -42,7 +42,7 @@ export const finishClientRegistration = options =>
 /**
  * Mock client login creation
  */
-export const createClientLogin = options =>
+export const createClientLogin = _options =>
   __awaiter(void 0, void 0, void 0, function* () {
     // Mock implementation
     const mockRequest = new Uint8Array(generateRandomBytes(32));
@@ -55,7 +55,7 @@ export const createClientLogin = options =>
 /**
  * Mock client login completion
  */
-export const finishClientLogin = options =>
+export const finishClientLogin = _options =>
   __awaiter(void 0, void 0, void 0, function* () {
     // Mock implementation
     return {
@@ -66,7 +66,7 @@ export const finishClientLogin = options =>
 /**
  * Mock server registration creation
  */
-export const createServerRegistration = options =>
+export const createServerRegistration = _options =>
   __awaiter(void 0, void 0, void 0, function* () {
     // Mock implementation
     const mockResponse = new Uint8Array(generateRandomBytes(128));
@@ -79,7 +79,7 @@ export const createServerRegistration = options =>
 /**
  * Mock server registration completion
  */
-export const finishServerRegistration = options =>
+export const finishServerRegistration = _options =>
   __awaiter(void 0, void 0, void 0, function* () {
     // Mock implementation
     return generateRandomBytes(256);
@@ -87,7 +87,7 @@ export const finishServerRegistration = options =>
 /**
  * Mock server login creation
  */
-export const createServerLogin = options =>
+export const createServerLogin = _options =>
   __awaiter(void 0, void 0, void 0, function* () {
     // Mock implementation
     const mockResponse = new Uint8Array(generateRandomBytes(128));
@@ -100,7 +100,7 @@ export const createServerLogin = options =>
 /**
  * Mock server login completion
  */
-export const finishServerLogin = options =>
+export const finishServerLogin = _options =>
   __awaiter(void 0, void 0, void 0, function* () {
     // Mock implementation
     return generateRandomBytes(32);
@@ -112,7 +112,7 @@ export function isTestEnvironment() {
   return (
     typeof process !== 'undefined' &&
     process.env &&
-    (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
+    (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
   );
 }
 //# sourceMappingURL=mock.js.map

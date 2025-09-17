@@ -25,7 +25,7 @@ async function getOpaqueModule() {
     // Fall back to mock implementation in test environment
     if (
       typeof process !== 'undefined' &&
-      (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
+      (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
     ) {
       opaqueModule = await import('./mock');
       return opaqueModule;

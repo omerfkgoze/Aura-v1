@@ -54,7 +54,7 @@ export class OpaqueAuthenticationFlow {
         this.state.serverState = serverState;
         // Step 3: Client completes authentication
         this.state.step = 'client-completion';
-        const { sessionKey: clientSessionKey, exportKey } = yield this.withTimeout(
+        const { exportKey } = yield this.withTimeout(
           this.client.completeAuthentication(clientState, loginResponse),
           'Client authentication completion timed out'
         );
@@ -224,7 +224,10 @@ export class OpaqueSessionManager {
       if (!session) {
         // Check server-side validation
         const serverValidation = yield this.server.validateSession(sessionKey);
-        return { isValid: serverValidation.isValid, userId: serverValidation.userId };
+        return Object.assign(
+          { isValid: serverValidation.isValid },
+          serverValidation.userId && { userId: serverValidation.userId }
+        );
       }
       if (session.expiresAt < new Date()) {
         this.activeSessions.delete(sessionKey);

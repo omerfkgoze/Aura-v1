@@ -25,7 +25,7 @@ async function getOpaqueModule() {
     // Fall back to mock implementation in test environment
     if (
       typeof process !== 'undefined' &&
-      (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true')
+      (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
     ) {
       opaqueModule = await import('./mock');
       return opaqueModule;
@@ -52,24 +52,14 @@ import type {
 } from './types';
 
 /**
- * Default OPAQUE client configuration
- */
-const DEFAULT_CONFIG: OpaqueClientConfig = {
-  serverUrl: '/api/auth/opaque',
-  timeout: 10000, // 10 seconds
-  retryAttempts: 3,
-};
-
-/**
  * OPAQUE protocol client implementation
  */
 export class OpaqueClientImpl implements OpaqueClient {
-  private config: OpaqueClientConfig;
   private registrationStatus: OpaqueRegistrationStatus = 'idle';
   private authenticationStatus: OpaqueAuthenticationStatus = 'idle';
 
-  constructor(config?: Partial<OpaqueClientConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+  constructor(_config?: Partial<OpaqueClientConfig>) {
+    // Configuration merging removed as config was not being used
   }
 
   /**
@@ -274,18 +264,6 @@ export class OpaqueClientImpl implements OpaqueClient {
       binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary);
-  }
-
-  /**
-   * Convert Base64 string back to ArrayBuffer
-   */
-  private base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes.buffer;
   }
 
   /**
