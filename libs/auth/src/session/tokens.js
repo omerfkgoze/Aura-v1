@@ -1,8 +1,8 @@
 import { __awaiter } from 'tslib';
 export class TokenManager {
   constructor(config) {
-    this.JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
-    this.REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-key';
+    this.JWT_SECRET = process.env['JWT_SECRET'] || 'dev-secret-key';
+    this.REFRESH_SECRET = process.env['JWT_REFRESH_SECRET'] || 'dev-refresh-secret-key';
     this.config = config;
   }
   createSession(user, deviceId, authMethod) {
@@ -13,16 +13,20 @@ export class TokenManager {
       const refreshTokenExp = new Date(
         now.getTime() + this.config.refreshTokenExpiry * 24 * 60 * 60 * 1000
       );
-      const accessTokenPayload = {
-        sub: user.id,
-        email: user.email,
-        username: user.username,
-        iat: Math.floor(now.getTime() / 1000),
-        exp: Math.floor(accessTokenExp.getTime() / 1000),
-        device_id: deviceId,
-        auth_method: authMethod,
-        session_id: sessionId,
-      };
+      const accessTokenPayload = Object.assign(
+        Object.assign(
+          {
+            sub: user.id,
+            iat: Math.floor(now.getTime() / 1000),
+            exp: Math.floor(accessTokenExp.getTime() / 1000),
+            device_id: deviceId,
+            auth_method: authMethod,
+            session_id: sessionId,
+          },
+          user.email && { email: user.email }
+        ),
+        user.username && { username: user.username }
+      );
       const refreshTokenPayload = {
         sub: user.id,
         iat: Math.floor(now.getTime() / 1000),
@@ -114,13 +118,18 @@ export class TokenManager {
   extractUserFromToken(token) {
     try {
       const payload = this.decodeToken(token);
-      return {
+      const user = {
         id: payload.sub,
-        email: payload.email,
-        username: payload.username,
         createdAt: new Date(), // Would be fetched from database in real implementation
         emailVerified: true, // Would be part of token payload
       };
+      if (payload.email) {
+        user.email = payload.email;
+      }
+      if (payload.username) {
+        user.username = payload.username;
+      }
+      return user;
     } catch (_a) {
       return null;
     }

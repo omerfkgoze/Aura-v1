@@ -44,10 +44,10 @@ export class LogoutManager {
           method: 'passkey', // This should come from current session
           timestamp: startTime,
           success: true,
-          deviceInfo: {
-            platform: this.getPlatform(),
-            userAgent: this.getUserAgent(),
-          },
+          deviceInfo: Object.assign(
+            { platform: this.getPlatform() },
+            this.getUserAgent() ? { userAgent: this.getUserAgent() } : {}
+          ),
         });
         return {
           success: true,
@@ -63,10 +63,10 @@ export class LogoutManager {
           timestamp: startTime,
           success: false,
           error: errorMessage,
-          deviceInfo: {
-            platform: this.getPlatform(),
-            userAgent: this.getUserAgent(),
-          },
+          deviceInfo: Object.assign(
+            { platform: this.getPlatform() },
+            this.getUserAgent() ? { userAgent: this.getUserAgent() } : {}
+          ),
         });
         return {
           success: false,
@@ -77,7 +77,7 @@ export class LogoutManager {
       }
     });
   }
-  performSecurityLogout(reason) {
+  performSecurityLogout(_reason) {
     return __awaiter(this, void 0, void 0, function* () {
       // Security logout clears everything
       return yield this.performLogout({
@@ -226,9 +226,11 @@ export class LogoutManager {
 }
 export class SessionInvalidator {
   constructor(sessionManager) {
+    this.inactivityTimer = undefined;
+    this.securityCheckTimer = undefined;
     this.sessionManager = sessionManager;
   }
-  startInactivityMonitoring(timeoutMinutes = 30) {
+  startInactivityMonitoring(_timeoutMinutes = 30) {
     this.stopInactivityMonitoring();
     this.inactivityTimer = setInterval(() => {
       if (!this.sessionManager.isSessionActive()) {

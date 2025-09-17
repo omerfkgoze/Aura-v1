@@ -1,13 +1,13 @@
 import { AuthSession, AuthState, User, StoredSession, SessionConfig, AuthEvent } from './types';
-import { SecureStorage } from './storage';
+import { SessionSecureStorage } from './storage';
 export declare class SessionManager {
   private tokenManager;
   private sessionStorage;
   private config;
-  private refreshTimer?;
+  private refreshTimer;
   private eventListeners;
   private lastActivityTime;
-  constructor(storage: SecureStorage, config?: SessionConfig);
+  constructor(storage: SessionSecureStorage, config?: SessionConfig);
   createSession(user: User, authMethod: 'passkey' | 'opaque'): Promise<AuthSession>;
   restoreSession(): Promise<AuthSession | null>;
   refreshSession(storedSession?: StoredSession): Promise<AuthSession>;

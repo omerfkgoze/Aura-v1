@@ -22,8 +22,8 @@ export interface RefreshTokenPayload {
 
 export class TokenManager {
   private config: SessionConfig;
-  private readonly JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
-  private readonly REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-key';
+  private readonly JWT_SECRET = process.env['JWT_SECRET'] || 'dev-secret-key';
+  private readonly REFRESH_SECRET = process.env['JWT_REFRESH_SECRET'] || 'dev-refresh-secret-key';
 
   constructor(config: SessionConfig) {
     this.config = config;
@@ -44,13 +44,13 @@ export class TokenManager {
 
     const accessTokenPayload: TokenPayload = {
       sub: user.id,
-      email: user.email,
-      username: user.username,
       iat: Math.floor(now.getTime() / 1000),
       exp: Math.floor(accessTokenExp.getTime() / 1000),
       device_id: deviceId,
       auth_method: authMethod,
       session_id: sessionId,
+      ...(user.email && { email: user.email }),
+      ...(user.username && { username: user.username }),
     };
 
     const refreshTokenPayload: RefreshTokenPayload = {
@@ -153,13 +153,21 @@ export class TokenManager {
     try {
       const payload = this.decodeToken(token) as TokenPayload;
 
-      return {
+      const user: User = {
         id: payload.sub,
-        email: payload.email,
-        username: payload.username,
         createdAt: new Date(), // Would be fetched from database in real implementation
         emailVerified: true, // Would be part of token payload
       };
+
+      if (payload.email) {
+        user.email = payload.email;
+      }
+
+      if (payload.username) {
+        user.username = payload.username;
+      }
+
+      return user;
     } catch {
       return null;
     }

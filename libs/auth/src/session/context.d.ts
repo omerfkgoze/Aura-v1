@@ -1,9 +1,25 @@
 import React from 'react';
+import { SessionManager } from './manager';
+import { AuthState, AuthEvent, AuthSession, User } from './types';
 interface AuthProviderProps {
   children: React.ReactNode;
   storage?: any;
   config?: any;
   enablePersistence?: boolean;
+}
+interface AuthContextValue extends AuthState {
+  eventHistory: AuthEvent[];
+  isInitialized: boolean;
+  error: string | null;
+  authenticateWithPasskey: () => Promise<AuthSession>;
+  authenticateWithOpaque: (username: string, password: string) => Promise<AuthSession>;
+  registerDevice: () => Promise<void>;
+  refreshSession: () => Promise<AuthSession>;
+  logout: () => Promise<void>;
+  validateRecovery: (phrase: string) => Promise<boolean>;
+  clearAuthData: () => void;
+  syncAuthState: () => Promise<void>;
+  sessionManager: SessionManager;
 }
 export declare function AuthProvider({
   children,
@@ -11,33 +27,30 @@ export declare function AuthProvider({
   config,
   enablePersistence,
 }: AuthProviderProps): import('react/jsx-runtime').JSX.Element;
-export declare function useAuth(): never;
+export declare function useAuth(): AuthContextValue;
 export declare function useAuthState(): {
-  user: any;
-  session: any;
-  isAuthenticated: any;
-  isLoading: any;
-  authMethod: any;
-  deviceRegistered: any;
-  lastSyncAt: any;
-  isInitialized: any;
-  error: any;
+  user: User | null;
+  session: AuthSession | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  authMethod: 'passkey' | 'opaque' | null;
+  deviceRegistered: boolean;
+  lastSyncAt: Date | undefined;
+  isInitialized: boolean;
+  error: string | null;
 };
 export declare function useAuthActions(): {
-  authenticateWithPasskey: any;
-  authenticateWithOpaque: any;
-  registerDevice: any;
-  refreshSession: any;
-  logout: any;
-  validateRecovery: any;
-  clearAuthData: any;
-  syncAuthState: any;
+  authenticateWithPasskey: () => Promise<AuthSession>;
+  authenticateWithOpaque: (username: string, password: string) => Promise<AuthSession>;
+  registerDevice: () => Promise<void>;
+  refreshSession: () => Promise<AuthSession>;
+  logout: () => Promise<void>;
+  validateRecovery: (phrase: string) => Promise<boolean>;
+  clearAuthData: () => void;
+  syncAuthState: () => Promise<void>;
 };
-export declare function withAuthProtection(
-  WrappedComponent: any,
-  fallback: any
-): {
-  (props: any): import('react/jsx-runtime').JSX.Element;
-  displayName: string;
-};
+export declare function withAuthProtection<T extends object>(
+  WrappedComponent: React.ComponentType<T>,
+  fallback?: React.ComponentType
+): React.ComponentType<T>;
 export {};

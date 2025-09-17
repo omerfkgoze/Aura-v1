@@ -1,6 +1,7 @@
 import { __awaiter } from 'tslib';
 export class AuthPersistenceManager {
   constructor(sessionManager, config = {}) {
+    this.syncTimer = undefined;
     this.eventHistory = [];
     this.PERSISTENCE_KEY = 'aura_auth_persistence';
     this.sessionManager = sessionManager;
@@ -65,17 +66,18 @@ export class AuthPersistenceManager {
         const session = yield this.sessionManager.restoreSession();
         const persistedData = yield this.loadPersistedData();
         if (session && persistedData) {
-          return {
+          const authState = {
             user: session.user,
             session,
             isAuthenticated: true,
             isLoading: false,
             authMethod: persistedData.lastAuthState.authMethod,
             deviceRegistered: persistedData.lastAuthState.deviceRegistered,
-            lastSyncAt: persistedData.lastAuthState.lastSyncAt
-              ? new Date(persistedData.lastAuthState.lastSyncAt)
-              : undefined,
           };
+          if (persistedData.lastAuthState.lastSyncAt) {
+            authState.lastSyncAt = new Date(persistedData.lastAuthState.lastSyncAt);
+          }
+          return authState;
         }
         return null;
       } catch (error) {

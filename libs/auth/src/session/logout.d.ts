@@ -15,10 +15,10 @@ export interface LogoutResult {
 }
 export declare class LogoutManager {
   private sessionManager;
-  private persistenceManager?;
+  private persistenceManager;
   constructor(sessionManager: SessionManager, persistenceManager?: AuthPersistenceManager);
   performLogout(options?: LogoutOptions): Promise<LogoutResult>;
-  performSecurityLogout(reason: string): Promise<LogoutResult>;
+  performSecurityLogout(_reason: string): Promise<LogoutResult>;
   performTimeoutLogout(): Promise<LogoutResult>;
   performEmergencyLogout(): Promise<LogoutResult>;
   private revokeServerTokens;
@@ -30,10 +30,10 @@ export declare class LogoutManager {
 }
 export declare class SessionInvalidator {
   private sessionManager;
-  private inactivityTimer?;
-  private securityCheckTimer?;
+  private inactivityTimer;
+  private securityCheckTimer;
   constructor(sessionManager: SessionManager);
-  startInactivityMonitoring(timeoutMinutes?: number): void;
+  startInactivityMonitoring(_timeoutMinutes?: number): void;
   stopInactivityMonitoring(): void;
   startSecurityMonitoring(checkIntervalMinutes?: number): void;
   stopSecurityMonitoring(): void;

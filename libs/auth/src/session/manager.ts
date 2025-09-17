@@ -1,16 +1,16 @@
 import { AuthSession, AuthState, User, StoredSession, SessionConfig, AuthEvent } from './types';
 import { TokenManager, defaultSessionConfig } from './tokens';
-import { SessionStorage, SecureStorage } from './storage';
+import { SessionStorage, SessionSecureStorage } from './storage';
 
 export class SessionManager {
   private tokenManager: TokenManager;
   private sessionStorage: SessionStorage;
   private config: SessionConfig;
-  private refreshTimer?: NodeJS.Timeout;
+  private refreshTimer: NodeJS.Timeout | undefined = undefined;
   private eventListeners: ((event: AuthEvent) => void)[] = [];
   private lastActivityTime: Date = new Date();
 
-  constructor(storage: SecureStorage, config: SessionConfig = defaultSessionConfig) {
+  constructor(storage: SessionSecureStorage, config: SessionConfig = defaultSessionConfig) {
     this.config = config;
     this.tokenManager = new TokenManager(config);
     this.sessionStorage = new SessionStorage(storage);
@@ -68,7 +68,7 @@ export class SessionManager {
       }
 
       // Verify access token
-      const tokenPayload = await this.tokenManager.verifyAccessToken(storedSession.accessToken);
+      await this.tokenManager.verifyAccessToken(storedSession.accessToken);
 
       const session: AuthSession = {
         accessToken: storedSession.accessToken,
@@ -95,10 +95,11 @@ export class SessionManager {
       let sessionToRefresh = storedSession;
 
       if (!sessionToRefresh) {
-        sessionToRefresh = await this.sessionStorage.getStoredSession();
-        if (!sessionToRefresh) {
+        const retrievedSession = await this.sessionStorage.getStoredSession();
+        if (!retrievedSession) {
           throw new Error('No session to refresh');
         }
+        sessionToRefresh = retrievedSession;
       }
 
       const newSession = await this.tokenManager.refreshSession(
@@ -136,7 +137,7 @@ export class SessionManager {
 
   async validateToken(token: string): Promise<User | null> {
     try {
-      const payload = await this.tokenManager.verifyAccessToken(token);
+      await this.tokenManager.verifyAccessToken(token);
       return this.tokenManager.extractUserFromToken(token);
     } catch {
       return null;

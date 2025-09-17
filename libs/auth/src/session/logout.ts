@@ -19,7 +19,7 @@ export interface LogoutResult {
 
 export class LogoutManager {
   private sessionManager: SessionManager;
-  private persistenceManager?: AuthPersistenceManager;
+  private persistenceManager: AuthPersistenceManager | undefined;
 
   constructor(sessionManager: SessionManager, persistenceManager?: AuthPersistenceManager) {
     this.sessionManager = sessionManager;
@@ -72,7 +72,7 @@ export class LogoutManager {
         success: true,
         deviceInfo: {
           platform: this.getPlatform(),
-          userAgent: this.getUserAgent(),
+          ...(this.getUserAgent() ? { userAgent: this.getUserAgent()! } : {}),
         },
       });
 
@@ -93,7 +93,7 @@ export class LogoutManager {
         error: errorMessage,
         deviceInfo: {
           platform: this.getPlatform(),
-          userAgent: this.getUserAgent(),
+          ...(this.getUserAgent() ? { userAgent: this.getUserAgent()! } : {}),
         },
       });
 
@@ -106,7 +106,7 @@ export class LogoutManager {
     }
   }
 
-  async performSecurityLogout(reason: string): Promise<LogoutResult> {
+  async performSecurityLogout(_reason: string): Promise<LogoutResult> {
     // Security logout clears everything
     return await this.performLogout({
       clearAllSessions: true,
@@ -262,14 +262,14 @@ export class LogoutManager {
 
 export class SessionInvalidator {
   private sessionManager: SessionManager;
-  private inactivityTimer?: NodeJS.Timeout;
-  private securityCheckTimer?: NodeJS.Timeout;
+  private inactivityTimer: NodeJS.Timeout | undefined = undefined;
+  private securityCheckTimer: NodeJS.Timeout | undefined = undefined;
 
   constructor(sessionManager: SessionManager) {
     this.sessionManager = sessionManager;
   }
 
-  startInactivityMonitoring(timeoutMinutes: number = 30): void {
+  startInactivityMonitoring(_timeoutMinutes: number = 30): void {
     this.stopInactivityMonitoring();
 
     this.inactivityTimer = setInterval(() => {

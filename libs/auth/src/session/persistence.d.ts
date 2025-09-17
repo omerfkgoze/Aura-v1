@@ -24,7 +24,7 @@ export interface PersistedAuthData {
 export declare class AuthPersistenceManager {
   private sessionManager;
   private config;
-  private syncTimer?;
+  private syncTimer;
   private eventHistory;
   private readonly PERSISTENCE_KEY;
   constructor(sessionManager: SessionManager, config?: Partial<PersistenceConfig>);
@@ -39,8 +39,8 @@ export declare class AuthPersistenceManager {
   dispose(): void;
   private setupEventLogging;
   private startPeriodicSync;
-  private loadPersistedData;
-  private savePersistedData;
+  protected loadPersistedData(): Promise<PersistedAuthData | null>;
+  protected savePersistedData(data: PersistedAuthData): Promise<void>;
   private persistEventHistory;
   private createEmptyPersistedData;
   private validatePersistedData;

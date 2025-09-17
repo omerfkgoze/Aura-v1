@@ -1,7 +1,6 @@
+import { __awaiter as __awaiter_1 } from 'tslib';
 import { jsx as _jsx } from 'react/jsx-runtime';
-
-import { __awaiter } from 'tslib';
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { SessionManager, AuthStateManager } from './manager';
 import { AuthPersistenceManager } from './persistence';
 import { WebStorage, MockSecureStorage } from './storage';
@@ -24,7 +23,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   useEffect(() => {
     let mounted = true;
     const initialize = () =>
-      __awaiter(this, void 0, void 0, function* () {
+      __awaiter_1(this, void 0, void 0, function* () {
         try {
           if (persistenceManager) {
             yield persistenceManager.initializePersistence();
@@ -66,7 +65,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   // Auth action implementations
   const authenticateWithPasskey = useCallback(
     () =>
-      __awaiter(this, void 0, void 0, function* () {
+      __awaiter_1(this, void 0, void 0, function* () {
         try {
           setError(null);
           // This would integrate with WebAuthn manager
@@ -91,7 +90,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   );
   const authenticateWithOpaque = useCallback(
     (username, _password) =>
-      __awaiter(this, void 0, void 0, function* () {
+      __awaiter_1(this, void 0, void 0, function* () {
         try {
           setError(null);
           // This would integrate with OPAQUE manager
@@ -116,7 +115,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   );
   const registerDevice = useCallback(
     () =>
-      __awaiter(this, void 0, void 0, function* () {
+      __awaiter_1(this, void 0, void 0, function* () {
         try {
           setError(null);
           // Mock device registration
@@ -133,7 +132,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   );
   const refreshSession = useCallback(
     () =>
-      __awaiter(this, void 0, void 0, function* () {
+      __awaiter_1(this, void 0, void 0, function* () {
         try {
           setError(null);
           const session = yield sessionManager.refreshSession();
@@ -149,7 +148,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   );
   const logout = useCallback(
     () =>
-      __awaiter(this, void 0, void 0, function* () {
+      __awaiter_1(this, void 0, void 0, function* () {
         try {
           setError(null);
           yield sessionManager.logout();
@@ -164,7 +163,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   );
   const validateRecovery = useCallback(
     phrase =>
-      __awaiter(this, void 0, void 0, function* () {
+      __awaiter_1(this, void 0, void 0, function* () {
         try {
           setError(null);
           // Mock recovery validation
@@ -199,7 +198,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   }, [sessionManager, persistenceManager]);
   const syncAuthState = useCallback(
     () =>
-      __awaiter(this, void 0, void 0, function* () {
+      __awaiter_1(this, void 0, void 0, function* () {
         try {
           yield authStateManager.syncState();
         } catch (err) {
@@ -225,6 +224,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
         window.removeEventListener('touchstart', handleActivity);
       };
     }
+    return () => {}; // Return empty cleanup function for server-side
   }, [sessionManager]);
   // Auto-refresh token before expiry
   useEffect(() => {
@@ -300,10 +300,12 @@ export function withAuthProtection(WrappedComponent, fallback) {
   const AuthProtectedComponent = props => {
     const { isAuthenticated, isInitialized, isLoading } = useAuthState();
     if (!isInitialized || isLoading) {
-      return fallback ? _jsx('fallback', {}) : _jsx('div', { children: 'Loading...' });
+      return fallback ? React.createElement(fallback) : _jsx('div', { children: 'Loading...' });
     }
     if (!isAuthenticated) {
-      return fallback ? _jsx('fallback', {}) : _jsx('div', { children: 'Please authenticate' });
+      return fallback
+        ? React.createElement(fallback)
+        : _jsx('div', { children: 'Please authenticate' });
     }
     return _jsx(WrappedComponent, Object.assign({}, props));
   };

@@ -1,4 +1,4 @@
-import { AuthState, StoredSession, AuthEvent } from './types';
+import { AuthState, AuthEvent } from './types';
 import { SessionManager } from './manager';
 
 export interface PersistenceConfig {
@@ -27,7 +27,7 @@ export interface PersistedAuthData {
 export class AuthPersistenceManager {
   private sessionManager: SessionManager;
   private config: PersistenceConfig;
-  private syncTimer?: NodeJS.Timeout;
+  private syncTimer: NodeJS.Timeout | undefined = undefined;
   private eventHistory: AuthEvent[] = [];
   private readonly PERSISTENCE_KEY = 'aura_auth_persistence';
 
@@ -99,17 +99,20 @@ export class AuthPersistenceManager {
       const persistedData = await this.loadPersistedData();
 
       if (session && persistedData) {
-        return {
+        const authState: AuthState = {
           user: session.user,
           session,
           isAuthenticated: true,
           isLoading: false,
           authMethod: persistedData.lastAuthState.authMethod,
           deviceRegistered: persistedData.lastAuthState.deviceRegistered,
-          lastSyncAt: persistedData.lastAuthState.lastSyncAt
-            ? new Date(persistedData.lastAuthState.lastSyncAt)
-            : undefined,
         };
+
+        if (persistedData.lastAuthState.lastSyncAt) {
+          authState.lastSyncAt = new Date(persistedData.lastAuthState.lastSyncAt);
+        }
+
+        return authState;
       }
 
       return null;
@@ -183,7 +186,7 @@ export class AuthPersistenceManager {
     }, this.config.syncInterval);
   }
 
-  private async loadPersistedData(): Promise<PersistedAuthData | null> {
+  protected async loadPersistedData(): Promise<PersistedAuthData | null> {
     try {
       if (typeof localStorage === 'undefined') {
         return null;
@@ -204,7 +207,7 @@ export class AuthPersistenceManager {
     }
   }
 
-  private async savePersistedData(data: PersistedAuthData): Promise<void> {
+  protected async savePersistedData(data: PersistedAuthData): Promise<void> {
     try {
       if (typeof localStorage === 'undefined') {
         return;
@@ -316,7 +319,7 @@ export class ReactNativeAuthPersistence extends AuthPersistenceManager {
     this.AsyncStorage = AsyncStorage;
   }
 
-  protected async loadPersistedData(): Promise<PersistedAuthData | null> {
+  protected override async loadPersistedData(): Promise<PersistedAuthData | null> {
     try {
       if (!this.AsyncStorage) {
         return null;
@@ -335,7 +338,7 @@ export class ReactNativeAuthPersistence extends AuthPersistenceManager {
     }
   }
 
-  protected async savePersistedData(data: PersistedAuthData): Promise<void> {
+  protected override async savePersistedData(data: PersistedAuthData): Promise<void> {
     try {
       if (!this.AsyncStorage) {
         return;
@@ -349,7 +352,7 @@ export class ReactNativeAuthPersistence extends AuthPersistenceManager {
     }
   }
 
-  async clearPersistedData(): Promise<void> {
+  override async clearPersistedData(): Promise<void> {
     try {
       if (this.AsyncStorage) {
         await this.AsyncStorage.removeItem(this['PERSISTENCE_KEY']);

@@ -3,6 +3,7 @@ import { TokenManager, defaultSessionConfig } from './tokens';
 import { SessionStorage } from './storage';
 export class SessionManager {
   constructor(storage, config = defaultSessionConfig) {
+    this.refreshTimer = undefined;
     this.eventListeners = [];
     this.lastActivityTime = new Date();
     this.config = config;
@@ -56,7 +57,7 @@ export class SessionManager {
           return yield this.refreshSession(storedSession);
         }
         // Verify access token
-        const tokenPayload = yield this.tokenManager.verifyAccessToken(storedSession.accessToken);
+        yield this.tokenManager.verifyAccessToken(storedSession.accessToken);
         const session = {
           accessToken: storedSession.accessToken,
           refreshToken: storedSession.refreshToken,
@@ -80,10 +81,11 @@ export class SessionManager {
       try {
         let sessionToRefresh = storedSession;
         if (!sessionToRefresh) {
-          sessionToRefresh = yield this.sessionStorage.getStoredSession();
-          if (!sessionToRefresh) {
+          const retrievedSession = yield this.sessionStorage.getStoredSession();
+          if (!retrievedSession) {
             throw new Error('No session to refresh');
           }
+          sessionToRefresh = retrievedSession;
         }
         const newSession = yield this.tokenManager.refreshSession(
           sessionToRefresh.refreshToken,
@@ -116,7 +118,7 @@ export class SessionManager {
   validateToken(token) {
     return __awaiter(this, void 0, void 0, function* () {
       try {
-        const payload = yield this.tokenManager.verifyAccessToken(token);
+        yield this.tokenManager.verifyAccessToken(token);
         return this.tokenManager.extractUserFromToken(token);
       } catch (_a) {
         return null;
