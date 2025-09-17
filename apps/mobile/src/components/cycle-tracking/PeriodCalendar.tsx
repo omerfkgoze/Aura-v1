@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Button, Text, YStack, XStack } from '@tamagui/core';
+import { View, Text, Button } from 'react-native';
 import { Calendar, CalendarUtils } from 'react-native-calendars';
 import { PeriodDayData, FlowIntensity } from '@aura/shared-types';
 

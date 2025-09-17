@@ -149,5 +149,8 @@ debug-galois.js
 debug-shamir.js
 test-actual-shamir.js
 
+# expo
+apps/mobile/.expo
+
 #  extra
 task.md
