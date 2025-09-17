@@ -81,7 +81,12 @@ export class AndroidWebAuthnManager {
           id: registrationResponse.id,
           userId: userId,
           credentialId: registrationResponse.id,
-          publicKeyData: { data: registrationResponse.response.publicKey },
+          publicKeyData: Object.assign(
+            { kty: 2, alg: -7 },
+            registrationResponse.response.publicKey && {
+              rawData: registrationResponse.response.publicKey,
+            }
+          ),
           counter: 0,
           platform: 'android',
           createdAt: new Date(),
@@ -92,7 +97,9 @@ export class AndroidWebAuthnManager {
         yield this.storeAndroidCredentialMetadata(validatedCredential, biometricOptions);
         return validatedCredential;
       } catch (error) {
-        throw new Error(`Android WebAuthn registration failed: ${error.message}`);
+        throw new Error(
+          `Android WebAuthn registration failed: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     });
   }
@@ -101,7 +108,7 @@ export class AndroidWebAuthnManager {
    */
   authenticateWithAndroidBiometrics(credentialIds, options) {
     return __awaiter(this, void 0, void 0, function* () {
-      const biometricOptions = this.getAndroidBiometricOptions(options);
+      this.getAndroidBiometricOptions(options);
       const authenticationOptions =
         this.platformManager.getAuthenticationOptionsForPlatform('android');
       // Enhanced Android-specific authentication options
@@ -140,7 +147,9 @@ export class AndroidWebAuthnManager {
           timestamp: new Date(),
         };
       } catch (error) {
-        throw new Error(`Android WebAuthn authentication failed: ${error.message}`);
+        throw new Error(
+          `Android WebAuthn authentication failed: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     });
   }
@@ -302,9 +311,11 @@ export class AndroidWebAuthnManager {
     );
   }
   validateAndroidAttestation(credential) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
       // Validate Android-specific attestation format
-      const attestationObject = credential.response.attestationObject;
+      const attestationObject =
+        (_a = credential.response) === null || _a === void 0 ? void 0 : _a.attestationObject;
       try {
         // Parse CBOR attestation object
         const attestationData = this.parseCBOR(attestationObject);
@@ -502,10 +513,12 @@ export class AndroidWebAuthnManager {
         authData: buffer,
       };
     } catch (error) {
-      throw new Error(`CBOR parsing failed: ${error.message}`);
+      throw new Error(
+        `CBOR parsing failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
-  validateSafetyNetAttestation(attStmt) {
+  validateSafetyNetAttestation(_attStmt) {
     return __awaiter(this, void 0, void 0, function* () {
       // Validate Google SafetyNet attestation
       try {
@@ -518,7 +531,7 @@ export class AndroidWebAuthnManager {
       }
     });
   }
-  validateAndroidKeyAttestation(attStmt) {
+  validateAndroidKeyAttestation(_attStmt) {
     return __awaiter(this, void 0, void 0, function* () {
       // Validate Android Key attestation
       try {

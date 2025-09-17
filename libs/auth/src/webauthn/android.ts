@@ -100,7 +100,13 @@ export class AndroidWebAuthnManager {
         id: registrationResponse.id,
         userId: userId,
         credentialId: registrationResponse.id,
-        publicKeyData: { data: registrationResponse.response.publicKey },
+        publicKeyData: {
+          kty: 2,
+          alg: -7,
+          ...(registrationResponse.response.publicKey && {
+            rawData: registrationResponse.response.publicKey,
+          }),
+        },
         counter: 0,
         platform: 'android',
         createdAt: new Date(),
@@ -114,7 +120,9 @@ export class AndroidWebAuthnManager {
 
       return validatedCredential;
     } catch (error) {
-      throw new Error(`Android WebAuthn registration failed: ${error.message}`);
+      throw new Error(
+        `Android WebAuthn registration failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -125,7 +133,7 @@ export class AndroidWebAuthnManager {
     credentialIds?: string[],
     options?: BiometricAuthenticationOptions
   ): Promise<AndroidBiometricResult> {
-    const biometricOptions = this.getAndroidBiometricOptions(options);
+    this.getAndroidBiometricOptions(options);
 
     const authenticationOptions =
       this.platformManager.getAuthenticationOptionsForPlatform('android');
@@ -169,7 +177,9 @@ export class AndroidWebAuthnManager {
         timestamp: new Date(),
       };
     } catch (error) {
-      throw new Error(`Android WebAuthn authentication failed: ${error.message}`);
+      throw new Error(
+        `Android WebAuthn authentication failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -326,7 +336,7 @@ export class AndroidWebAuthnManager {
     credential: WebAuthnCredential
   ): Promise<WebAuthnCredential> {
     // Validate Android-specific attestation format
-    const attestationObject = credential.response.attestationObject;
+    const attestationObject = (credential as any).response?.attestationObject;
 
     try {
       // Parse CBOR attestation object
@@ -542,11 +552,13 @@ export class AndroidWebAuthnManager {
         authData: buffer,
       };
     } catch (error) {
-      throw new Error(`CBOR parsing failed: ${error.message}`);
+      throw new Error(
+        `CBOR parsing failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
-  private async validateSafetyNetAttestation(attStmt: any): Promise<boolean> {
+  private async validateSafetyNetAttestation(_attStmt: any): Promise<boolean> {
     // Validate Google SafetyNet attestation
     try {
       // This is a placeholder - implement proper SafetyNet validation
@@ -558,7 +570,7 @@ export class AndroidWebAuthnManager {
     }
   }
 
-  private async validateAndroidKeyAttestation(attStmt: any): Promise<boolean> {
+  private async validateAndroidKeyAttestation(_attStmt: any): Promise<boolean> {
     // Validate Android Key attestation
     try {
       // This is a placeholder - implement proper Android Key attestation validation

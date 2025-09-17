@@ -8,7 +8,7 @@ export class WebAuthnAuthentication {
   constructor(rpId) {
     this.rpId = rpId;
   }
-  generateAuthenticationOptions(request, allowedCredentials) {
+  generateAuthenticationOptions(_request, allowedCredentials) {
     return __awaiter(this, void 0, void 0, function* () {
       const allowCredentials =
         allowedCredentials === null || allowedCredentials === void 0
@@ -18,12 +18,10 @@ export class WebAuthnAuthentication {
               type: 'public-key',
               transports: this.getTransportsForPlatform(cred.platform),
             }));
-      const options = {
-        rpID: this.rpId,
-        timeout: 60000,
-        userVerification: 'required',
-        allowCredentials,
-      };
+      const options = Object.assign(
+        { rpID: this.rpId, timeout: 60000, userVerification: 'required' },
+        allowCredentials && { allowCredentials }
+      );
       return yield generateAuthenticationOptions(options);
     });
   }

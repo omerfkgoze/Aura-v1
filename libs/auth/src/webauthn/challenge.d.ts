@@ -12,7 +12,7 @@ export interface ChallengeValidationResult {
 }
 export declare class ChallengeManager {
   private config;
-  private challenges;
+  protected challenges: Map<string, WebAuthnChallenge>;
   constructor(config?: Partial<ChallengeConfig>);
   generateChallenge(userId?: string): string;
   validateChallenge(challenge: string, userId?: string): ChallengeValidationResult;
@@ -23,16 +23,16 @@ export declare class ChallengeManager {
   private generateCryptoChallenge;
   private generateRandomChallenge;
   private uint8ArrayToBase64Url;
-  private getChallengeKey;
+  protected getChallengeKey(challenge: string, userId?: string): string;
   private cleanupExpiredChallenges;
 }
 export declare class ServerChallengeManager extends ChallengeManager {
-  private databaseAdapter?;
+  private databaseAdapter;
   constructor(config?: Partial<ChallengeConfig>, databaseAdapter?: ChallengeStorageAdapter);
   generateChallengeAsync(userId?: string): Promise<string>;
   validateChallengeAsync(challenge: string, userId?: string): Promise<ChallengeValidationResult>;
   consumeChallengeAsync(challenge: string, userId?: string): Promise<ChallengeValidationResult>;
-  private getChallengeKey;
+  getChallengeKey(challenge: string, userId?: string): string;
 }
 export interface ChallengeStorageAdapter {
   storeChallenge(challenge: WebAuthnChallenge): Promise<void>;

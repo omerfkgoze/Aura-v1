@@ -11,7 +11,7 @@ export declare class WebAuthnAuthentication {
   private rpId;
   constructor(rpId: string);
   generateAuthenticationOptions(
-    request: WebAuthnAuthenticationRequest,
+    _request: WebAuthnAuthenticationRequest,
     allowedCredentials?: WebAuthnCredential[]
   ): Promise<PublicKeyCredentialRequestOptionsJSON>;
   verifyAuthenticationResponse(

@@ -225,7 +225,7 @@ export class PlatformDetectionManager {
     return false;
   }
 
-  private isAndroidDevice(userAgent: string, platform: string, vendor: string): boolean {
+  private isAndroidDevice(userAgent: string, platform: string, _vendor: string): boolean {
     // Enhanced Android detection
     const androidIndicators = [/android/, /linux.*mobile/, /mobile.*linux/];
 

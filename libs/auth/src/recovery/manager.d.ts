@@ -166,6 +166,10 @@ export declare class RecoveryManager {
     issues: string[];
     recommendations: string[];
   }>;
+  /**
+   * Alias for generatePhrase - for backward compatibility
+   */
+  generateRecoveryPhrase(wordCount?: RecoveryPhrase['wordCount']): Promise<RecoveryPhrase>;
 }
 /**
  * Create a default recovery manager configuration

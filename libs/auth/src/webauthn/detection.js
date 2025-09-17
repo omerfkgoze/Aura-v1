@@ -222,7 +222,7 @@ export class PlatformDetectionManager {
     }
     return false;
   }
-  isAndroidDevice(userAgent, platform, vendor) {
+  isAndroidDevice(userAgent, platform, _vendor) {
     // Enhanced Android detection
     const androidIndicators = [/android/, /linux.*mobile/, /mobile.*linux/];
     const platformIndicators = [/android/, /linux arm/];

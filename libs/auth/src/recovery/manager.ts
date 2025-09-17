@@ -308,6 +308,13 @@ export class RecoveryManager {
       };
     }
   }
+
+  /**
+   * Alias for generatePhrase - for backward compatibility
+   */
+  async generateRecoveryPhrase(wordCount?: RecoveryPhrase['wordCount']): Promise<RecoveryPhrase> {
+    return await this.generatePhrase(wordCount);
+  }
 }
 
 /**

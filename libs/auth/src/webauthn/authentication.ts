@@ -9,6 +9,7 @@ import type {
 import type {
   AuthenticationResponseJSON,
   PublicKeyCredentialRequestOptionsJSON,
+  PublicKeyCredentialDescriptor,
 } from '@simplewebauthn/types';
 import { startAuthentication } from '@simplewebauthn/browser';
 import type {
@@ -26,20 +27,20 @@ export class WebAuthnAuthentication {
   }
 
   async generateAuthenticationOptions(
-    request: WebAuthnAuthenticationRequest,
+    _request: WebAuthnAuthenticationRequest,
     allowedCredentials?: WebAuthnCredential[]
   ): Promise<PublicKeyCredentialRequestOptionsJSON> {
     const allowCredentials = allowedCredentials?.map(cred => ({
       id: cred.credentialId,
       type: 'public-key' as const,
       transports: this.getTransportsForPlatform(cred.platform),
-    }));
+    })) as PublicKeyCredentialDescriptor[] | undefined;
 
     const options: GenerateAuthenticationOptionsOpts = {
       rpID: this.rpId,
       timeout: 60000,
       userVerification: 'required',
-      allowCredentials,
+      ...(allowCredentials && { allowCredentials }),
     };
 
     return await generateAuthenticationOptions(options);

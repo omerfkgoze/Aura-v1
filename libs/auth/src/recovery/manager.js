@@ -276,6 +276,14 @@ export class RecoveryManager {
       }
     });
   }
+  /**
+   * Alias for generatePhrase - for backward compatibility
+   */
+  generateRecoveryPhrase(wordCount) {
+    return __awaiter(this, void 0, void 0, function* () {
+      return yield this.generatePhrase(wordCount);
+    });
+  }
 }
 /**
  * Create a default recovery manager configuration

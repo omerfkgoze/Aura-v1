@@ -15,7 +15,7 @@ export interface ChallengeValidationResult {
 
 export class ChallengeManager {
   private config: ChallengeConfig;
-  private challenges: Map<string, WebAuthnChallenge>;
+  protected challenges: Map<string, WebAuthnChallenge>;
 
   constructor(config?: Partial<ChallengeConfig>) {
     this.config = {
@@ -44,7 +44,7 @@ export class ChallengeManager {
     // Store challenge with metadata
     const challengeData: WebAuthnChallenge = {
       challenge,
-      userId,
+      ...(userId && { userId }),
       expiresAt: new Date(Date.now() + this.config.expirationMinutes * 60 * 1000),
     };
 
@@ -174,7 +174,7 @@ export class ChallengeManager {
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 
-  private getChallengeKey(challenge: string, userId?: string): string {
+  protected getChallengeKey(challenge: string, userId?: string): string {
     return userId ? `${challenge}:${userId}` : challenge;
   }
 
@@ -194,7 +194,7 @@ export class ChallengeManager {
 
 export class ServerChallengeManager extends ChallengeManager {
   // Server-side challenge management with database storage
-  private databaseAdapter?: ChallengeStorageAdapter;
+  private databaseAdapter: ChallengeStorageAdapter | undefined;
 
   constructor(config?: Partial<ChallengeConfig>, databaseAdapter?: ChallengeStorageAdapter) {
     super(config);
@@ -269,7 +269,7 @@ export class ServerChallengeManager extends ChallengeManager {
     return result;
   }
 
-  private getChallengeKey(challenge: string, userId?: string): string {
+  override getChallengeKey(challenge: string, userId?: string): string {
     return userId ? `${challenge}:${userId}` : challenge;
   }
 }

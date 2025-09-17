@@ -17,11 +17,9 @@ export class ChallengeManager {
         challenge = this.generateCryptoChallenge();
     }
     // Store challenge with metadata
-    const challengeData = {
-      challenge,
-      userId,
+    const challengeData = Object.assign(Object.assign({ challenge }, userId && { userId }), {
       expiresAt: new Date(Date.now() + this.config.expirationMinutes * 60 * 1000),
-    };
+    });
     const key = this.getChallengeKey(challenge, userId);
     this.challenges.set(key, challengeData);
     // Clean up expired challenges periodically
