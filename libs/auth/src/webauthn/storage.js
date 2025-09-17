@@ -13,11 +13,7 @@ export class IOSSecureStorage extends SecureStorage {
       const fullKey = this.getFullKey(key);
       try {
         // Use iOS Keychain Services through React Native Keychain or similar
-        const storageItem = {
-          key: fullKey,
-          value,
-          metadata,
-        };
+        const storageItem = Object.assign({ key: fullKey, value }, metadata && { metadata });
         // Platform-specific iOS Keychain storage
         yield this.storeInKeychain(fullKey, JSON.stringify(storageItem));
       } catch (error) {
@@ -140,11 +136,7 @@ export class AndroidSecureStorage extends SecureStorage {
     return __awaiter(this, void 0, void 0, function* () {
       const fullKey = this.getFullKey(key);
       try {
-        const storageItem = {
-          key: fullKey,
-          value,
-          metadata,
-        };
+        const storageItem = Object.assign({ key: fullKey, value }, metadata && { metadata });
         // Platform-specific Android Keystore storage
         yield this.storeInKeystore(fullKey, JSON.stringify(storageItem));
       } catch (error) {
@@ -265,11 +257,7 @@ export class WebSecureStorage extends SecureStorage {
     return __awaiter(this, void 0, void 0, function* () {
       const fullKey = this.getFullKey(key);
       try {
-        const storageItem = {
-          key: fullKey,
-          value,
-          metadata,
-        };
+        const storageItem = Object.assign({ key: fullKey, value }, metadata && { metadata });
         // Use IndexedDB for more secure web storage
         yield this.storeInIndexedDB(fullKey, JSON.stringify(storageItem));
       } catch (error) {

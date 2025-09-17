@@ -37,7 +37,7 @@ export class FallbackAuthenticationManager {
       events: {
         onRecoveryAttempted: () => {},
         onRecoverySuccessful: () => {},
-        onRecoveryFailure: () => {},
+        onRecoveryFailed: () => {},
       },
       rateLimiting: {
         maxAttemptsPerHour: 5,
@@ -382,7 +382,10 @@ export class FallbackAuthenticationManager {
             const result = (yield (_b = (_a = this.opaqueManager).authenticateUser) === null ||
             _b === void 0
               ? void 0
-              : _b.call(_a, identifier, '')) || { success: false, error: 'OPAQUE not available' };
+              : _b.call(_a, identifier, '')) || {
+              success: false,
+              error: 'OPAQUE not available',
+            };
             return { success: true, data: result };
           } catch (error) {
             return {
@@ -399,7 +402,10 @@ export class FallbackAuthenticationManager {
               const isValid = (yield (_d = (_c = this.recoveryManager).validateRecovery) === null ||
               _d === void 0
                 ? void 0
-                : _d.call(_c, { type: 'phrase', phrase: phraseWords })) || { success: false };
+                : _d.call(_c, {
+                    type: 'phrase',
+                    phrase: phraseWords,
+                  })) || { success: false };
               return { success: isValid.success || false, data: { method: 'recovery-phrase' } };
             } catch (error) {
               return {
@@ -413,9 +419,10 @@ export class FallbackAuthenticationManager {
               const isValid = (yield (_f = (_e = this.recoveryManager).validateRecovery) === null ||
               _f === void 0
                 ? void 0
-                : _f.call(_e, { type: 'emergency', emergencyCode: identifier })) || {
-                success: false,
-              };
+                : _f.call(_e, {
+                    type: 'emergency',
+                    emergencyCode: identifier,
+                  })) || { success: false };
               return { success: isValid.success || false, data: { method: 'emergency-code' } };
             } catch (error) {
               return {
@@ -479,7 +486,9 @@ export class FallbackAuthenticationManager {
               const phrase = (yield (_d = (_c = this.recoveryManager).generateRecoveryPhrase) ===
                 null || _d === void 0
                 ? void 0
-                : _d.call(_c)) || { words: ['test', 'recovery', 'phrase'] };
+                : _d.call(_c)) || {
+                words: ['test', 'recovery', 'phrase'],
+              };
               return { success: true, data: { recoveryPhrase: phrase.words } };
             } catch (error) {
               return {

@@ -227,11 +227,10 @@ export class WebAuthnManager {
   }
   storeChallenge(challenge, userId) {
     return __awaiter(this, void 0, void 0, function* () {
-      const challengeData = {
-        challenge,
-        userId,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
-      };
+      const challengeData = Object.assign(
+        { challenge, expiresAt: new Date(Date.now() + 5 * 60 * 1000) },
+        userId && { userId }
+      );
       const challengeKey = userId ? `challenge:${userId}` : 'challenge:anonymous';
       yield this.secureStorage.store(challengeKey, JSON.stringify(challengeData));
     });

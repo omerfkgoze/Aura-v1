@@ -377,8 +377,7 @@ export class WebWebAuthnManager {
         const flags = authenticatorData[32];
         const _userPresent = (flags & 0x01) !== 0;
         const userVerified = (flags & 0x04) !== 0;
-        const _attestedCredentialData = (flags & 0x40) !== 0;
-        const _extensionData = (flags & 0x80) !== 0;
+        // Skip unused flags: attestedCredentialData and extensionData
         // Determine authenticator type
         let authenticatorType = 'unknown';
         const isPlatformAvailable = yield this.isPlatformAuthenticatorAvailable();

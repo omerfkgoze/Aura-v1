@@ -49,7 +49,7 @@ export class IOSSecureStorage extends SecureStorage {
       const storageItem: SecureStorageItem = {
         key: fullKey,
         value,
-        metadata,
+        ...(metadata && { metadata }),
       };
 
       // Platform-specific iOS Keychain storage
@@ -173,7 +173,7 @@ export class AndroidSecureStorage extends SecureStorage {
       const storageItem: SecureStorageItem = {
         key: fullKey,
         value,
-        metadata,
+        ...(metadata && { metadata }),
       };
 
       // Platform-specific Android Keystore storage
@@ -295,7 +295,7 @@ export class WebSecureStorage extends SecureStorage {
       const storageItem: SecureStorageItem = {
         key: fullKey,
         value,
-        metadata,
+        ...(metadata && { metadata }),
       };
 
       // Use IndexedDB for more secure web storage

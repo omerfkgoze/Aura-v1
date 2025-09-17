@@ -61,7 +61,7 @@ export class UnifiedAuthenticationManager {
             success: false,
             method: 'none',
             fallbackUsed: true,
-            error: `All registration methods failed: ${error.message}`,
+            error: `All registration methods failed: ${error instanceof Error ? error.message : String(error)}`,
           };
         }
       } catch (error) {
@@ -69,7 +69,7 @@ export class UnifiedAuthenticationManager {
           success: false,
           method: 'none',
           fallbackUsed: true,
-          error: `Registration failed: ${error.message}`,
+          error: `Registration failed: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
     });
@@ -115,7 +115,7 @@ export class UnifiedAuthenticationManager {
             success: false,
             method: 'none',
             fallbackUsed: true,
-            error: `All authentication methods failed: ${error.message}`,
+            error: `All authentication methods failed: ${error instanceof Error ? error.message : String(error)}`,
           };
         }
       } catch (error) {
@@ -123,7 +123,7 @@ export class UnifiedAuthenticationManager {
           success: false,
           method: 'none',
           fallbackUsed: true,
-          error: `Authentication failed: ${error.message}`,
+          error: `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
     });
@@ -279,21 +279,17 @@ export class AuthenticationService {
         const options = this.getOptimalRegistrationOptions(support, preferredMethod);
         const result = yield this.unifiedManager.register(userId, username, displayName, options);
         if (result.success) {
-          return {
-            success: true,
-            credential: result.credential,
-            recommendedSetup: this.getRecommendedSetupSteps(support),
-          };
+          return Object.assign(
+            { success: true, recommendedSetup: this.getRecommendedSetupSteps(support) },
+            result.credential && { credential: result.credential }
+          );
         } else {
-          return {
-            success: false,
-            error: result.error,
-          };
+          return Object.assign({ success: false }, result.error && { error: result.error });
         }
       } catch (error) {
         return {
           success: false,
-          error: `Registration failed: ${error.message}`,
+          error: `Registration failed: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
     });
@@ -310,21 +306,17 @@ export class AuthenticationService {
         const options = this.getOptimalAuthenticationOptions(support, preferredMethod);
         const result = yield this.unifiedManager.authenticate(identifier, options);
         if (result.success) {
-          return {
-            success: true,
-            result: result.result,
-            nextSteps: this.getRecommendedNextSteps(support, result.method),
-          };
+          return Object.assign(
+            { success: true, nextSteps: this.getRecommendedNextSteps(support, result.method) },
+            result.result && { result: result.result }
+          );
         } else {
-          return {
-            success: false,
-            error: result.error,
-          };
+          return Object.assign({ success: false }, result.error && { error: result.error });
         }
       } catch (error) {
         return {
           success: false,
-          error: `Authentication failed: ${error.message}`,
+          error: `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
         };
       }
     });

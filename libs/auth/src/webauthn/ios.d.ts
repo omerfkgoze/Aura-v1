@@ -56,8 +56,7 @@ export declare class IOSWebAuthnManager {
   private isFaceIdCapableDevice;
   private isTouchIdCapableDevice;
   private base64UrlToArrayBuffer;
-  private parseCBOR;
-  private validateAppleAttestationChain;
   private storeSecureMetadata;
   private getSecureMetadata;
+  private parsePublicKeyData;
 }

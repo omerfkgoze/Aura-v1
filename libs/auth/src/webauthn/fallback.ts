@@ -32,7 +32,7 @@ export class FallbackAuthenticationManager {
       events: {
         onRecoveryAttempted: () => {},
         onRecoverySuccessful: () => {},
-        onRecoveryFailure: () => {},
+        onRecoveryFailed: () => {},
       },
       rateLimiting: {
         maxAttemptsPerHour: 5,

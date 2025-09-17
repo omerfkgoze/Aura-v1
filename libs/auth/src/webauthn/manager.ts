@@ -297,8 +297,8 @@ export class WebAuthnManager {
   private async storeChallenge(challenge: string, userId?: string): Promise<void> {
     const challengeData: WebAuthnChallenge = {
       challenge,
-      userId,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+      ...(userId && { userId }),
     };
 
     const challengeKey = userId ? `challenge:${userId}` : 'challenge:anonymous';
