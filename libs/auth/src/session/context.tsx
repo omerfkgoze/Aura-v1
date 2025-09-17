@@ -3,8 +3,21 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { SessionManager, AuthStateManager } from './manager';
 import { AuthPersistenceManager } from './persistence';
 import { WebStorage, MockSecureStorage } from './storage';
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+  storage?: any;
+  config?: any;
+  enablePersistence?: boolean;
+}
+
 const AuthContext = createContext(null);
-export function AuthProvider({ children, storage, config, enablePersistence = true }) {
+export function AuthProvider({
+  children,
+  storage,
+  config,
+  enablePersistence = true,
+}: AuthProviderProps) {
   // Initialize storage based on platform
   const defaultStorage =
     storage ||
@@ -88,7 +101,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
     [sessionManager, authStateManager]
   );
   const authenticateWithOpaque = useCallback(
-    (username, password) =>
+    (username: string, _password: string) =>
       __awaiter(this, void 0, void 0, function* () {
         try {
           setError(null);

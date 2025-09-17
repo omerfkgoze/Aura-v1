@@ -8,7 +8,6 @@
 import type {
   OpaqueClient,
   OpaqueServer,
-  OpaqueRegistrationData,
   OpaqueError,
   RegistrationRequest,
   RegistrationResponse,

@@ -4,56 +4,42 @@
  * This module defines TypeScript types for OPAQUE protocol operations,
  * providing zero-knowledge password authentication without server storage.
  */
-
-// OPAQUE protocol types - self-contained definitions
 export interface ClientRegistrationState {
   data: ArrayBuffer;
 }
-
 export interface ClientLoginState {
   data: ArrayBuffer;
 }
-
 export interface RegistrationRequest {
   data: ArrayBuffer;
 }
-
 export interface RegistrationResponse {
   data: ArrayBuffer;
 }
-
 export interface LoginRequest {
   data: ArrayBuffer;
 }
-
 export interface LoginResponse {
   data: ArrayBuffer;
 }
-
 export interface ServerRegistrationState {
   data: ArrayBuffer;
 }
-
 export interface ServerLoginState {
   data: ArrayBuffer;
 }
-
 export interface ClientKeyShare {
   data: ArrayBuffer;
 }
-
 export interface ServerKeyShare {
   data: ArrayBuffer;
 }
-
 export interface OPRFClient {
   data: ArrayBuffer;
 }
-
 export interface OPRFServer {
   data: ArrayBuffer;
 }
-
 /**
  * OPAQUE registration flow data
  */
@@ -63,7 +49,6 @@ export interface OpaqueRegistrationData {
   clientState: ClientRegistrationState;
   timestamp: number;
 }
-
 /**
  * OPAQUE authentication flow data
  */
@@ -73,7 +58,6 @@ export interface OpaqueAuthenticationData {
   clientState: ClientLoginState;
   timestamp: number;
 }
-
 /**
  * Server-side OPAQUE registration storage
  */
@@ -81,11 +65,10 @@ export interface OpaqueServerRegistration {
   id: string;
   userId: string;
   username: string;
-  registrationRecord: string; // Base64 encoded server registration data
+  registrationRecord: string;
   createdAt: Date;
   lastUsedAt?: Date;
 }
-
 /**
  * OPAQUE session establishment result
  */
@@ -95,7 +78,6 @@ export interface OpaqueSessionResult {
   userId?: string;
   error?: string;
 }
-
 /**
  * OPAQUE client configuration
  */
@@ -104,7 +86,6 @@ export interface OpaqueClientConfig {
   timeout: number;
   retryAttempts: number;
 }
-
 /**
  * OPAQUE server configuration
  */
@@ -115,7 +96,6 @@ export interface OpaqueServerConfig {
   rateLimitWindowMs: number;
   rateLimitMaxAttempts: number;
 }
-
 /**
  * OPAQUE registration configuration
  */
@@ -125,7 +105,6 @@ export interface OpaqueRegistrationConfig {
   validateUsername: boolean;
   validatePassword: boolean;
 }
-
 /**
  * OPAQUE authentication configuration
  */
@@ -135,7 +114,6 @@ export interface OpaqueAuthenticationConfig {
   sessionTimeout: number;
   rememberMe: boolean;
 }
-
 /**
  * Registration flow result
  */
@@ -146,7 +124,6 @@ export interface RegistrationFlowResult {
   exportKey?: string;
   error?: string;
 }
-
 /**
  * Authentication flow result
  */
@@ -158,7 +135,6 @@ export interface AuthenticationFlowResult {
   expiresAt?: Date;
   error?: string;
 }
-
 /**
  * OPAQUE registration flow status
  */
@@ -169,7 +145,6 @@ export type OpaqueRegistrationStatus =
   | 'completing-registration'
   | 'completed'
   | 'error';
-
 /**
  * OPAQUE authentication flow status
  */
@@ -180,7 +155,6 @@ export type OpaqueAuthenticationStatus =
   | 'completing-authentication'
   | 'authenticated'
   | 'error';
-
 /**
  * OPAQUE flow error types
  */
@@ -189,7 +163,6 @@ export interface OpaqueError {
   message: string;
   details?: string;
 }
-
 /**
  * OPAQUE client interface for registration and authentication
  */
@@ -204,7 +177,6 @@ export interface OpaqueClient {
     registrationRequest: RegistrationRequest;
     clientState: ClientRegistrationState;
   }>;
-
   /**
    * Complete OPAQUE registration flow
    */
@@ -215,7 +187,6 @@ export interface OpaqueClient {
     registrationRecord: string;
     exportKey: string;
   }>;
-
   /**
    * Start OPAQUE authentication flow
    */
@@ -226,7 +197,6 @@ export interface OpaqueClient {
     loginRequest: LoginRequest;
     clientState: ClientLoginState;
   }>;
-
   /**
    * Complete OPAQUE authentication flow
    */
@@ -238,7 +208,6 @@ export interface OpaqueClient {
     exportKey: string;
   }>;
 }
-
 /**
  * OPAQUE server interface for handling registration and authentication
  */
@@ -253,7 +222,6 @@ export interface OpaqueServer {
     registrationResponse: RegistrationResponse;
     serverState: ServerRegistrationState;
   }>;
-
   /**
    * Store OPAQUE registration record
    */
@@ -262,7 +230,6 @@ export interface OpaqueServer {
     serverState: ServerRegistrationState,
     userId: string
   ): Promise<void>;
-
   /**
    * Process OPAQUE authentication request
    */
@@ -273,7 +240,6 @@ export interface OpaqueServer {
     loginResponse: LoginResponse;
     serverState: ServerLoginState;
   }>;
-
   /**
    * Verify OPAQUE authentication and establish session
    */
@@ -281,7 +247,6 @@ export interface OpaqueServer {
     username: string,
     serverState: ServerLoginState
   ): Promise<OpaqueSessionResult>;
-
   /**
    * Validate session
    */
@@ -290,17 +255,14 @@ export interface OpaqueServer {
     userId?: string;
     username?: string;
   }>;
-
   /**
    * Revoke session
    */
   revokeSession(sessionKey: string): Promise<void>;
-
   /**
    * Delete user
    */
   deleteUser(username: string): Promise<void>;
-
   /**
    * Get user by username
    */

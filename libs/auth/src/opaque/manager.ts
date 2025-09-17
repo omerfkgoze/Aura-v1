@@ -73,7 +73,7 @@ export class OpaqueManager {
   private server: OpaqueServer;
   private sessionManager: OpaqueSessionManager;
   private config: OpaqueManagerConfig;
-  private cleanupInterval?: NodeJS.Timeout;
+  private cleanupInterval?: NodeJS.Timeout | undefined;
 
   // User context cache
   private userContexts = new Map<string, UserAuthContext>();
@@ -313,10 +313,21 @@ export class OpaqueManager {
 
     const userContext = validation.username ? this.getUserContext(validation.username) : undefined;
 
-    return {
+    const result: {
+      isValid: boolean;
+      userId?: string;
+      username?: string;
+      expiresAt?: Date;
+      userContext?: UserAuthContext;
+    } = {
       ...validation,
-      userContext,
     };
+
+    if (userContext) {
+      result.userContext = userContext;
+    }
+
+    return result;
   }
 
   /**

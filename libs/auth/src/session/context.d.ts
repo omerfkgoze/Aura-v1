@@ -1,15 +1,16 @@
 import React from 'react';
+interface AuthProviderProps {
+  children: React.ReactNode;
+  storage?: any;
+  config?: any;
+  enablePersistence?: boolean;
+}
 export declare function AuthProvider({
   children,
   storage,
   config,
   enablePersistence,
-}: {
-  children: any;
-  storage: any;
-  config: any;
-  enablePersistence?: boolean | undefined;
-}): React.JSX.Element;
+}: AuthProviderProps): import('react/jsx-runtime').JSX.Element;
 export declare function useAuth(): never;
 export declare function useAuthState(): {
   user: any;
@@ -36,6 +37,7 @@ export declare function withAuthProtection(
   WrappedComponent: any,
   fallback: any
 ): {
-  (props: any): React.JSX.Element;
+  (props: any): import('react/jsx-runtime').JSX.Element;
   displayName: string;
 };
+export {};

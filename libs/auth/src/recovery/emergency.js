@@ -197,12 +197,15 @@ export function validateEmergencyCode(providedCode, storedCode) {
  * Mark an emergency code as used
  */
 export function markCodeAsUsed(code, usedFromIp) {
-  return Object.assign(Object.assign({}, code), {
+  const result = Object.assign(Object.assign({}, code), {
     used: true,
     usedAt: new Date(),
-    usedFromIp,
     attempts: code.attempts + 1,
   });
+  if (usedFromIp !== undefined) {
+    result.usedFromIp = usedFromIp;
+  }
+  return result;
 }
 /**
  * Increment attempt counter for a code

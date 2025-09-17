@@ -143,26 +143,20 @@ export class AuthMigrationManager {
           };
         }
         // Step 1: Register Passkey for user
-        const passkeyRegistration = yield this.webauthnManager.registerCredential(
+        const passkeyRegistration = yield this.webauthnManager.startRegistration({
           userId,
-          userContext.username,
-          {
-            authenticatorSelection: {
-              authenticatorAttachment: 'platform', // Prefer built-in authenticators
-              userVerification: 'required',
-              residentKey: 'required',
-            },
-            attestation: 'direct',
-          }
-        );
-        if (!passkeyRegistration.success) {
+          username: userContext.username,
+          displayName: userContext.username,
+          platform: 'web',
+        });
+        if (!passkeyRegistration.options) {
           return {
             success: false,
             userId,
             oldAuthMethod: 'opaque',
             newAuthMethod: 'both',
             fallbackRetained: true,
-            error: `Passkey registration failed: ${passkeyRegistration.error}`,
+            error: 'Passkey registration failed: Unable to generate registration options',
           };
         }
         // Step 2: Update user context to indicate Passkey is available
@@ -254,7 +248,7 @@ export class AuthMigrationManager {
         }
         // Update migration status
         status.currentAuthMethod = 'passkey';
-        status.fallbackRetainedUntil = undefined;
+        delete status.fallbackRetainedUntil;
         this.migrationStatus.set(userId, status);
         return { success: true };
       } catch (error) {
@@ -279,7 +273,6 @@ export class AuthMigrationManager {
       const eligibleUsers = [];
       // This would typically query from a database in production
       // For now, we'll iterate through known user contexts
-      const stats = this.opaqueManager.getSessionStats();
       // Implementation would depend on how user contexts are stored
       // This is a simplified version
       return eligibleUsers;

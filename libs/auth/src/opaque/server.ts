@@ -254,7 +254,7 @@ export class OpaqueServerImpl implements OpaqueServer {
 
       // Complete server-side authentication
       const opaque = await getOpaqueModule();
-      const sessionKey = await opaque.finishServerLogin({
+      await opaque.finishServerLogin({
         state: serverState,
       });
 
@@ -322,8 +322,8 @@ export class OpaqueServerImpl implements OpaqueServer {
   /**
    * Delete user registration (account deletion)
    */
-  async deleteUser(username: string): Promise<boolean> {
-    return this.registrationStorage.delete(username);
+  async deleteUser(username: string): Promise<void> {
+    this.registrationStorage.delete(username);
   }
 
   /**

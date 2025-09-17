@@ -105,6 +105,7 @@ export interface RecoveryValidationResult {
   error?: string;
   /** Error code for programmatic handling */
   errorCode?:
+    | 'INVALID_CODE'
     | 'INVALID_PHRASE'
     | 'INVALID_SHARES'
     | 'EXPIRED_CODE'

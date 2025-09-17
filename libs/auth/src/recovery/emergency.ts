@@ -241,13 +241,18 @@ export function markCodeAsUsed(
   code: EmergencyAccessCode,
   usedFromIp?: string
 ): EmergencyAccessCode {
-  return {
+  const result: EmergencyAccessCode = {
     ...code,
     used: true,
     usedAt: new Date(),
-    usedFromIp,
     attempts: code.attempts + 1,
   };
+
+  if (usedFromIp !== undefined) {
+    result.usedFromIp = usedFromIp;
+  }
+
+  return result;
 }
 
 /**

@@ -211,7 +211,11 @@ export class OpaqueManager {
       const userContext = validation.username
         ? this.getUserContext(validation.username)
         : undefined;
-      return Object.assign(Object.assign({}, validation), { userContext });
+      const result = Object.assign({}, validation);
+      if (userContext) {
+        result.userContext = userContext;
+      }
+      return result;
     });
   }
   /**

@@ -38,7 +38,7 @@ export interface UserMigrationStatus {
   canMigrate: boolean;
   migrationOfferedAt?: Date;
   migrationCompletedAt?: Date;
-  fallbackRetainedUntil?: Date;
+  fallbackRetainedUntil?: Date | undefined;
   migrationErrors?: string[];
 }
 
@@ -205,27 +205,21 @@ export class AuthMigrationManager {
       }
 
       // Step 1: Register Passkey for user
-      const passkeyRegistration = await this.webauthnManager.registerCredential(
+      const passkeyRegistration = await this.webauthnManager.startRegistration({
         userId,
-        userContext.username,
-        {
-          authenticatorSelection: {
-            authenticatorAttachment: 'platform', // Prefer built-in authenticators
-            userVerification: 'required',
-            residentKey: 'required',
-          },
-          attestation: 'direct',
-        }
-      );
+        username: userContext.username,
+        displayName: userContext.username,
+        platform: 'web',
+      });
 
-      if (!passkeyRegistration.success) {
+      if (!passkeyRegistration.options) {
         return {
           success: false,
           userId,
           oldAuthMethod: 'opaque',
           newAuthMethod: 'both',
           fallbackRetained: true,
-          error: `Passkey registration failed: ${passkeyRegistration.error}`,
+          error: 'Passkey registration failed: Unable to generate registration options',
         };
       }
 
@@ -331,7 +325,7 @@ export class AuthMigrationManager {
 
       // Update migration status
       status.currentAuthMethod = 'passkey';
-      status.fallbackRetainedUntil = undefined;
+      delete status.fallbackRetainedUntil;
       this.migrationStatus.set(userId, status);
 
       return { success: true };
@@ -358,8 +352,6 @@ export class AuthMigrationManager {
 
     // This would typically query from a database in production
     // For now, we'll iterate through known user contexts
-    const stats = this.opaqueManager.getSessionStats();
-
     // Implementation would depend on how user contexts are stored
     // This is a simplified version
     return eligibleUsers;

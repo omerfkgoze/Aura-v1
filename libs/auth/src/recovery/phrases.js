@@ -154,19 +154,6 @@ function bytesToHex(bytes) {
     .join('');
 }
 /**
- * Convert hex string to bytes
- */
-function hexToBytes(hex) {
-  if (hex.length % 2 !== 0) {
-    throw new Error('Invalid hex string length');
-  }
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
-  }
-  return bytes;
-}
-/**
  * Calculate SHA256 hash
  */
 function sha256(data) {

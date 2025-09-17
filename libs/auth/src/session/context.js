@@ -1,5 +1,7 @@
+import { jsx as _jsx } from 'react/jsx-runtime';
+
 import { __awaiter } from 'tslib';
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { SessionManager, AuthStateManager } from './manager';
 import { AuthPersistenceManager } from './persistence';
 import { WebStorage, MockSecureStorage } from './storage';
@@ -88,7 +90,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
     [sessionManager, authStateManager]
   );
   const authenticateWithOpaque = useCallback(
-    (username, password) =>
+    (username, _password) =>
       __awaiter(this, void 0, void 0, function* () {
         try {
           setError(null);
@@ -254,7 +256,7 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
     // Managers
     sessionManager,
   });
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+  return _jsx(AuthContext.Provider, { value: contextValue, children: children });
 }
 // Hook for using auth context
 export function useAuth() {
@@ -298,15 +300,14 @@ export function withAuthProtection(WrappedComponent, fallback) {
   const AuthProtectedComponent = props => {
     const { isAuthenticated, isInitialized, isLoading } = useAuthState();
     if (!isInitialized || isLoading) {
-      return fallback ? <fallback /> : <div>Loading...</div>;
+      return fallback ? _jsx('fallback', {}) : _jsx('div', { children: 'Loading...' });
     }
     if (!isAuthenticated) {
-      return fallback ? <fallback /> : <div>Please authenticate</div>;
+      return fallback ? _jsx('fallback', {}) : _jsx('div', { children: 'Please authenticate' });
     }
-    return <WrappedComponent {...props} />;
+    return _jsx(WrappedComponent, Object.assign({}, props));
   };
   AuthProtectedComponent.displayName = `withAuthProtection(${WrappedComponent.displayName || WrappedComponent.name})`;
   return AuthProtectedComponent;
 }
-//# sourceMappingURL=context.js.map
 //# sourceMappingURL=context.js.map

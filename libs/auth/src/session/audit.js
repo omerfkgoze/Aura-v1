@@ -247,7 +247,7 @@ export class AuthAuditLogger {
   maskUserAgent(userAgent) {
     // Keep browser type but mask version details
     const browserRegex = /(Chrome|Firefox|Safari|Edge|Opera)\/[\d.]+/g;
-    return userAgent.replace(browserRegex, (match, browser) => `${browser}/***`);
+    return userAgent.replace(browserRegex, (_match, browser) => `${browser}/***`);
   }
   exportToJson() {
     const exportData = {

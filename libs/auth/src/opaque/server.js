@@ -177,7 +177,7 @@ export class OpaqueServerImpl {
         }
         // Complete server-side authentication
         const opaque = yield getOpaqueModule();
-        const sessionKey = yield opaque.finishServerLogin({
+        yield opaque.finishServerLogin({
           state: serverState,
         });
         // Create secure session
@@ -241,7 +241,7 @@ export class OpaqueServerImpl {
    */
   deleteUser(username) {
     return __awaiter(this, void 0, void 0, function* () {
-      return this.registrationStorage.delete(username);
+      this.registrationStorage.delete(username);
     });
   }
   /**

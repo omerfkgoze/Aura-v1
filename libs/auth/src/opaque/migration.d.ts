@@ -25,7 +25,7 @@ export interface UserMigrationStatus {
   canMigrate: boolean;
   migrationOfferedAt?: Date;
   migrationCompletedAt?: Date;
-  fallbackRetainedUntil?: Date;
+  fallbackRetainedUntil?: Date | undefined;
   migrationErrors?: string[];
 }
 /**

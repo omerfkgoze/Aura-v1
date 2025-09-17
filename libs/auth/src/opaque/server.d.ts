@@ -88,7 +88,7 @@ export declare class OpaqueServerImpl implements OpaqueServer {
   /**
    * Delete user registration (account deletion)
    */
-  deleteUser(username: string): Promise<boolean>;
+  deleteUser(username: string): Promise<void>;
   /**
    * Check rate limiting for IP/username
    */

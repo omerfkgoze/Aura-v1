@@ -118,9 +118,14 @@ class RecoveryRateLimiter {
       type,
       timestamp: new Date(),
       success,
-      ipAddress: context?.ipAddress,
-      userAgent: context?.userAgent,
     };
+
+    if (context?.ipAddress) {
+      attempt.ipAddress = context.ipAddress;
+    }
+    if (context?.userAgent) {
+      attempt.userAgent = context.userAgent;
+    }
 
     const userAttempts = this.attempts.get(key) || [];
     userAttempts.push(attempt);
@@ -158,7 +163,9 @@ export class RecoveryValidator {
     rateLimitConfig?: Partial<RateLimitConfig>
   ) {
     this.storage = storage;
-    this.events = events;
+    if (events) {
+      this.events = events;
+    }
     this.rateLimiter = new RecoveryRateLimiter(rateLimitConfig);
   }
 
@@ -370,26 +377,36 @@ export class RecoveryValidator {
           errorCode = 'TOO_MANY_ATTEMPTS';
         }
 
-        return {
+        const result: any = {
           success: false,
           error: validation.error || 'Invalid emergency code',
           errorCode,
-          remainingAttempts: validation.remainingAttempts,
         };
+
+        if (validation.remainingAttempts !== undefined) {
+          result.remainingAttempts = validation.remainingAttempts;
+        }
+
+        return result;
       }
 
       // Mark code as used
-      const usedCode = markCodeAsUsed(storedCode);
+      markCodeAsUsed(storedCode);
       await this.storage.markCodeAsUsed(storedCode.codeId);
 
-      return {
+      const result: any = {
         success: true,
         recoveredData: {
           userId,
           sessionToken: `emergency_session_${Date.now()}`,
         },
-        remainingAttempts: validation.remainingAttempts,
       };
+
+      if (validation.remainingAttempts !== undefined) {
+        result.remainingAttempts = validation.remainingAttempts;
+      }
+
+      return result;
     } catch (error) {
       return {
         success: false,
@@ -408,13 +425,16 @@ export class RecoveryValidator {
       if (request.userId) {
         const rateLimitCheck = this.rateLimiter.checkRateLimit(request.userId, request.type);
         if (!rateLimitCheck.allowed) {
-          const result: RecoveryValidationResult = {
+          const result: any = {
             success: false,
             error: 'Too many recovery attempts. Please try again later.',
             errorCode: 'TOO_MANY_ATTEMPTS',
             remainingAttempts: rateLimitCheck.remainingAttempts,
-            retryAfter: rateLimitCheck.retryAfter,
           };
+
+          if (rateLimitCheck.retryAfter !== undefined) {
+            result.retryAfter = rateLimitCheck.retryAfter;
+          }
 
           this.events?.onRecoveryFailed?.(request.userId, request.type, 'Rate limit exceeded');
 
@@ -490,11 +510,13 @@ export class RecoveryValidator {
           this.rateLimiter.clearRateLimit(request.userId, request.type);
           this.events?.onRecoverySuccessful?.(request.userId, request.type);
         } else {
-          this.events?.onRecoveryFailed?.(
-            request.userId,
-            request.type,
-            result.error || 'Unknown error'
-          );
+          if (request.userId) {
+            this.events?.onRecoveryFailed?.(
+              request.userId,
+              request.type,
+              result.error || 'Unknown error'
+            );
+          }
         }
       }
 
@@ -510,7 +532,11 @@ export class RecoveryValidator {
       };
 
       if (request.userId) {
-        this.events?.onRecoveryFailed?.(request.userId, request.type, result.error);
+        this.events?.onRecoveryFailed?.(
+          request.userId,
+          request.type,
+          result.error || 'Unknown error'
+        );
       }
 
       return result;

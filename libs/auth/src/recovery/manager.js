@@ -281,7 +281,7 @@ export class RecoveryManager {
  * Create a default recovery manager configuration
  */
 export function createDefaultRecoveryConfig(storage, events) {
-  return {
+  const config = {
     defaultWordCount: 12,
     defaultShamirConfig: {
       totalShares: 5,
@@ -297,8 +297,11 @@ export function createDefaultRecoveryConfig(storage, events) {
       lockoutDuration: 60 * 60 * 1000, // 1 hour
     },
     storage,
-    events,
   };
+  if (events !== undefined) {
+    config.events = events;
+  }
+  return config;
 }
 /**
  * Factory function to create a recovery manager with default configuration

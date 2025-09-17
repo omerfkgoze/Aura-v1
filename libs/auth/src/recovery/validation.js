@@ -67,9 +67,13 @@ class RecoveryRateLimiter {
       type,
       timestamp: new Date(),
       success,
-      ipAddress: context === null || context === void 0 ? void 0 : context.ipAddress,
-      userAgent: context === null || context === void 0 ? void 0 : context.userAgent,
     };
+    if (context === null || context === void 0 ? void 0 : context.ipAddress) {
+      attempt.ipAddress = context.ipAddress;
+    }
+    if (context === null || context === void 0 ? void 0 : context.userAgent) {
+      attempt.userAgent = context.userAgent;
+    }
     const userAttempts = this.attempts.get(key) || [];
     userAttempts.push(attempt);
     this.attempts.set(key, userAttempts);
@@ -96,7 +100,9 @@ class RecoveryRateLimiter {
 export class RecoveryValidator {
   constructor(storage, events, rateLimitConfig) {
     this.storage = storage;
-    this.events = events;
+    if (events) {
+      this.events = events;
+    }
     this.rateLimiter = new RecoveryRateLimiter(rateLimitConfig);
   }
   /**
@@ -285,24 +291,30 @@ export class RecoveryValidator {
           ) {
             errorCode = 'TOO_MANY_ATTEMPTS';
           }
-          return {
+          const result = {
             success: false,
             error: validation.error || 'Invalid emergency code',
             errorCode,
-            remainingAttempts: validation.remainingAttempts,
           };
+          if (validation.remainingAttempts !== undefined) {
+            result.remainingAttempts = validation.remainingAttempts;
+          }
+          return result;
         }
         // Mark code as used
-        const usedCode = markCodeAsUsed(storedCode);
+        markCodeAsUsed(storedCode);
         yield this.storage.markCodeAsUsed(storedCode.codeId);
-        return {
+        const result = {
           success: true,
           recoveredData: {
             userId,
             sessionToken: `emergency_session_${Date.now()}`,
           },
-          remainingAttempts: validation.remainingAttempts,
         };
+        if (validation.remainingAttempts !== undefined) {
+          result.remainingAttempts = validation.remainingAttempts;
+        }
+        return result;
       } catch (error) {
         return {
           success: false,
@@ -328,8 +340,10 @@ export class RecoveryValidator {
               error: 'Too many recovery attempts. Please try again later.',
               errorCode: 'TOO_MANY_ATTEMPTS',
               remainingAttempts: rateLimitCheck.remainingAttempts,
-              retryAfter: rateLimitCheck.retryAfter,
             };
+            if (rateLimitCheck.retryAfter !== undefined) {
+              result.retryAfter = rateLimitCheck.retryAfter;
+            }
             (_b = (_a = this.events) === null || _a === void 0 ? void 0 : _a.onRecoveryFailed) ===
               null || _b === void 0
               ? void 0
@@ -405,10 +419,12 @@ export class RecoveryValidator {
               ? void 0
               : _f.call(_e, request.userId, request.type);
           } else {
-            (_h = (_g = this.events) === null || _g === void 0 ? void 0 : _g.onRecoveryFailed) ===
-              null || _h === void 0
-              ? void 0
-              : _h.call(_g, request.userId, request.type, result.error || 'Unknown error');
+            if (request.userId) {
+              (_h = (_g = this.events) === null || _g === void 0 ? void 0 : _g.onRecoveryFailed) ===
+                null || _h === void 0
+                ? void 0
+                : _h.call(_g, request.userId, request.type, result.error || 'Unknown error');
+            }
           }
         }
         // Final attempt notification
@@ -427,7 +443,7 @@ export class RecoveryValidator {
           (_m = (_l = this.events) === null || _l === void 0 ? void 0 : _l.onRecoveryFailed) ===
             null || _m === void 0
             ? void 0
-            : _m.call(_l, request.userId, request.type, result.error);
+            : _m.call(_l, request.userId, request.type, result.error || 'Unknown error');
         }
         return result;
       }
