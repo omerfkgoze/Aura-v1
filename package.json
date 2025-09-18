@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "nx run-many --target=dev --all",
+    "dev": "nx run-many --target=dev --projects=mobile,web --parallel=2",
+    "dev:mobile": "nx dev mobile",
+    "dev:web": "nx dev web",
+    "dev:all": "nx run-many --target=dev --all",
     "build": "nx run-many --target=build --all --exclude=mobile,crypto-core,auth,web,@aura/database-security",
     "build:all": "nx run-many --target=build --all",
     "test": "nx run-many --target=test --all --exclude=crypto-core,web",

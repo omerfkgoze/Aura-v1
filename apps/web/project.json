@@ -14,9 +14,10 @@
       }
     },
     "dev": {
-      "executor": "@nx/next:dev",
+      "executor": "nx:run-commands",
       "options": {
-        "dev": true
+        "command": "pnpm dev",
+        "cwd": "apps/web"
       }
     },
     "lint": {
