@@ -1,7 +1,7 @@
 {
   "name": "@aura/mobile",
   "version": "1.0.0",
-  "main": "App.tsx",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -12,10 +12,11 @@
     "@tamagui/button": "^1.132.25",
     "@tamagui/core": "^1.132.25",
     "@tamagui/text": "^1.132.25",
+    "@types/react": "~19.1.10",
     "expo": "^54.0.8",
-    "react": "^18.3.1",
+    "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-native": "^0.76.9",
+    "react-native": "0.81.4",
     "react-native-calendars": "^1.1313.0",
     "react-native-web": "^0.21.1",
     "string-width": "^8.1.0"
@@ -23,8 +24,8 @@
   "devDependencies": {
     "@babel/core": "^7.25.9",
     "@expo/cli": "^54.0.6",
-    "@types/react": "~18.3.12",
-    "typescript": "~5.3.3"
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
   },
   "private": true
 }
