@@ -12,7 +12,7 @@ Pragmatic approach ile kritik güvenlik işlemleri için Rust/WASM, diğer her �
 | Local Database       | **SQLite (Expo) + Encryption**    | Latest  | **Real offline with encrypted storage**   | **Secure enclave keys, conflict resolution**      |
 | Crypto Core          | **Rust/WASM (minimal)**           | Latest  | **CRITICAL: Client-side encryption only** | **Zero-knowledge requires bulletproof crypto**    |
 | Backend Language     | TypeScript                        | 5.3+    | Consistent language across stack          | Same types, reduced cognitive load                |
-| Backend Framework    | **Next.js API Routes**            | 14.x    | **Simple REST endpoints**                 | **Standard HTTP, easy to test/debug**             |
+| Backend Framework    | **Next.js API Routes**            | 15.x    | **Simple REST endpoints**                 | **Standard HTTP, easy to test/debug**             |
 | API Style            | **REST + Zod + OpenAPI**          | Latest  | **Standards-based with type generation**  | **External integration friendly, auto-docs**      |
 | Database             | PostgreSQL (Supabase)             | 15+     | Managed DB with RLS                       | Row Level Security essential                      |
 | Cache                | Redis (Supabase)                  | Latest  | Session and metadata caching              | Simple, managed solution                          |
