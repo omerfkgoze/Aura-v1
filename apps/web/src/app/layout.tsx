@@ -1,6 +1,5 @@
 import './globals.css';
-import { TamaguiProvider } from '@tamagui/core';
-import tamaguiConfig from '../tamagui.config';
+import { TamaguiProviderClient } from '../components/providers/TamaguiProviderClient';
 
 export const metadata = {
   title: 'Aura - Privacy-First Reproductive Health Tracking',
@@ -16,9 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
-          {children}
-        </TamaguiProvider>
+        <TamaguiProviderClient>{children}</TamaguiProviderClient>
       </body>
     </html>
   );

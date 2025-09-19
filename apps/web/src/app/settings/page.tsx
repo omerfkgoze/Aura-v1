@@ -1,3 +1,5 @@
+'use client';
+
 import { H1, H2 } from '@tamagui/text';
 import { Card } from '@tamagui/card';
 import { Button } from '@tamagui/button';
