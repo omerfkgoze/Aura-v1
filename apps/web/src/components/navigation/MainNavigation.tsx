@@ -51,7 +51,16 @@ export function MainNavigation({ currentPath = '/', isMobile = false }: MainNavi
 
   if (isMobile) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
+      <YStack
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
+        backgroundColor="$background"
+        borderTopWidth={1}
+        borderTopColor="$borderColor"
+        zIndex={50}
+      >
         <XStack justifyContent="space-around" padding="$3">
           {navigationItems.map(item => (
             <Button
@@ -74,14 +83,19 @@ export function MainNavigation({ currentPath = '/', isMobile = false }: MainNavi
             </Button>
           ))}
         </XStack>
-      </div>
+      </YStack>
     );
   }
 
   return (
-    <div className="bg-white border-r border-slate-200 h-full">
+    <YStack
+      backgroundColor="$background"
+      borderRightWidth={1}
+      borderRightColor="$borderColor"
+      height="100%"
+    >
       {/* Desktop Navigation Header */}
-      <div className="p-6 border-b border-slate-200">
+      <XStack padding="$6" borderBottomWidth={1} borderBottomColor="$borderColor">
         <XStack alignItems="center" justifyContent="space-between">
           <H3 color="#2E5266" fontSize="$6" fontWeight="600">
             Navigation
@@ -95,7 +109,7 @@ export function MainNavigation({ currentPath = '/', isMobile = false }: MainNavi
             <Text fontSize="$4">{isExpanded ? '◀' : '▶'}</Text>
           </Button>
         </XStack>
-      </div>
+      </XStack>
 
       {/* Navigation Items */}
       <YStack padding="$4" space="$2">
@@ -128,9 +142,15 @@ export function MainNavigation({ currentPath = '/', isMobile = false }: MainNavi
                 )}
               </XStack>
               {isActive && (
-                <div
-                  className="absolute right-0 top-0 bottom-0 w-1 rounded-l"
-                  style={{ backgroundColor: '#2E5266' }}
+                <YStack
+                  position="absolute"
+                  right={0}
+                  top={0}
+                  bottom={0}
+                  width={4}
+                  backgroundColor="$primary"
+                  borderTopLeftRadius="$2"
+                  borderBottomLeftRadius="$2"
                 />
               )}
             </Button>
@@ -139,10 +159,16 @@ export function MainNavigation({ currentPath = '/', isMobile = false }: MainNavi
       </YStack>
 
       {/* Privacy Mode Indicator */}
-      <div className="absolute bottom-4 left-4 right-4">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+      <YStack position="absolute" bottom="$4" left="$4" right="$4">
+        <YStack
+          backgroundColor="$green2"
+          borderColor="$green6"
+          borderWidth={1}
+          borderRadius="$4"
+          padding="$3"
+        >
           <XStack alignItems="center" space="$2">
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <YStack width={8} height={8} backgroundColor="$green9" borderRadius="$round" />
             {isExpanded ? (
               <YStack flex={1}>
                 <Text fontSize="$2" fontWeight="500" color="$green11">
@@ -158,8 +184,8 @@ export function MainNavigation({ currentPath = '/', isMobile = false }: MainNavi
               </Text>
             )}
           </XStack>
-        </div>
-      </div>
-    </div>
+        </YStack>
+      </YStack>
+    </YStack>
   );
 }

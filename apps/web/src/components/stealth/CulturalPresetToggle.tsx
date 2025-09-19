@@ -97,12 +97,18 @@ export function CulturalPresetToggle({
             >
               <XStack alignItems="center" space="$3" width="100%">
                 {/* Icon */}
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: option.color }}
+                <YStack
+                  width={48}
+                  height={48}
+                  borderRadius="$round"
+                  backgroundColor={option.color}
+                  alignItems="center"
+                  justifyContent="center"
                 >
-                  <span className="text-white text-lg">{option.icon}</span>
-                </div>
+                  <Text color="white" fontSize="$6">
+                    {option.icon}
+                  </Text>
+                </YStack>
 
                 {/* Content */}
                 <YStack flex={1} alignItems="flex-start">
@@ -120,9 +126,13 @@ export function CulturalPresetToggle({
 
                 {/* Selected Indicator */}
                 {isSelected && (
-                  <div
-                    className="w-4 h-4 rounded-full border-2 border-white"
-                    style={{ backgroundColor: option.color }}
+                  <YStack
+                    width={16}
+                    height={16}
+                    borderRadius="$round"
+                    backgroundColor={option.color}
+                    borderWidth={2}
+                    borderColor="white"
                   />
                 )}
               </XStack>
@@ -132,7 +142,14 @@ export function CulturalPresetToggle({
       </YStack>
 
       {/* Current Status */}
-      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <YStack
+        marginTop="$6"
+        padding="$4"
+        backgroundColor="$blue2"
+        borderColor="$blue6"
+        borderWidth={1}
+        borderRadius="$4"
+      >
         <XStack alignItems="center" space="$3">
           <Text fontSize="$2" color="$blue11" fontWeight="500">
             Active Mode: {presetOptions.find(p => p.id === selectedPreset)?.name}
@@ -143,7 +160,7 @@ export function CulturalPresetToggle({
             </Text>
           )}
         </XStack>
-      </div>
+      </YStack>
     </Card>
   );
 }
