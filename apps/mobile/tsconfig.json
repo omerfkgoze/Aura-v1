@@ -23,10 +23,6 @@
     "**/*.test.tsx",
     "src/__tests__/**/*",
     "src/config/env.ts",
-    "**/*.original.ts",
-
-    "src/components/**/*",
-    "src/services/**/*",
-    "src/hooks/**/*"
+    "**/*.original.ts"
   ]
 }

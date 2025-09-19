@@ -77,12 +77,12 @@ export class OfflineDataPersistence {
           location: 'default',
           createFromLocation: '~aura_offline.db',
         },
-        database => {
+        (database: any) => {
           this.db = database;
           console.log('[OfflineDataPersistence] Database opened successfully');
           resolve();
         },
-        error => {
+        (error: any) => {
           console.error('[OfflineDataPersistence] Database open failed:', error);
           reject(error);
         }
@@ -132,7 +132,7 @@ export class OfflineDataPersistence {
 
     return new Promise((resolve, reject) => {
       this.db!.transaction(
-        tx => {
+        (tx: any) => {
           tx.executeSql(createOfflineOpsTable);
           tx.executeSql(createSyncMetadataTable);
           tx.executeSql(createConflictLogTable);

@@ -1,4 +1,4 @@
-import { NetInfo, NetInfoState } from '@react-native-async-storage/async-storage';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface NetworkStatus {
@@ -172,7 +172,7 @@ export class OfflineFirstService {
       if (retryOnFailure && requiresNetwork) {
         await this.queueOperation({
           type: 'sync',
-          data: { operationType, error: error.message },
+          data: { operationType, error: (error as Error).message },
           priority,
         });
       }

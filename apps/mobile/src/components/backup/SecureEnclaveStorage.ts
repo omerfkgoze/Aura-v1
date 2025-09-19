@@ -86,8 +86,8 @@ export class SecureEnclaveStorage {
 
       return { stored, enclaveReference };
     } catch (error) {
-      await this.auditOperation('encrypt', keyConfig.keyId, false, error.message);
-      throw new Error(`Failed to store backup key: ${error.message}`);
+      await this.auditOperation('encrypt', keyConfig.keyId, false, (error as Error).message);
+      throw new Error(`Failed to store backup key: ${(error as Error).message}`);
     }
   }
 
@@ -125,8 +125,8 @@ export class SecureEnclaveStorage {
 
       return { keyMaterial, keyConfig };
     } catch (error) {
-      await this.auditOperation('decrypt', keyId, false, error.message);
-      throw new Error(`Failed to retrieve backup key: ${error.message}`);
+      await this.auditOperation('decrypt', keyId, false, (error as Error).message);
+      throw new Error(`Failed to retrieve backup key: ${(error as Error).message}`);
     }
   }
 
@@ -142,8 +142,8 @@ export class SecureEnclaveStorage {
       const service = `${SecureEnclaveStorage.IOS_SERVICE_PREFIX}${keyConfig.keyId}`;
 
       // Encode key material and config as base64
-      const encodedKey = Buffer.from(keyMaterial).toString('base64');
-      const encodedConfig = Buffer.from(JSON.stringify(keyConfig)).toString('base64');
+      const encodedKey = btoa(String.fromCharCode(...keyMaterial));
+      const encodedConfig = btoa(JSON.stringify(keyConfig));
       const combinedData = `${encodedKey}|${encodedConfig}`;
 
       // Mock Keychain storage (would use @react-native-keychain in production)
@@ -168,7 +168,7 @@ export class SecureEnclaveStorage {
         reference: service,
       };
     } catch (error) {
-      throw new Error(`iOS Keychain storage failed: ${error.message}`);
+      throw new Error(`iOS Keychain storage failed: ${(error as Error).message}`);
     }
   }
 
@@ -184,8 +184,8 @@ export class SecureEnclaveStorage {
       const alias = `${SecureEnclaveStorage.ANDROID_ALIAS_PREFIX}${keyConfig.keyId}`;
 
       // Encode key material and config
-      const encodedKey = Buffer.from(keyMaterial).toString('base64');
-      const encodedConfig = Buffer.from(JSON.stringify(keyConfig)).toString('base64');
+      const encodedKey = btoa(String.fromCharCode(...keyMaterial));
+      const encodedConfig = btoa(JSON.stringify(keyConfig));
       const combinedData = `${encodedKey}|${encodedConfig}`;
 
       // Mock Android Keystore options (would use @react-native-android-keystore in production)
@@ -210,7 +210,7 @@ export class SecureEnclaveStorage {
         reference: alias,
       };
     } catch (error) {
-      throw new Error(`Android Keystore storage failed: ${error.message}`);
+      throw new Error(`Android Keystore storage failed: ${(error as Error).message}`);
     }
   }
 
@@ -239,12 +239,13 @@ export class SecureEnclaveStorage {
 
       // Decode combined data
       const [encodedKey, encodedConfig] = mockCredentials.password.split('|');
-      const keyMaterial = new Uint8Array(Buffer.from(encodedKey, 'base64'));
-      const keyConfig = JSON.parse(Buffer.from(encodedConfig, 'base64').toString());
+      const decodedKey = atob(encodedKey);
+      const keyMaterial = new Uint8Array(decodedKey.split('').map(char => char.charCodeAt(0)));
+      const keyConfig = JSON.parse(atob(encodedConfig));
 
       return { keyMaterial, keyConfig };
     } catch (error) {
-      throw new Error(`iOS Keychain retrieval failed: ${error.message}`);
+      throw new Error(`iOS Keychain retrieval failed: ${(error as Error).message}`);
     }
   }
 
@@ -271,12 +272,13 @@ export class SecureEnclaveStorage {
 
       // Decode combined data
       const [encodedKey, encodedConfig] = mockResult.encryptedData.split('|');
-      const keyMaterial = new Uint8Array(Buffer.from(encodedKey, 'base64'));
-      const keyConfig = JSON.parse(Buffer.from(encodedConfig, 'base64').toString());
+      const decodedKey = atob(encodedKey);
+      const keyMaterial = new Uint8Array(decodedKey.split('').map(char => char.charCodeAt(0)));
+      const keyConfig = JSON.parse(atob(encodedConfig));
 
       return { keyMaterial, keyConfig };
     } catch (error) {
-      throw new Error(`Android Keystore retrieval failed: ${error.message}`);
+      throw new Error(`Android Keystore retrieval failed: ${(error as Error).message}`);
     }
   }
 
@@ -300,8 +302,8 @@ export class SecureEnclaveStorage {
       await this.auditOperation('revoke', keyId, deleted);
       return deleted;
     } catch (error) {
-      await this.auditOperation('revoke', keyId, false, error.message);
-      throw new Error(`Failed to delete backup key: ${error.message}`);
+      await this.auditOperation('revoke', keyId, false, (error as Error).message);
+      throw new Error(`Failed to delete backup key: ${(error as Error).message}`);
     }
   }
 
@@ -340,7 +342,7 @@ export class SecureEnclaveStorage {
     try {
       data.fill(0);
     } catch (error) {
-      console.error('Failed to zeroize sensitive data:', error.message);
+      console.error('Failed to zeroize sensitive data:', (error as Error).message);
     }
   }
 

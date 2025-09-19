@@ -6,7 +6,7 @@
  * Provides emergency revocation for security incidents
  */
 
-import crypto from 'crypto';
+import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
 import {
   BackupKeyConfig,
@@ -55,7 +55,7 @@ export class BackupKeyRotationService {
         `Scheduled rotation after ${BackupKeyRotationService.ROTATION_SCHEDULE_DAYS} days`
       );
     } catch (error) {
-      throw new Error(`Failed to schedule key rotation: ${error.message}`);
+      throw new Error(`Failed to schedule key rotation: ${(error as Error).message}`);
     }
   }
 
@@ -76,7 +76,7 @@ export class BackupKeyRotationService {
         `Emergency rotation: ${reason}`
       );
     } catch (error) {
-      throw new Error(`Failed to perform emergency key rotation: ${error.message}`);
+      throw new Error(`Failed to perform emergency key rotation: ${(error as Error).message}`);
     }
   }
 
@@ -100,7 +100,7 @@ export class BackupKeyRotationService {
         `Security incident rotation: ${incidentDetails}`
       );
     } catch (error) {
-      throw new Error(`Failed to perform security incident rotation: ${error.message}`);
+      throw new Error(`Failed to perform security incident rotation: ${(error as Error).message}`);
     }
   }
 
@@ -142,14 +142,16 @@ export class BackupKeyRotationService {
             'revoke',
             keyConfig.keyId,
             false,
-            `Failed to revoke from device ${deviceId}: ${error.message}`
+            `Failed to revoke from device ${deviceId}: ${(error as Error).message}`
           );
         }
       }
 
       // Create revocation event
       const revocationEvent: BackupKeyRotationEvent = {
-        eventId: `revocation_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`,
+        eventId: `revocation_${Date.now()}_${Array.from(await Crypto.getRandomBytesAsync(8))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('')}`,
         oldKeyId: keyConfig.keyId,
         newKeyId: 'REVOKED',
         rotationType: 'emergency',
@@ -167,8 +169,8 @@ export class BackupKeyRotationService {
         revocationTimestamp,
       };
     } catch (error) {
-      await this.auditOperation('revoke', keyConfig.keyId, false, error.message);
-      throw new Error(`Failed to perform emergency revocation: ${error.message}`);
+      await this.auditOperation('revoke', keyConfig.keyId, false, (error as Error).message);
+      throw new Error(`Failed to perform emergency revocation: ${(error as Error).message}`);
     }
   }
 
@@ -212,7 +214,7 @@ export class BackupKeyRotationService {
 
           migratedBackups.push(newBackup);
         } catch (error) {
-          failedMigrations.push(`${backup.backupId}: ${error.message}`);
+          failedMigrations.push(`${backup.backupId}: ${(error as Error).message}`);
         }
       }
 
@@ -235,8 +237,8 @@ export class BackupKeyRotationService {
         failedMigrations,
       };
     } catch (error) {
-      await this.auditOperation('rotate', newKeyConfig.keyId, false, error.message);
-      throw new Error(`Failed to migrate backup data: ${error.message}`);
+      await this.auditOperation('rotate', newKeyConfig.keyId, false, (error as Error).message);
+      throw new Error(`Failed to migrate backup data: ${(error as Error).message}`);
     }
   }
 
@@ -281,7 +283,7 @@ export class BackupKeyRotationService {
         isDue: true,
         daysSinceCreation: 0,
         daysUntilRotation: 0,
-        reason: `Error checking rotation status: ${error.message}`,
+        reason: `Error checking rotation status: ${(error as Error).message}`,
       };
     }
   }
@@ -302,7 +304,7 @@ export class BackupKeyRotationService {
       try {
         return await this.executeKeyRotation(currentKeyConfig, deviceIds, rotationType, reason);
       } catch (error) {
-        lastError = error;
+        lastError = error as Error;
         retryCount++;
 
         if (retryCount < BackupKeyRotationService.MAX_ROTATION_RETRIES) {
@@ -327,7 +329,9 @@ export class BackupKeyRotationService {
     reason: string
   ): Promise<BackupKeyRotationEvent> {
     const rotationEvent: BackupKeyRotationEvent = {
-      eventId: `rotation_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`,
+      eventId: `rotation_${Date.now()}_${Array.from(await Crypto.getRandomBytesAsync(8))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')}`,
       oldKeyId: currentKeyConfig.keyId,
       newKeyId: '',
       rotationType,
@@ -374,7 +378,7 @@ export class BackupKeyRotationService {
     } catch (error) {
       rotationEvent.migrationStatus = 'failed';
       this.rotationEvents.push(rotationEvent);
-      await this.auditOperation('rotate', currentKeyConfig.keyId, false, error.message);
+      await this.auditOperation('rotate', currentKeyConfig.keyId, false, (error as Error).message);
       throw error;
     }
   }
@@ -409,7 +413,7 @@ export class BackupKeyRotationService {
     try {
       data.fill(0);
     } catch (error) {
-      console.error('Failed to zeroize sensitive data:', error.message);
+      console.error('Failed to zeroize sensitive data:', (error as Error).message);
     }
   }
 

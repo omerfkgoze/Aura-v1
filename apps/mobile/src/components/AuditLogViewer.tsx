@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Modal,
+  StyleSheet,
 } from 'react-native';
 import { PrivacySafeAuditService } from '../services/PrivacySafeAuditService';
 
@@ -81,7 +82,7 @@ export const AuditLogViewer: React.FC = () => {
       ]);
 
       setAuditLogs(logs);
-      setAuditSessions(sessions);
+      setAuditSessions(sessions as AuditSession[]);
       setPrivacyMetrics(metrics);
     } catch (error) {
       console.error('Failed to load audit data:', error);
@@ -467,7 +468,7 @@ export const AuditLogViewer: React.FC = () => {
   );
 };
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -729,4 +730,4 @@ const styles = {
     color: '#0066CC',
     textAlign: 'center',
   },
-};
+});

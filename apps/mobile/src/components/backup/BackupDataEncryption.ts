@@ -6,15 +6,23 @@
  * Supports cross-device restoration with integrity verification
  */
 
-import crypto from 'crypto';
 import { Platform } from 'react-native';
+import * as Crypto from 'expo-crypto';
 import {
   BackupKeyConfig,
   EncryptedBackupData,
   BackupRestoreContext,
   BackupSecurityAudit,
 } from './types';
-import { EncryptedCycleData } from '../../shared-types/src/data';
+
+// Local type definition for EncryptedCycleData
+interface EncryptedCycleData {
+  id: string;
+  encryptedData: string;
+  createdAt: string;
+  updatedAt?: string;
+  version: number;
+}
 
 export class BackupDataEncryption {
   private static readonly ENCRYPTION_ALGORITHM = 'aes-256-gcm';
@@ -43,7 +51,7 @@ export class BackupDataEncryption {
       const serializedData = this.serializeCycleData(cycleData);
 
       // Generate nonce and AAD for encryption
-      const nonce = crypto.randomBytes(BackupDataEncryption.NONCE_LENGTH);
+      const nonce = await Crypto.getRandomBytesAsync(BackupDataEncryption.NONCE_LENGTH);
       const aad = this.createAAD(keyConfig, deviceId);
 
       // Encrypt data using backup key
@@ -55,10 +63,19 @@ export class BackupDataEncryption {
       );
 
       // Calculate data checksum for integrity verification
-      const dataChecksum = crypto.createHash('sha256').update(serializedData).digest('hex');
+      const dataChecksum = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        new TextDecoder().decode(serializedData),
+        { encoding: Crypto.CryptoEncoding.HEX }
+      );
+
+      const randomBytes = await Crypto.getRandomBytesAsync(8);
+      const randomHex = Array.from(randomBytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 
       const encryptedBackup: EncryptedBackupData = {
-        backupId: `backup_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`,
+        backupId: `backup_${Date.now()}_${randomHex}`,
         keyId: keyConfig.keyId,
         encryptedData,
         nonce,
@@ -76,8 +93,8 @@ export class BackupDataEncryption {
 
       return encryptedBackup;
     } catch (error) {
-      await this.auditOperation('encrypt', keyConfig.keyId, false, error.message);
-      throw new Error(`Failed to encrypt cycle data for backup: ${error.message}`);
+      await this.auditOperation('encrypt', keyConfig.keyId, false, (error as Error).message);
+      throw new Error(`Failed to encrypt cycle data for backup: ${(error as Error).message}`);
     }
   }
 
@@ -118,7 +135,11 @@ export class BackupDataEncryption {
       );
 
       // Verify data integrity using checksum
-      const actualChecksum = crypto.createHash('sha256').update(decryptedData).digest('hex');
+      const actualChecksum = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        new TextDecoder().decode(decryptedData),
+        { encoding: Crypto.CryptoEncoding.HEX }
+      );
 
       const integrityVerified = actualChecksum === encryptedBackup.dataChecksum;
 
@@ -143,8 +164,8 @@ export class BackupDataEncryption {
         conflictDetected,
       };
     } catch (error) {
-      await this.auditOperation('decrypt', encryptedBackup.keyId, false, error.message);
-      throw new Error(`Failed to decrypt backup for restore: ${error.message}`);
+      await this.auditOperation('decrypt', encryptedBackup.keyId, false, (error as Error).message);
+      throw new Error(`Failed to decrypt backup for restore: ${(error as Error).message}`);
     }
   }
 
@@ -174,7 +195,7 @@ export class BackupDataEncryption {
       // Create incremental backup
       return this.encryptCycleDataForBackup(changedData, backupKey, keyConfig, deviceId);
     } catch (error) {
-      throw new Error(`Failed to create incremental backup: ${error.message}`);
+      throw new Error(`Failed to create incremental backup: ${(error as Error).message}`);
     }
   }
 
@@ -229,7 +250,7 @@ export class BackupDataEncryption {
 
       return { mergedData, conflicts };
     } catch (error) {
-      throw new Error(`Failed to merge backup with existing data: ${error.message}`);
+      throw new Error(`Failed to merge backup with existing data: ${(error as Error).message}`);
     }
   }
 
@@ -243,19 +264,11 @@ export class BackupDataEncryption {
     aad: Uint8Array
   ): Promise<{ encryptedData: Uint8Array; tag: Uint8Array }> {
     try {
-      const cipher = crypto.createCipherGCM(BackupDataEncryption.ENCRYPTION_ALGORITHM, backupKey);
-      cipher.setAAD(aad);
-
-      const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
-
-      const tag = cipher.getAuthTag();
-
-      return {
-        encryptedData: new Uint8Array(encrypted),
-        tag: new Uint8Array(tag),
-      };
+      // Note: This would need to be implemented with a proper crypto library for React Native
+      // For now, throwing error as crypto module is not available
+      throw new Error('Native crypto operations not implemented for React Native');
     } catch (error) {
-      throw new Error(`Backup encryption failed: ${error.message}`);
+      throw new Error(`Backup encryption failed: ${(error as Error).message}`);
     }
   }
 
@@ -270,18 +283,11 @@ export class BackupDataEncryption {
     tag: Uint8Array
   ): Promise<Uint8Array> {
     try {
-      const decipher = crypto.createDecipherGCM(
-        BackupDataEncryption.ENCRYPTION_ALGORITHM,
-        backupKey
-      );
-      decipher.setAAD(aad);
-      decipher.setAuthTag(tag);
-
-      const decrypted = Buffer.concat([decipher.update(encryptedData), decipher.final()]);
-
-      return new Uint8Array(decrypted);
+      // Note: This would need to be implemented with a proper crypto library for React Native
+      // For now, throwing error as crypto module is not available
+      throw new Error('Native crypto operations not implemented for React Native');
     } catch (error) {
-      throw new Error(`Backup decryption failed: ${error.message}`);
+      throw new Error(`Backup decryption failed: ${(error as Error).message}`);
     }
   }
 
@@ -291,9 +297,9 @@ export class BackupDataEncryption {
   private serializeCycleData(cycleData: EncryptedCycleData[]): Uint8Array {
     try {
       const serialized = JSON.stringify(cycleData);
-      return new Uint8Array(Buffer.from(serialized, 'utf8'));
+      return new Uint8Array(new TextEncoder().encode(serialized));
     } catch (error) {
-      throw new Error(`Failed to serialize cycle data: ${error.message}`);
+      throw new Error(`Failed to serialize cycle data: ${(error as Error).message}`);
     }
   }
 
@@ -302,10 +308,10 @@ export class BackupDataEncryption {
    */
   private deserializeCycleData(serializedData: Uint8Array): EncryptedCycleData[] {
     try {
-      const jsonString = Buffer.from(serializedData).toString('utf8');
+      const jsonString = new TextDecoder().decode(serializedData);
       return JSON.parse(jsonString);
     } catch (error) {
-      throw new Error(`Failed to deserialize cycle data: ${error.message}`);
+      throw new Error(`Failed to deserialize cycle data: ${(error as Error).message}`);
     }
   }
 
@@ -314,7 +320,7 @@ export class BackupDataEncryption {
    */
   private createAAD(keyConfig: BackupKeyConfig, deviceId: string): Uint8Array {
     const aadString = `${BackupDataEncryption.AAD_VERSION}|${keyConfig.keyId}|${deviceId}`;
-    return new Uint8Array(Buffer.from(aadString, 'utf8'));
+    return new Uint8Array(new TextEncoder().encode(aadString));
   }
 
   /**
@@ -417,7 +423,7 @@ export class BackupDataEncryption {
     try {
       data.fill(0);
     } catch (error) {
-      console.error('Failed to zeroize sensitive data:', error.message);
+      console.error('Failed to zeroize sensitive data:', (error as Error).message);
     }
   }
 

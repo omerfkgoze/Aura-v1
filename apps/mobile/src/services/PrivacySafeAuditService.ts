@@ -1,6 +1,31 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SQLite from 'react-native-sqlite-storage';
-import { createHash } from 'crypto';
+import * as Crypto from 'expo-crypto';
+
+// SQLite type definitions for better TypeScript support
+interface SQLTransaction {
+  executeSql(
+    sqlStatement: string,
+    arguments?: any[],
+    successCallback?: (tx: SQLTransaction, results: SQLResultSet) => void,
+    errorCallback?: (tx: SQLTransaction, error: SQLError) => boolean | void
+  ): void;
+}
+
+interface SQLResultSet {
+  insertId: number;
+  rowsAffected: number;
+  rows: {
+    length: number;
+    item(index: number): any;
+    raw(): any[];
+  };
+}
+
+interface SQLError {
+  code: number;
+  message: string;
+}
 
 interface AuditLogEntry {
   id: string;
@@ -30,6 +55,7 @@ interface AuditSession {
   startTime: number;
   endTime?: number;
   deviceId: string;
+  deviceIdHash?: string; // Added for consistency with return types
   totalOperations: number;
   successfulOperations: number;
   failedOperations: number;
@@ -87,12 +113,12 @@ export class PrivacySafeAuditService {
           name: 'aura_audit.db',
           location: 'default',
         },
-        database => {
+        (database: any) => {
           this.db = database;
           console.log('[PrivacySafeAuditService] Audit database opened');
           resolve();
         },
-        error => {
+        (error: any) => {
           console.error('[PrivacySafeAuditService] Database open failed:', error);
           reject(error);
         }
@@ -159,9 +185,9 @@ export class PrivacySafeAuditService {
       'CREATE INDEX IF NOT EXISTS idx_session_start ON audit_session(start_time);',
     ];
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       this.db!.transaction(
-        tx => {
+        (tx: SQLTransaction) => {
           tx.executeSql(createAuditLogTable);
           tx.executeSql(createAuditSessionTable);
           tx.executeSql(createPrivacyMetricsTable);
@@ -169,8 +195,8 @@ export class PrivacySafeAuditService {
           // Create indexes
           createIndexes.forEach(indexSql => tx.executeSql(indexSql));
         },
-        reject,
-        resolve
+        (error: SQLError) => reject(error),
+        () => resolve()
       );
     });
   }
@@ -245,14 +271,14 @@ export class PrivacySafeAuditService {
     // Store session in database
     if (this.db) {
       await new Promise<void>((resolve, reject) => {
-        this.db!.transaction(tx => {
+        this.db!.transaction((tx: SQLTransaction) => {
           tx.executeSql(
             `INSERT INTO audit_session 
              (id, start_time, device_id_hash, created_at)
              VALUES (?, ?, ?, ?)`,
             [sessionId, this.currentSession!.startTime, deviceIdHash, Date.now()],
             () => resolve(),
-            (_, error) => reject(error)
+            (_tx: SQLTransaction, error: SQLError) => reject(error)
           );
         });
       });
@@ -273,7 +299,7 @@ export class PrivacySafeAuditService {
 
     // Update session in database
     await new Promise<void>((resolve, reject) => {
-      this.db!.transaction(tx => {
+      this.db!.transaction((tx: SQLTransaction) => {
         tx.executeSql(
           `UPDATE audit_session 
            SET end_time = ?, total_operations = ?, successful_operations = ?, 
@@ -289,7 +315,7 @@ export class PrivacySafeAuditService {
             this.currentSession!.id,
           ],
           () => resolve(),
-          (_, error) => reject(error)
+          (_tx: SQLTransaction, error: SQLError) => reject(error)
         );
       });
     });
@@ -358,7 +384,7 @@ export class PrivacySafeAuditService {
     // Store log entry
     if (this.db) {
       await new Promise<void>((resolve, reject) => {
-        this.db!.transaction(tx => {
+        this.db!.transaction((tx: SQLTransaction) => {
           tx.executeSql(
             `INSERT INTO audit_log 
              (id, timestamp, device_id_hash, operation_type, data_type, 
@@ -381,7 +407,7 @@ export class PrivacySafeAuditService {
               Date.now(),
             ],
             () => resolve(),
-            (_, error) => reject(error)
+            (_tx: SQLTransaction, error: SQLError) => reject(error)
           );
         });
       });
@@ -439,12 +465,12 @@ export class PrivacySafeAuditService {
     query += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
-    return new Promise((resolve, reject) => {
-      this.db!.transaction(tx => {
+    return new Promise<Omit<AuditLogEntry, 'deviceId'>[]>((resolve, reject) => {
+      this.db!.transaction((tx: SQLTransaction) => {
         tx.executeSql(
           query,
           params,
-          (_, result) => {
+          (_tx: SQLTransaction, result: SQLResultSet) => {
             const entries: Omit<AuditLogEntry, 'deviceId'>[] = [];
             for (let i = 0; i < result.rows.length; i++) {
               const row = result.rows.item(i);
@@ -465,7 +491,7 @@ export class PrivacySafeAuditService {
             }
             resolve(entries);
           },
-          (_, error) => reject(error)
+          (_tx: SQLTransaction, error: SQLError) => reject(error)
         );
       });
     });
@@ -477,8 +503,8 @@ export class PrivacySafeAuditService {
   public async getAuditSessions(limit: number = 20): Promise<Omit<AuditSession, 'deviceId'>[]> {
     if (!this.db) return [];
 
-    return new Promise((resolve, reject) => {
-      this.db!.transaction(tx => {
+    return new Promise<Omit<AuditSession, 'deviceId'>[]>((resolve, reject) => {
+      this.db!.transaction((tx: SQLTransaction) => {
         tx.executeSql(
           `SELECT id, start_time, end_time, device_id_hash, total_operations, 
                   successful_operations, failed_operations, conflict_count, data_synced
@@ -486,7 +512,7 @@ export class PrivacySafeAuditService {
            ORDER BY start_time DESC 
            LIMIT ?`,
           [limit],
-          (_, result) => {
+          (_tx: SQLTransaction, result: SQLResultSet) => {
             const sessions: Omit<AuditSession, 'deviceId'>[] = [];
             for (let i = 0; i < result.rows.length; i++) {
               const row = result.rows.item(i);
@@ -504,7 +530,7 @@ export class PrivacySafeAuditService {
             }
             resolve(sessions);
           },
-          (_, error) => reject(error)
+          (_tx: SQLTransaction, error: SQLError) => reject(error)
         );
       });
     });
@@ -527,8 +553,8 @@ export class PrivacySafeAuditService {
 
     const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
 
-    return new Promise((resolve, reject) => {
-      this.db!.transaction(tx => {
+    return new Promise<PrivacyMetrics>((resolve, reject) => {
+      this.db!.transaction((tx: SQLTransaction) => {
         // Get session statistics
         tx.executeSql(
           `SELECT 
@@ -540,7 +566,7 @@ export class PrivacySafeAuditService {
            FROM audit_session 
            WHERE start_time >= ?`,
           [thirtyDaysAgo],
-          (_, result) => {
+          (_tx: SQLTransaction, result: SQLResultSet) => {
             const row = result.rows.item(0);
             const metrics: PrivacyMetrics = {
               totalSyncSessions: row.total_sessions || 0,
@@ -553,7 +579,7 @@ export class PrivacySafeAuditService {
             };
             resolve(metrics);
           },
-          (_, error) => reject(error)
+          (_tx: SQLTransaction, error: SQLError) => reject(error)
         );
       });
     });
@@ -597,7 +623,7 @@ export class PrivacySafeAuditService {
     const todayEnd = todayStart + 24 * 60 * 60 * 1000;
 
     return new Promise<void>((resolve, reject) => {
-      this.db!.transaction(tx => {
+      this.db!.transaction((tx: SQLTransaction) => {
         // Calculate today's metrics
         tx.executeSql(
           `SELECT 
@@ -609,7 +635,7 @@ export class PrivacySafeAuditService {
            FROM audit_session 
            WHERE start_time >= ? AND start_time < ?`,
           [todayStart, todayEnd],
-          (_, result) => {
+          (_tx: SQLTransaction, result: SQLResultSet) => {
             const row = result.rows.item(0);
             const conflictRate = row.operations > 0 ? (row.conflicts / row.operations) * 100 : 0;
 
@@ -629,10 +655,10 @@ export class PrivacySafeAuditService {
                 Date.now(),
               ],
               () => resolve(),
-              (_, error) => reject(error)
+              (_tx2: SQLTransaction, error: SQLError) => reject(error)
             );
           },
-          (_, error) => reject(error)
+          (_tx: SQLTransaction, error: SQLError) => reject(error)
         );
       });
     });
@@ -648,7 +674,7 @@ export class PrivacySafeAuditService {
 
     return new Promise<void>((resolve, reject) => {
       this.db!.transaction(
-        tx => {
+        (tx: SQLTransaction) => {
           // Clean up old audit logs
           tx.executeSql('DELETE FROM audit_log WHERE timestamp < ?', [cutoffTime]);
 
@@ -660,7 +686,7 @@ export class PrivacySafeAuditService {
           const metricsDate = new Date(metricscutoff).toISOString().split('T')[0];
           tx.executeSql('DELETE FROM privacy_metrics WHERE metric_date < ?', [metricsDate]);
         },
-        reject,
+        (error: SQLError) => reject(error),
         () => {
           console.log(`[PrivacySafeAuditService] Cleaned up logs older than ${retentionDays} days`);
           resolve();
@@ -702,14 +728,18 @@ export class PrivacySafeAuditService {
     }
 
     // Check for suspicious patterns that might indicate privacy violations
-    return new Promise((resolve, reject) => {
+    return new Promise<{
+      isValid: boolean;
+      checksPerformed: number;
+      violationsFound: string[];
+    }>((resolve, reject) => {
       this.db!.transaction(
-        tx => {
+        (tx: SQLTransaction) => {
           // Check 1: Ensure no raw device IDs are stored
           tx.executeSql(
             'SELECT COUNT(*) as count FROM audit_log WHERE device_id_hash LIKE "%device%"',
             [],
-            (_, result) => {
+            (_tx: SQLTransaction, result: SQLResultSet) => {
               checksPerformed++;
               if (result.rows.item(0).count > 0) {
                 violations.push('Potential raw device ID found in audit logs');
@@ -721,7 +751,7 @@ export class PrivacySafeAuditService {
           tx.executeSql(
             'SELECT COUNT(*) as count FROM audit_log WHERE session_id IS NULL OR session_id = ""',
             [],
-            (_, result) => {
+            (_tx: SQLTransaction, result: SQLResultSet) => {
               checksPerformed++;
               if (result.rows.item(0).count > 0) {
                 violations.push('Audit entries found without proper session tracking');
@@ -734,7 +764,7 @@ export class PrivacySafeAuditService {
             `SELECT COUNT(*) as count FROM audit_log 
            WHERE timestamp > ? OR timestamp < ?`,
             [Date.now() + 60000, Date.now() - 2 * 365 * 24 * 60 * 60 * 1000], // Future dates or older than 2 years
-            (_, result) => {
+            (_tx: SQLTransaction, result: SQLResultSet) => {
               checksPerformed++;
               if (result.rows.item(0).count > 0) {
                 violations.push('Audit entries found with suspicious timestamps');
@@ -742,7 +772,7 @@ export class PrivacySafeAuditService {
             }
           );
         },
-        reject,
+        (error: SQLError) => reject(error),
         () => {
           resolve({
             isValid: violations.length === 0,
