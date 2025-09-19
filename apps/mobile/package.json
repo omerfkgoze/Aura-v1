@@ -9,9 +9,9 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@tamagui/button": "^1.132.25",
-    "@tamagui/core": "^1.132.25",
-    "@tamagui/text": "^1.132.25",
+    "@tamagui/button": "^1.132.24",
+    "@tamagui/core": "^1.132.24",
+    "@tamagui/text": "^1.132.24",
     "@types/react": "~19.1.10",
     "expo": "^54.0.8",
     "react": "^19.1.1",
@@ -25,7 +25,7 @@
     "@babel/core": "^7.25.9",
     "@expo/cli": "^54.0.6",
     "@types/react": "~19.1.10",
-    "typescript": "~5.9.2"
+    "typescript": "~5.3.3"
   },
   "private": true
 }

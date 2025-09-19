@@ -23,9 +23,10 @@
     "**/*.test.tsx",
     "src/__tests__/**/*",
     "src/config/env.ts",
-    "src/components/CrossDeviceSyncPanel.tsx",
-    "src/components/EmergencyRotationPanel.tsx",
-    "src/components/cycle-tracking/**/*",
-    "**/*.original.ts"
+    "**/*.original.ts",
+
+    "src/components/**/*",
+    "src/services/**/*",
+    "src/hooks/**/*"
   ]
 }
