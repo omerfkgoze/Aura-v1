@@ -9,6 +9,11 @@
  * Galois Field GF(256) operations for Shamir Secret Sharing
  */
 class GaloisField {
+  static FIELD_SIZE = 256;
+  static PRIMITIVE_POLYNOMIAL = 0x11d; // x^8 + x^4 + x^3 + x^2 + 1
+  static expTable = [];
+  static logTable = [];
+  static initialized = false;
   /**
    * Initialize lookup tables for efficient operations
    */
@@ -74,11 +79,6 @@ class GaloisField {
     return this.expTable[(this.logTable[base] * exponent) % (this.FIELD_SIZE - 1)];
   }
 }
-GaloisField.FIELD_SIZE = 256;
-GaloisField.PRIMITIVE_POLYNOMIAL = 0x11d; // x^8 + x^4 + x^3 + x^2 + 1
-GaloisField.expTable = [];
-GaloisField.logTable = [];
-GaloisField.initialized = false;
 /**
  * Polynomial evaluation in GF(256)
  */
@@ -207,20 +207,11 @@ export function createShamirShares(config) {
       data: bytesToHex(shareBytes),
       threshold,
       totalShares,
-      metadata: Object.assign(
-        Object.assign(
-          Object.assign(
-            {},
-            (metadata === null || metadata === void 0 ? void 0 : metadata.description) && {
-              description: metadata.description,
-            }
-          ),
-          { createdAt: new Date() }
-        ),
-        (metadata === null || metadata === void 0 ? void 0 : metadata.expiresAt) && {
-          expiresAt: metadata.expiresAt,
-        }
-      ),
+      metadata: {
+        ...(metadata?.description && { description: metadata.description }),
+        createdAt: new Date(),
+        ...(metadata?.expiresAt && { expiresAt: metadata.expiresAt }),
+      },
     });
   }
   return shares;

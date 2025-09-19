@@ -1,171 +1,156 @@
-import { __awaiter } from 'tslib';
 import { TokenManager, defaultSessionConfig } from './tokens';
 import { SessionStorage } from './storage';
 export class SessionManager {
+  tokenManager;
+  sessionStorage;
+  config;
+  refreshTimer = undefined;
+  eventListeners = [];
+  lastActivityTime = new Date();
   constructor(storage, config = defaultSessionConfig) {
-    this.refreshTimer = undefined;
-    this.eventListeners = [];
-    this.lastActivityTime = new Date();
     this.config = config;
     this.tokenManager = new TokenManager(config);
     this.sessionStorage = new SessionStorage(storage);
     this.startInactivityTimer();
   }
-  createSession(user, authMethod) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        const deviceId = yield this.sessionStorage.getDeviceId();
-        const session = yield this.tokenManager.createSession(user, deviceId, authMethod);
-        yield this.persistSession(session, authMethod);
-        this.scheduleTokenRefresh(session);
-        this.emitEvent({
-          type: 'login',
-          method: authMethod,
-          timestamp: new Date(),
-          success: true,
-        });
-        this.updateLastActivity();
-        return session;
-      } catch (error) {
-        this.emitEvent({
-          type: 'login',
-          method: authMethod,
-          timestamp: new Date(),
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        throw error;
-      }
-    });
+  async createSession(user, authMethod) {
+    try {
+      const deviceId = await this.sessionStorage.getDeviceId();
+      const session = await this.tokenManager.createSession(user, deviceId, authMethod);
+      await this.persistSession(session, authMethod);
+      this.scheduleTokenRefresh(session);
+      this.emitEvent({
+        type: 'login',
+        method: authMethod,
+        timestamp: new Date(),
+        success: true,
+      });
+      this.updateLastActivity();
+      return session;
+    } catch (error) {
+      this.emitEvent({
+        type: 'login',
+        method: authMethod,
+        timestamp: new Date(),
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
   }
-  restoreSession() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        const storedSession = yield this.sessionStorage.getStoredSession();
-        if (!storedSession) {
+  async restoreSession() {
+    try {
+      const storedSession = await this.sessionStorage.getStoredSession();
+      if (!storedSession) {
+        return null;
+      }
+      // Check if access token is expired
+      if (this.tokenManager.isTokenExpired(storedSession.accessToken)) {
+        // Try to refresh using refresh token
+        if (this.tokenManager.isTokenExpired(storedSession.refreshToken)) {
+          // Both tokens expired, clear session
+          await this.clearSession();
           return null;
         }
-        // Check if access token is expired
-        if (this.tokenManager.isTokenExpired(storedSession.accessToken)) {
-          // Try to refresh using refresh token
-          if (this.tokenManager.isTokenExpired(storedSession.refreshToken)) {
-            // Both tokens expired, clear session
-            yield this.clearSession();
-            return null;
-          }
-          // Refresh the session
-          return yield this.refreshSession(storedSession);
+        // Refresh the session
+        return await this.refreshSession(storedSession);
+      }
+      // Verify access token
+      await this.tokenManager.verifyAccessToken(storedSession.accessToken);
+      const session = {
+        accessToken: storedSession.accessToken,
+        refreshToken: storedSession.refreshToken,
+        expiresAt: new Date(storedSession.expiresAt),
+        expiresIn: Math.floor((new Date(storedSession.expiresAt).getTime() - Date.now()) / 1000),
+        tokenType: 'Bearer',
+        user: storedSession.user,
+      };
+      this.scheduleTokenRefresh(session);
+      this.updateLastActivity();
+      return session;
+    } catch (error) {
+      // If restore fails, clear corrupted session
+      await this.clearSession();
+      return null;
+    }
+  }
+  async refreshSession(storedSession) {
+    try {
+      let sessionToRefresh = storedSession;
+      if (!sessionToRefresh) {
+        const retrievedSession = await this.sessionStorage.getStoredSession();
+        if (!retrievedSession) {
+          throw new Error('No session to refresh');
         }
-        // Verify access token
-        yield this.tokenManager.verifyAccessToken(storedSession.accessToken);
-        const session = {
-          accessToken: storedSession.accessToken,
-          refreshToken: storedSession.refreshToken,
-          expiresAt: new Date(storedSession.expiresAt),
-          expiresIn: Math.floor((new Date(storedSession.expiresAt).getTime() - Date.now()) / 1000),
-          tokenType: 'Bearer',
-          user: storedSession.user,
-        };
-        this.scheduleTokenRefresh(session);
-        this.updateLastActivity();
-        return session;
-      } catch (error) {
-        // If restore fails, clear corrupted session
-        yield this.clearSession();
-        return null;
+        sessionToRefresh = retrievedSession;
       }
-    });
+      const newSession = await this.tokenManager.refreshSession(
+        sessionToRefresh.refreshToken,
+        sessionToRefresh.user
+      );
+      await this.persistSession(newSession, sessionToRefresh.authMethod);
+      this.scheduleTokenRefresh(newSession);
+      this.emitEvent({
+        type: 'refresh',
+        method: sessionToRefresh.authMethod,
+        timestamp: new Date(),
+        success: true,
+      });
+      this.updateLastActivity();
+      return newSession;
+    } catch (error) {
+      this.emitEvent({
+        type: 'refresh',
+        method: 'passkey', // Default
+        timestamp: new Date(),
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      // Clear session on refresh failure
+      await this.clearSession();
+      throw error;
+    }
   }
-  refreshSession(storedSession) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        let sessionToRefresh = storedSession;
-        if (!sessionToRefresh) {
-          const retrievedSession = yield this.sessionStorage.getStoredSession();
-          if (!retrievedSession) {
-            throw new Error('No session to refresh');
-          }
-          sessionToRefresh = retrievedSession;
-        }
-        const newSession = yield this.tokenManager.refreshSession(
-          sessionToRefresh.refreshToken,
-          sessionToRefresh.user
-        );
-        yield this.persistSession(newSession, sessionToRefresh.authMethod);
-        this.scheduleTokenRefresh(newSession);
-        this.emitEvent({
-          type: 'refresh',
-          method: sessionToRefresh.authMethod,
-          timestamp: new Date(),
-          success: true,
-        });
-        this.updateLastActivity();
-        return newSession;
-      } catch (error) {
-        this.emitEvent({
-          type: 'refresh',
-          method: 'passkey', // Default
-          timestamp: new Date(),
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        // Clear session on refresh failure
-        yield this.clearSession();
-        throw error;
-      }
-    });
+  async validateToken(token) {
+    try {
+      await this.tokenManager.verifyAccessToken(token);
+      return this.tokenManager.extractUserFromToken(token);
+    } catch {
+      return null;
+    }
   }
-  validateToken(token) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        yield this.tokenManager.verifyAccessToken(token);
-        return this.tokenManager.extractUserFromToken(token);
-      } catch (_a) {
-        return null;
-      }
-    });
+  async logout() {
+    try {
+      const storedSession = await this.sessionStorage.getStoredSession();
+      const authMethod = storedSession?.authMethod || 'passkey';
+      await this.clearSession();
+      this.emitEvent({
+        type: 'logout',
+        method: authMethod,
+        timestamp: new Date(),
+        success: true,
+      });
+    } catch (error) {
+      this.emitEvent({
+        type: 'logout',
+        method: 'passkey',
+        timestamp: new Date(),
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
   }
-  logout() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        const storedSession = yield this.sessionStorage.getStoredSession();
-        const authMethod =
-          (storedSession === null || storedSession === void 0
-            ? void 0
-            : storedSession.authMethod) || 'passkey';
-        yield this.clearSession();
-        this.emitEvent({
-          type: 'logout',
-          method: authMethod,
-          timestamp: new Date(),
-          success: true,
-        });
-      } catch (error) {
-        this.emitEvent({
-          type: 'logout',
-          method: 'passkey',
-          timestamp: new Date(),
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        throw error;
-      }
-    });
+  async clearSession() {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = undefined;
+    }
+    await this.sessionStorage.clearSession();
   }
-  clearSession() {
-    return __awaiter(this, void 0, void 0, function* () {
-      if (this.refreshTimer) {
-        clearTimeout(this.refreshTimer);
-        this.refreshTimer = undefined;
-      }
-      yield this.sessionStorage.clearSession();
-    });
-  }
-  isAuthenticated() {
-    return __awaiter(this, void 0, void 0, function* () {
-      const session = yield this.restoreSession();
-      return session !== null;
-    });
+  async isAuthenticated() {
+    const session = await this.restoreSession();
+    return session !== null;
   }
   shouldRefreshToken(session) {
     return this.tokenManager.shouldRefreshToken(session.accessToken);
@@ -189,19 +174,17 @@ export class SessionManager {
     const timeoutMs = this.config.sessionTimeout * 60 * 1000;
     return inactiveTime < timeoutMs;
   }
-  persistSession(session, authMethod) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const storedSession = {
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-        expiresAt: session.expiresAt.toISOString(),
-        user: session.user,
-        authMethod,
-        deviceRegistered: true, // Assuming device is registered if we have a session
-        createdAt: new Date().toISOString(),
-      };
-      yield this.sessionStorage.storeSession(storedSession);
-    });
+  async persistSession(session, authMethod) {
+    const storedSession = {
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      expiresAt: session.expiresAt.toISOString(),
+      user: session.user,
+      authMethod,
+      deviceRegistered: true, // Assuming device is registered if we have a session
+      createdAt: new Date().toISOString(),
+    };
+    await this.sessionStorage.storeSession(storedSession);
   }
   scheduleTokenRefresh(session) {
     if (this.refreshTimer) {
@@ -212,18 +195,14 @@ export class SessionManager {
     const refreshThreshold = this.config.autoRefreshThreshold * 60 * 1000;
     const timeToRefresh = expiresAt - now - refreshThreshold;
     if (timeToRefresh > 0) {
-      this.refreshTimer = setTimeout(
-        () =>
-          __awaiter(this, void 0, void 0, function* () {
-            try {
-              yield this.refreshSession();
-            } catch (error) {
-              // Refresh failed, session will be cleared
-              console.error('Auto-refresh failed:', error);
-            }
-          }),
-        timeToRefresh
-      );
+      this.refreshTimer = setTimeout(async () => {
+        try {
+          await this.refreshSession();
+        } catch (error) {
+          // Refresh failed, session will be cleared
+          console.error('Auto-refresh failed:', error);
+        }
+      }, timeToRefresh);
     }
   }
   startInactivityTimer() {
@@ -244,8 +223,10 @@ export class SessionManager {
   }
 }
 export class AuthStateManager {
+  sessionManager;
+  state;
+  stateListeners = [];
   constructor(sessionManager) {
-    this.stateListeners = [];
     this.sessionManager = sessionManager;
     this.state = {
       user: null,
@@ -260,39 +241,22 @@ export class AuthStateManager {
       this.handleAuthEvent(event);
     });
   }
-  initialize() {
-    return __awaiter(this, void 0, void 0, function* () {
-      this.updateState({ isLoading: true });
-      try {
-        const session = yield this.sessionManager.restoreSession();
-        if (session) {
-          const storedSession = yield this.sessionManager['sessionStorage'].getStoredSession();
-          this.updateState({
-            user: session.user,
-            session,
-            isAuthenticated: true,
-            authMethod:
-              (storedSession === null || storedSession === void 0
-                ? void 0
-                : storedSession.authMethod) || 'passkey',
-            deviceRegistered:
-              (storedSession === null || storedSession === void 0
-                ? void 0
-                : storedSession.deviceRegistered) || false,
-            lastSyncAt: new Date(),
-            isLoading: false,
-          });
-        } else {
-          this.updateState({
-            user: null,
-            session: null,
-            isAuthenticated: false,
-            authMethod: null,
-            deviceRegistered: false,
-            isLoading: false,
-          });
-        }
-      } catch (error) {
+  async initialize() {
+    this.updateState({ isLoading: true });
+    try {
+      const session = await this.sessionManager.restoreSession();
+      if (session) {
+        const storedSession = await this.sessionManager['sessionStorage'].getStoredSession();
+        this.updateState({
+          user: session.user,
+          session,
+          isAuthenticated: true,
+          authMethod: storedSession?.authMethod || 'passkey',
+          deviceRegistered: storedSession?.deviceRegistered || false,
+          lastSyncAt: new Date(),
+          isLoading: false,
+        });
+      } else {
         this.updateState({
           user: null,
           session: null,
@@ -302,10 +266,19 @@ export class AuthStateManager {
           isLoading: false,
         });
       }
-    });
+    } catch (error) {
+      this.updateState({
+        user: null,
+        session: null,
+        isAuthenticated: false,
+        authMethod: null,
+        deviceRegistered: false,
+        isLoading: false,
+      });
+    }
   }
   getState() {
-    return Object.assign({}, this.state);
+    return { ...this.state };
   }
   onStateChange(listener) {
     this.stateListeners.push(listener);
@@ -316,28 +289,20 @@ export class AuthStateManager {
       }
     };
   }
-  syncState() {
-    return __awaiter(this, void 0, void 0, function* () {
-      const session = yield this.sessionManager.restoreSession();
-      const storedSession = yield this.sessionManager['sessionStorage'].getStoredSession();
-      this.updateState({
-        user: (session === null || session === void 0 ? void 0 : session.user) || null,
-        session,
-        isAuthenticated: session !== null,
-        authMethod:
-          (storedSession === null || storedSession === void 0
-            ? void 0
-            : storedSession.authMethod) || null,
-        deviceRegistered:
-          (storedSession === null || storedSession === void 0
-            ? void 0
-            : storedSession.deviceRegistered) || false,
-        lastSyncAt: new Date(),
-      });
+  async syncState() {
+    const session = await this.sessionManager.restoreSession();
+    const storedSession = await this.sessionManager['sessionStorage'].getStoredSession();
+    this.updateState({
+      user: session?.user || null,
+      session,
+      isAuthenticated: session !== null,
+      authMethod: storedSession?.authMethod || null,
+      deviceRegistered: storedSession?.deviceRegistered || false,
+      lastSyncAt: new Date(),
     });
   }
   updateState(updates) {
-    this.state = Object.assign(Object.assign({}, this.state), updates);
+    this.state = { ...this.state, ...updates };
     for (const listener of this.stateListeners) {
       try {
         listener(this.state);

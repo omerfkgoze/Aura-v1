@@ -4,7 +4,6 @@
  * This module provides high-level authentication flow orchestration
  * for OPAQUE protocol, handling client-server coordination.
  */
-import { __awaiter } from 'tslib';
 /**
  * Default authentication configuration
  */
@@ -18,10 +17,14 @@ const DEFAULT_AUTH_CONFIG = {
  * OPAQUE Authentication Flow Orchestrator
  */
 export class OpaqueAuthenticationFlow {
+  client;
+  server;
+  config;
+  state;
   constructor(client, server, username, config) {
     this.client = client;
     this.server = server;
-    this.config = Object.assign(Object.assign({}, DEFAULT_AUTH_CONFIG), config);
+    this.config = { ...DEFAULT_AUTH_CONFIG, ...config };
     this.state = {
       username,
       step: 'idle',
@@ -32,95 +35,91 @@ export class OpaqueAuthenticationFlow {
   /**
    * Execute complete OPAQUE authentication flow
    */
-  authenticate(password) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const startTime = Date.now();
-      try {
-        this.state.attempts++;
-        // Step 1: Client generates login request
-        this.state.step = 'client-request';
-        const { loginRequest, clientState } = yield this.withTimeout(
-          this.client.startAuthentication(this.state.username, password),
-          'Client authentication request timed out'
-        );
-        this.state.loginRequest = loginRequest;
-        // Step 2: Server processes login request
-        this.state.step = 'server-processing';
-        const { loginResponse, serverState } = yield this.withTimeout(
-          this.server.processAuthentication(this.state.username, loginRequest),
-          'Server authentication processing timed out'
-        );
-        this.state.loginResponse = loginResponse;
-        this.state.serverState = serverState;
-        // Step 3: Client completes authentication
-        this.state.step = 'client-completion';
-        const { exportKey } = yield this.withTimeout(
-          this.client.completeAuthentication(clientState, loginResponse),
-          'Client authentication completion timed out'
-        );
-        // Step 4: Server verifies authentication and establishes session
-        this.state.step = 'server-verification';
-        const sessionResult = yield this.withTimeout(
-          this.server.verifyAuthentication(this.state.username, serverState),
-          'Server authentication verification timed out'
-        );
-        if (!sessionResult.success) {
-          throw new Error(sessionResult.error || 'Authentication verification failed');
-        }
-        this.state.step = 'authenticated';
-        const totalTime = Date.now() - startTime;
-        console.info(
-          `OPAQUE authentication completed in ${totalTime}ms for user ${this.state.username}`
-        );
-        const expiresAt = new Date(Date.now() + this.config.sessionTimeout);
-        const result = { success: true };
-        if (sessionResult.sessionKey) result.sessionKey = sessionResult.sessionKey;
-        if (sessionResult.userId) result.userId = sessionResult.userId;
-        if (exportKey) result.exportKey = exportKey;
-        result.expiresAt = expiresAt;
-        return result;
-      } catch (error) {
-        this.state.step = 'error';
-        this.state.error =
-          error instanceof Error
-            ? { code: 'CLIENT_ERROR', message: error.message }
-            : { code: 'CLIENT_ERROR', message: 'Unknown error occurred' };
-        const totalTime = Date.now() - startTime;
-        console.error(
-          `OPAQUE authentication failed after ${totalTime}ms for user ${this.state.username}:`,
-          error
-        );
-        return {
-          success: false,
-          error: this.state.error.message,
-        };
+  async authenticate(password) {
+    const startTime = Date.now();
+    try {
+      this.state.attempts++;
+      // Step 1: Client generates login request
+      this.state.step = 'client-request';
+      const { loginRequest, clientState } = await this.withTimeout(
+        this.client.startAuthentication(this.state.username, password),
+        'Client authentication request timed out'
+      );
+      this.state.loginRequest = loginRequest;
+      // Step 2: Server processes login request
+      this.state.step = 'server-processing';
+      const { loginResponse, serverState } = await this.withTimeout(
+        this.server.processAuthentication(this.state.username, loginRequest),
+        'Server authentication processing timed out'
+      );
+      this.state.loginResponse = loginResponse;
+      this.state.serverState = serverState;
+      // Step 3: Client completes authentication
+      this.state.step = 'client-completion';
+      const { exportKey } = await this.withTimeout(
+        this.client.completeAuthentication(clientState, loginResponse),
+        'Client authentication completion timed out'
+      );
+      // Step 4: Server verifies authentication and establishes session
+      this.state.step = 'server-verification';
+      const sessionResult = await this.withTimeout(
+        this.server.verifyAuthentication(this.state.username, serverState),
+        'Server authentication verification timed out'
+      );
+      if (!sessionResult.success) {
+        throw new Error(sessionResult.error || 'Authentication verification failed');
       }
-    });
+      this.state.step = 'authenticated';
+      const totalTime = Date.now() - startTime;
+      console.info(
+        `OPAQUE authentication completed in ${totalTime}ms for user ${this.state.username}`
+      );
+      const expiresAt = new Date(Date.now() + this.config.sessionTimeout);
+      const result = { success: true };
+      if (sessionResult.sessionKey) result.sessionKey = sessionResult.sessionKey;
+      if (sessionResult.userId) result.userId = sessionResult.userId;
+      if (exportKey) result.exportKey = exportKey;
+      result.expiresAt = expiresAt;
+      return result;
+    } catch (error) {
+      this.state.step = 'error';
+      this.state.error =
+        error instanceof Error
+          ? { code: 'CLIENT_ERROR', message: error.message }
+          : { code: 'CLIENT_ERROR', message: 'Unknown error occurred' };
+      const totalTime = Date.now() - startTime;
+      console.error(
+        `OPAQUE authentication failed after ${totalTime}ms for user ${this.state.username}:`,
+        error
+      );
+      return {
+        success: false,
+        error: this.state.error.message,
+      };
+    }
   }
   /**
    * Retry authentication with exponential backoff
    */
-  retryAuthentication(password) {
-    return __awaiter(this, void 0, void 0, function* () {
-      if (this.state.attempts >= this.config.retryAttempts) {
-        return {
-          success: false,
-          error: `Maximum authentication attempts (${this.config.retryAttempts}) exceeded`,
-        };
-      }
-      // Exponential backoff
-      const delayMs = Math.pow(2, this.state.attempts - 1) * 1000;
-      if (delayMs > 0) {
-        yield new Promise(resolve => setTimeout(resolve, delayMs));
-      }
-      return this.authenticate(password);
-    });
+  async retryAuthentication(password) {
+    if (this.state.attempts >= this.config.retryAttempts) {
+      return {
+        success: false,
+        error: `Maximum authentication attempts (${this.config.retryAttempts}) exceeded`,
+      };
+    }
+    // Exponential backoff
+    const delayMs = Math.pow(2, this.state.attempts - 1) * 1000;
+    if (delayMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    return this.authenticate(password);
   }
   /**
    * Get current authentication state
    */
   getState() {
-    return Object.assign({}, this.state);
+    return { ...this.state };
   }
   /**
    * Check if authentication is in progress
@@ -183,26 +182,25 @@ export class OpaqueAuthenticationFlow {
   /**
    * Wrap async operation with timeout
    */
-  withTimeout(promise, errorMessage) {
-    return __awaiter(this, void 0, void 0, function* () {
-      return Promise.race([
-        promise,
-        new Promise((_, reject) => {
-          setTimeout(() => {
-            reject(new Error(errorMessage));
-          }, this.config.timeout);
-        }),
-      ]);
-    });
+  async withTimeout(promise, errorMessage) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(errorMessage));
+        }, this.config.timeout);
+      }),
+    ]);
   }
 }
 /**
  * Session manager for OPAQUE authentication
  */
 export class OpaqueSessionManager {
+  server;
+  activeSessions = new Map();
   constructor(server) {
     this.server = server;
-    this.activeSessions = new Map();
   }
   /**
    * Store active session
@@ -218,29 +216,27 @@ export class OpaqueSessionManager {
   /**
    * Validate session
    */
-  validateSession(sessionKey) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const session = this.activeSessions.get(sessionKey);
-      if (!session) {
-        // Check server-side validation
-        const serverValidation = yield this.server.validateSession(sessionKey);
-        return Object.assign(
-          { isValid: serverValidation.isValid },
-          serverValidation.userId && { userId: serverValidation.userId }
-        );
-      }
-      if (session.expiresAt < new Date()) {
-        this.activeSessions.delete(sessionKey);
-        yield this.server.revokeSession(sessionKey);
-        return { isValid: false };
-      }
+  async validateSession(sessionKey) {
+    const session = this.activeSessions.get(sessionKey);
+    if (!session) {
+      // Check server-side validation
+      const serverValidation = await this.server.validateSession(sessionKey);
       return {
-        isValid: true,
-        userId: session.userId,
-        username: session.username,
-        exportKey: session.exportKey,
+        isValid: serverValidation.isValid,
+        ...(serverValidation.userId && { userId: serverValidation.userId }),
       };
-    });
+    }
+    if (session.expiresAt < new Date()) {
+      this.activeSessions.delete(sessionKey);
+      await this.server.revokeSession(sessionKey);
+      return { isValid: false };
+    }
+    return {
+      isValid: true,
+      userId: session.userId,
+      username: session.username,
+      exportKey: session.exportKey,
+    };
   }
   /**
    * Extend session
@@ -254,19 +250,17 @@ export class OpaqueSessionManager {
   /**
    * Revoke session
    */
-  revokeSession(sessionKey) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        this.activeSessions.delete(sessionKey);
-        yield this.server.revokeSession(sessionKey);
-        return { success: true };
-      } catch (error) {
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : 'Failed to revoke session',
-        };
-      }
-    });
+  async revokeSession(sessionKey) {
+    try {
+      this.activeSessions.delete(sessionKey);
+      await this.server.revokeSession(sessionKey);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to revoke session',
+      };
+    }
   }
   /**
    * Get all active sessions for user
@@ -283,23 +277,21 @@ export class OpaqueSessionManager {
   /**
    * Revoke all sessions for user
    */
-  revokeAllUserSessions(userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const userSessions = this.getUserSessions(userId);
-      const results = yield Promise.all(
-        userSessions.map(sessionKey => this.revokeSession(sessionKey))
-      );
-      const errors = results.filter(result => !result.success).map(result => result.error);
-      const revokedCount = results.filter(result => result.success).length;
-      const result = {
-        success: errors.length === 0,
-        revokedCount,
-      };
-      if (errors.length > 0) {
-        result.errors = errors;
-      }
-      return result;
-    });
+  async revokeAllUserSessions(userId) {
+    const userSessions = this.getUserSessions(userId);
+    const results = await Promise.all(
+      userSessions.map(sessionKey => this.revokeSession(sessionKey))
+    );
+    const errors = results.filter(result => !result.success).map(result => result.error);
+    const revokedCount = results.filter(result => result.success).length;
+    const result = {
+      success: errors.length === 0,
+      revokedCount,
+    };
+    if (errors.length > 0) {
+      result.errors = errors;
+    }
+    return result;
   }
   /**
    * Clean up expired sessions
@@ -324,11 +316,9 @@ export class OpaqueSessionManager {
 /**
  * Utility function to create and execute OPAQUE authentication flow
  */
-export function executeOpaqueAuthentication(client, server, username, password, config) {
-  return __awaiter(this, void 0, void 0, function* () {
-    const flow = new OpaqueAuthenticationFlow(client, server, username, config);
-    return flow.authenticate(password);
-  });
+export async function executeOpaqueAuthentication(client, server, username, password, config) {
+  const flow = new OpaqueAuthenticationFlow(client, server, username, config);
+  return flow.authenticate(password);
 }
 /**
  * Validate authentication inputs

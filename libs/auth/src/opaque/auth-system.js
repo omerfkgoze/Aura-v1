@@ -3,7 +3,6 @@
  *
  * Creates complete OPAQUE authentication system with all components
  */
-import { __awaiter } from 'tslib';
 import { createOpaqueClient } from './client';
 import { createOpaqueServer } from './server';
 import { OpaqueSessionManager, executeOpaqueAuthentication } from './authentication';
@@ -19,21 +18,14 @@ const OPAQUE_CONSTANTS = {
  */
 export function createOpaqueAuthSystem(config) {
   const client = createOpaqueClient({
-    serverUrl:
-      (config === null || config === void 0 ? void 0 : config.serverUrl) || '/api/auth/opaque',
+    serverUrl: config?.serverUrl || '/api/auth/opaque',
     timeout: 30000,
     retryAttempts: 3,
   });
   const server = createOpaqueServer({
-    sessionTimeoutMs:
-      (config === null || config === void 0 ? void 0 : config.sessionTimeoutMs) ||
-      OPAQUE_CONSTANTS.DEFAULT_SESSION_TIMEOUT_MS,
-    rateLimitWindowMs:
-      (config === null || config === void 0 ? void 0 : config.rateLimitWindowMs) ||
-      OPAQUE_CONSTANTS.DEFAULT_RATE_LIMIT_WINDOW_MS,
-    rateLimitMaxAttempts:
-      (config === null || config === void 0 ? void 0 : config.maxAttempts) ||
-      OPAQUE_CONSTANTS.DEFAULT_MAX_ATTEMPTS,
+    sessionTimeoutMs: config?.sessionTimeoutMs || OPAQUE_CONSTANTS.DEFAULT_SESSION_TIMEOUT_MS,
+    rateLimitWindowMs: config?.rateLimitWindowMs || OPAQUE_CONSTANTS.DEFAULT_RATE_LIMIT_WINDOW_MS,
+    rateLimitMaxAttempts: config?.maxAttempts || OPAQUE_CONSTANTS.DEFAULT_MAX_ATTEMPTS,
   });
   const sessionManager = new OpaqueSessionManager(server);
   return {
@@ -41,30 +33,20 @@ export function createOpaqueAuthSystem(config) {
     server,
     sessionManager,
     // Convenience methods
-    register(username, password, userId) {
-      return __awaiter(this, void 0, void 0, function* () {
-        return executeOpaqueRegistration(client, server, username, password, userId);
-      });
+    async register(username, password, userId) {
+      return executeOpaqueRegistration(client, server, username, password, userId);
     },
-    authenticate(username, password) {
-      return __awaiter(this, void 0, void 0, function* () {
-        return executeOpaqueAuthentication(client, server, username, password);
-      });
+    async authenticate(username, password) {
+      return executeOpaqueAuthentication(client, server, username, password);
     },
-    validateSession(sessionKey) {
-      return __awaiter(this, void 0, void 0, function* () {
-        return sessionManager.validateSession(sessionKey);
-      });
+    async validateSession(sessionKey) {
+      return sessionManager.validateSession(sessionKey);
     },
-    logout(sessionKey) {
-      return __awaiter(this, void 0, void 0, function* () {
-        return sessionManager.revokeSession(sessionKey);
-      });
+    async logout(sessionKey) {
+      return sessionManager.revokeSession(sessionKey);
     },
-    logoutAll(userId) {
-      return __awaiter(this, void 0, void 0, function* () {
-        return sessionManager.revokeAllUserSessions(userId);
-      });
+    async logoutAll(userId) {
+      return sessionManager.revokeAllUserSessions(userId);
     },
   };
 }

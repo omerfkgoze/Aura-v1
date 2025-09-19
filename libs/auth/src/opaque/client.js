@@ -4,165 +4,154 @@
  * This module implements the client-side OPAQUE protocol for zero-knowledge
  * password authentication without server-side password storage.
  */
-import { __awaiter } from 'tslib';
 // Dynamic import to handle different environments
 let opaqueModule = null;
-function getOpaqueModule() {
-  return __awaiter(this, void 0, void 0, function* () {
-    if (opaqueModule) return opaqueModule;
-    try {
-      // Try to import the real OPAQUE library
-      opaqueModule = yield import('@cloudflare/opaque-ts');
-      // Verify the library has the required functions
-      if (!opaqueModule.createClientRegistration || !opaqueModule.createClientLogin) {
-        throw new Error('OPAQUE library missing required functions');
-      }
-      return opaqueModule;
-    } catch (error) {
-      // Fall back to mock implementation in test environment
-      if (
-        typeof process !== 'undefined' &&
-        (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
-      ) {
-        opaqueModule = yield import('./mock');
-        return opaqueModule;
-      }
-      throw new Error('OPAQUE library not available and not in test environment');
+async function getOpaqueModule() {
+  if (opaqueModule) return opaqueModule;
+  try {
+    // Try to import the real OPAQUE library
+    opaqueModule = await import('@cloudflare/opaque-ts');
+    // Verify the library has the required functions
+    if (!opaqueModule.createClientRegistration || !opaqueModule.createClientLogin) {
+      throw new Error('OPAQUE library missing required functions');
     }
-  });
+    return opaqueModule;
+  } catch (error) {
+    // Fall back to mock implementation in test environment
+    if (
+      typeof process !== 'undefined' &&
+      (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
+    ) {
+      opaqueModule = await import('./mock');
+      return opaqueModule;
+    }
+    throw new Error('OPAQUE library not available and not in test environment');
+  }
 }
 /**
  * OPAQUE protocol client implementation
  */
 export class OpaqueClientImpl {
+  registrationStatus = 'idle';
+  authenticationStatus = 'idle';
   constructor(_config) {
-    this.registrationStatus = 'idle';
-    this.authenticationStatus = 'idle';
     // Configuration merging removed as config was not being used
   }
   /**
    * Start OPAQUE registration flow
    * Generates initial registration request without exposing password to server
    */
-  startRegistration(username, password) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        this.registrationStatus = 'generating-request';
-        if (!username || username.trim().length === 0) {
-          throw new Error('Username cannot be empty');
-        }
-        if (!password || password.length < 8) {
-          throw new Error('Password must be at least 8 characters');
-        }
-        // Create OPAQUE registration request
-        // This does NOT send the password to the server
-        const opaque = yield getOpaqueModule();
-        const { request, state } = yield opaque.createClientRegistration({
-          password: new TextEncoder().encode(password),
-        });
-        this.registrationStatus = 'waiting-server';
-        return {
-          registrationRequest: request,
-          clientState: state,
-        };
-      } catch (error) {
-        this.registrationStatus = 'error';
-        throw this.createError('CLIENT_ERROR', 'Failed to start registration', error);
+  async startRegistration(username, password) {
+    try {
+      this.registrationStatus = 'generating-request';
+      if (!username || username.trim().length === 0) {
+        throw new Error('Username cannot be empty');
       }
-    });
+      if (!password || password.length < 8) {
+        throw new Error('Password must be at least 8 characters');
+      }
+      // Create OPAQUE registration request
+      // This does NOT send the password to the server
+      const opaque = await getOpaqueModule();
+      const { request, state } = await opaque.createClientRegistration({
+        password: new TextEncoder().encode(password),
+      });
+      this.registrationStatus = 'waiting-server';
+      return {
+        registrationRequest: request,
+        clientState: state,
+      };
+    } catch (error) {
+      this.registrationStatus = 'error';
+      throw this.createError('CLIENT_ERROR', 'Failed to start registration', error);
+    }
   }
   /**
    * Complete OPAQUE registration flow
    * Processes server response and generates final registration record
    */
-  completeRegistration(clientState, registrationResponse) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        this.registrationStatus = 'completing-registration';
-        if (!clientState) {
-          throw new Error('Client registration state is required');
-        }
-        if (!registrationResponse) {
-          throw new Error('Server registration response is required');
-        }
-        // Complete OPAQUE registration
-        const opaque = yield getOpaqueModule();
-        const { record, exportKey } = yield opaque.finishClientRegistration({
-          state: clientState,
-          response: registrationResponse,
-        });
-        this.registrationStatus = 'completed';
-        return {
-          registrationRecord: this.arrayBufferToBase64(record),
-          exportKey: this.arrayBufferToBase64(exportKey),
-        };
-      } catch (error) {
-        this.registrationStatus = 'error';
-        throw this.createError('CLIENT_ERROR', 'Failed to complete registration', error);
+  async completeRegistration(clientState, registrationResponse) {
+    try {
+      this.registrationStatus = 'completing-registration';
+      if (!clientState) {
+        throw new Error('Client registration state is required');
       }
-    });
+      if (!registrationResponse) {
+        throw new Error('Server registration response is required');
+      }
+      // Complete OPAQUE registration
+      const opaque = await getOpaqueModule();
+      const { record, exportKey } = await opaque.finishClientRegistration({
+        state: clientState,
+        response: registrationResponse,
+      });
+      this.registrationStatus = 'completed';
+      return {
+        registrationRecord: this.arrayBufferToBase64(record),
+        exportKey: this.arrayBufferToBase64(exportKey),
+      };
+    } catch (error) {
+      this.registrationStatus = 'error';
+      throw this.createError('CLIENT_ERROR', 'Failed to complete registration', error);
+    }
   }
   /**
    * Start OPAQUE authentication flow
    * Generates login request without exposing password to server
    */
-  startAuthentication(username, password) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        this.authenticationStatus = 'generating-request';
-        if (!username || username.trim().length === 0) {
-          throw new Error('Username cannot be empty');
-        }
-        if (!password || password.length === 0) {
-          throw new Error('Password cannot be empty');
-        }
-        // Create OPAQUE login request
-        // This does NOT send the password to the server
-        const opaque = yield getOpaqueModule();
-        const { request, state } = yield opaque.createClientLogin({
-          password: new TextEncoder().encode(password),
-        });
-        this.authenticationStatus = 'waiting-server';
-        return {
-          loginRequest: request,
-          clientState: state,
-        };
-      } catch (error) {
-        this.authenticationStatus = 'error';
-        throw this.createError('CLIENT_ERROR', 'Failed to start authentication', error);
+  async startAuthentication(username, password) {
+    try {
+      this.authenticationStatus = 'generating-request';
+      if (!username || username.trim().length === 0) {
+        throw new Error('Username cannot be empty');
       }
-    });
+      if (!password || password.length === 0) {
+        throw new Error('Password cannot be empty');
+      }
+      // Create OPAQUE login request
+      // This does NOT send the password to the server
+      const opaque = await getOpaqueModule();
+      const { request, state } = await opaque.createClientLogin({
+        password: new TextEncoder().encode(password),
+      });
+      this.authenticationStatus = 'waiting-server';
+      return {
+        loginRequest: request,
+        clientState: state,
+      };
+    } catch (error) {
+      this.authenticationStatus = 'error';
+      throw this.createError('CLIENT_ERROR', 'Failed to start authentication', error);
+    }
   }
   /**
    * Complete OPAQUE authentication flow
    * Processes server response and establishes secure session
    */
-  completeAuthentication(clientState, loginResponse) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        this.authenticationStatus = 'completing-authentication';
-        if (!clientState) {
-          throw new Error('Client login state is required');
-        }
-        if (!loginResponse) {
-          throw new Error('Server login response is required');
-        }
-        // Complete OPAQUE authentication
-        const opaque = yield getOpaqueModule();
-        const { sessionKey, exportKey } = yield opaque.finishClientLogin({
-          state: clientState,
-          response: loginResponse,
-        });
-        this.authenticationStatus = 'authenticated';
-        return {
-          sessionKey: this.arrayBufferToBase64(sessionKey),
-          exportKey: this.arrayBufferToBase64(exportKey),
-        };
-      } catch (error) {
-        this.authenticationStatus = 'error';
-        throw this.createError('CLIENT_ERROR', 'Failed to complete authentication', error);
+  async completeAuthentication(clientState, loginResponse) {
+    try {
+      this.authenticationStatus = 'completing-authentication';
+      if (!clientState) {
+        throw new Error('Client login state is required');
       }
-    });
+      if (!loginResponse) {
+        throw new Error('Server login response is required');
+      }
+      // Complete OPAQUE authentication
+      const opaque = await getOpaqueModule();
+      const { sessionKey, exportKey } = await opaque.finishClientLogin({
+        state: clientState,
+        response: loginResponse,
+      });
+      this.authenticationStatus = 'authenticated';
+      return {
+        sessionKey: this.arrayBufferToBase64(sessionKey),
+        exportKey: this.arrayBufferToBase64(exportKey),
+      };
+    } catch (error) {
+      this.authenticationStatus = 'error';
+      throw this.createError('CLIENT_ERROR', 'Failed to complete authentication', error);
+    }
   }
   /**
    * Get current registration status

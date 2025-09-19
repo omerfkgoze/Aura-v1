@@ -4,32 +4,29 @@
  * This module implements the server-side OPAQUE protocol for zero-knowledge
  * password authentication without server-side password storage.
  */
-import { __awaiter } from 'tslib';
 // Dynamic import to handle different environments
 let opaqueModule = null;
-function getOpaqueModule() {
-  return __awaiter(this, void 0, void 0, function* () {
-    if (opaqueModule) return opaqueModule;
-    try {
-      // Try to import the real OPAQUE library
-      opaqueModule = yield import('@cloudflare/opaque-ts');
-      // Verify the library has the required functions
-      if (!opaqueModule.createServerRegistration || !opaqueModule.createServerLogin) {
-        throw new Error('OPAQUE library missing required server functions');
-      }
-      return opaqueModule;
-    } catch (error) {
-      // Fall back to mock implementation in test environment
-      if (
-        typeof process !== 'undefined' &&
-        (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
-      ) {
-        opaqueModule = yield import('./mock');
-        return opaqueModule;
-      }
-      throw new Error('OPAQUE library not available and not in test environment');
+async function getOpaqueModule() {
+  if (opaqueModule) return opaqueModule;
+  try {
+    // Try to import the real OPAQUE library
+    opaqueModule = await import('@cloudflare/opaque-ts');
+    // Verify the library has the required functions
+    if (!opaqueModule.createServerRegistration || !opaqueModule.createServerLogin) {
+      throw new Error('OPAQUE library missing required server functions');
     }
-  });
+    return opaqueModule;
+  } catch (error) {
+    // Fall back to mock implementation in test environment
+    if (
+      typeof process !== 'undefined' &&
+      (process.env['NODE_ENV'] === 'test' || process.env['VITEST'] === 'true')
+    ) {
+      opaqueModule = await import('./mock');
+      return opaqueModule;
+    }
+    throw new Error('OPAQUE library not available and not in test environment');
+  }
 }
 /**
  * Default server configuration
@@ -45,12 +42,13 @@ const DEFAULT_SERVER_CONFIG = {
  * OPAQUE protocol server implementation
  */
 export class OpaqueServerImpl {
+  config;
+  rateLimitMap = new Map();
+  // In production, these would be stored in database
+  registrationStorage = new Map();
+  sessionStorage = new Map();
   constructor(config) {
-    this.rateLimitMap = new Map();
-    // In production, these would be stored in database
-    this.registrationStorage = new Map();
-    this.sessionStorage = new Map();
-    this.config = Object.assign(Object.assign({}, DEFAULT_SERVER_CONFIG), config);
+    this.config = { ...DEFAULT_SERVER_CONFIG, ...config };
     // Clean up expired sessions and rate limit entries periodically
     setInterval(() => {
       this.cleanupExpiredSessions();
@@ -61,188 +59,172 @@ export class OpaqueServerImpl {
    * Process OPAQUE registration request
    * Server never sees the actual password
    */
-  processRegistration(username, registrationRequest) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        // Check rate limiting
-        this.checkRateLimit(username);
-        if (!username || username.trim().length === 0) {
-          throw new Error('Username cannot be empty');
-        }
-        if (!registrationRequest) {
-          throw new Error('Registration request is required');
-        }
-        // Check if username already exists
-        if (this.registrationStorage.has(username)) {
-          throw new Error('Username already exists');
-        }
-        // Create server registration response
-        // Server never receives or processes the actual password
-        const opaque = yield getOpaqueModule();
-        const { response, state } = yield opaque.createServerRegistration({
-          request: registrationRequest,
-          serverIdentity: new TextEncoder().encode(this.config.serverIdentity),
-        });
-        this.updateRateLimit(username);
-        return {
-          registrationResponse: response,
-          serverState: state,
-        };
-      } catch (error) {
-        throw this.createError('SERVER_ERROR', 'Failed to process registration', error);
+  async processRegistration(username, registrationRequest) {
+    try {
+      // Check rate limiting
+      this.checkRateLimit(username);
+      if (!username || username.trim().length === 0) {
+        throw new Error('Username cannot be empty');
       }
-    });
+      if (!registrationRequest) {
+        throw new Error('Registration request is required');
+      }
+      // Check if username already exists
+      if (this.registrationStorage.has(username)) {
+        throw new Error('Username already exists');
+      }
+      // Create server registration response
+      // Server never receives or processes the actual password
+      const opaque = await getOpaqueModule();
+      const { response, state } = await opaque.createServerRegistration({
+        request: registrationRequest,
+        serverIdentity: new TextEncoder().encode(this.config.serverIdentity),
+      });
+      this.updateRateLimit(username);
+      return {
+        registrationResponse: response,
+        serverState: state,
+      };
+    } catch (error) {
+      throw this.createError('SERVER_ERROR', 'Failed to process registration', error);
+    }
   }
   /**
    * Store OPAQUE registration record
    * Only stores opaque data, never the password
    */
-  storeRegistration(username, serverState, userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        if (!username || !serverState || !userId) {
-          throw new Error('Username, server state, and user ID are required');
-        }
-        // Complete server-side registration
-        const opaque = yield getOpaqueModule();
-        const record = yield opaque.finishServerRegistration({
-          state: serverState,
-        });
-        // Store registration data (password never stored)
-        const registration = {
-          id: this.generateId(),
-          userId,
-          username,
-          registrationRecord: this.arrayBufferToBase64(record),
-          createdAt: new Date(),
-        };
-        this.registrationStorage.set(username, registration);
-      } catch (error) {
-        throw this.createError('SERVER_ERROR', 'Failed to store registration', error);
+  async storeRegistration(username, serverState, userId) {
+    try {
+      if (!username || !serverState || !userId) {
+        throw new Error('Username, server state, and user ID are required');
       }
-    });
+      // Complete server-side registration
+      const opaque = await getOpaqueModule();
+      const record = await opaque.finishServerRegistration({
+        state: serverState,
+      });
+      // Store registration data (password never stored)
+      const registration = {
+        id: this.generateId(),
+        userId,
+        username,
+        registrationRecord: this.arrayBufferToBase64(record),
+        createdAt: new Date(),
+      };
+      this.registrationStorage.set(username, registration);
+    } catch (error) {
+      throw this.createError('SERVER_ERROR', 'Failed to store registration', error);
+    }
   }
   /**
    * Process OPAQUE authentication request
    * Server verifies authentication without knowing password
    */
-  processAuthentication(username, loginRequest) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        // Check rate limiting
-        this.checkRateLimit(username);
-        if (!username || username.trim().length === 0) {
-          throw new Error('Username cannot be empty');
-        }
-        if (!loginRequest) {
-          throw new Error('Login request is required');
-        }
-        // Get stored registration record
-        const registration = this.registrationStorage.get(username);
-        if (!registration) {
-          throw new Error('User not found');
-        }
-        // Create server login response
-        const opaque = yield getOpaqueModule();
-        const { response, state } = yield opaque.createServerLogin({
-          request: loginRequest,
-          record: this.base64ToArrayBuffer(registration.registrationRecord),
-          serverIdentity: new TextEncoder().encode(this.config.serverIdentity),
-        });
-        this.updateRateLimit(username);
-        return {
-          loginResponse: response,
-          serverState: state,
-        };
-      } catch (error) {
-        throw this.createError('SERVER_ERROR', 'Failed to process authentication', error);
+  async processAuthentication(username, loginRequest) {
+    try {
+      // Check rate limiting
+      this.checkRateLimit(username);
+      if (!username || username.trim().length === 0) {
+        throw new Error('Username cannot be empty');
       }
-    });
+      if (!loginRequest) {
+        throw new Error('Login request is required');
+      }
+      // Get stored registration record
+      const registration = this.registrationStorage.get(username);
+      if (!registration) {
+        throw new Error('User not found');
+      }
+      // Create server login response
+      const opaque = await getOpaqueModule();
+      const { response, state } = await opaque.createServerLogin({
+        request: loginRequest,
+        record: this.base64ToArrayBuffer(registration.registrationRecord),
+        serverIdentity: new TextEncoder().encode(this.config.serverIdentity),
+      });
+      this.updateRateLimit(username);
+      return {
+        loginResponse: response,
+        serverState: state,
+      };
+    } catch (error) {
+      throw this.createError('SERVER_ERROR', 'Failed to process authentication', error);
+    }
   }
   /**
    * Verify OPAQUE authentication and establish session
    */
-  verifyAuthentication(username, serverState) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        if (!username || !serverState) {
-          throw new Error('Username and server state are required');
-        }
-        const registration = this.registrationStorage.get(username);
-        if (!registration) {
-          return {
-            success: false,
-            error: 'User not found',
-          };
-        }
-        // Complete server-side authentication
-        const opaque = yield getOpaqueModule();
-        yield opaque.finishServerLogin({
-          state: serverState,
-        });
-        // Create secure session
-        const sessionId = this.generateSessionId();
-        const expiresAt = Date.now() + this.config.sessionTimeoutMs;
-        this.sessionStorage.set(sessionId, {
-          userId: registration.userId,
-          expiresAt,
-        });
-        // Update last used timestamp
-        registration.lastUsedAt = new Date();
-        return {
-          success: true,
-          sessionKey: sessionId,
-          userId: registration.userId,
-        };
-      } catch (error) {
+  async verifyAuthentication(username, serverState) {
+    try {
+      if (!username || !serverState) {
+        throw new Error('Username and server state are required');
+      }
+      const registration = this.registrationStorage.get(username);
+      if (!registration) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Authentication failed',
+          error: 'User not found',
         };
       }
-    });
+      // Complete server-side authentication
+      const opaque = await getOpaqueModule();
+      await opaque.finishServerLogin({
+        state: serverState,
+      });
+      // Create secure session
+      const sessionId = this.generateSessionId();
+      const expiresAt = Date.now() + this.config.sessionTimeoutMs;
+      this.sessionStorage.set(sessionId, {
+        userId: registration.userId,
+        expiresAt,
+      });
+      // Update last used timestamp
+      registration.lastUsedAt = new Date();
+      return {
+        success: true,
+        sessionKey: sessionId,
+        userId: registration.userId,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Authentication failed',
+      };
+    }
   }
   /**
    * Validate existing session
    */
-  validateSession(sessionKey) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const session = this.sessionStorage.get(sessionKey);
-      if (!session || session.expiresAt < Date.now()) {
-        if (session) {
-          this.sessionStorage.delete(sessionKey);
-        }
-        return { isValid: false };
+  async validateSession(sessionKey) {
+    const session = this.sessionStorage.get(sessionKey);
+    if (!session || session.expiresAt < Date.now()) {
+      if (session) {
+        this.sessionStorage.delete(sessionKey);
       }
-      return {
-        isValid: true,
-        userId: session.userId,
-      };
-    });
+      return { isValid: false };
+    }
+    return {
+      isValid: true,
+      userId: session.userId,
+    };
   }
   /**
    * Revoke session (logout)
    */
-  revokeSession(sessionKey) {
-    return __awaiter(this, void 0, void 0, function* () {
-      this.sessionStorage.delete(sessionKey);
-    });
+  async revokeSession(sessionKey) {
+    this.sessionStorage.delete(sessionKey);
   }
   /**
    * Get user by username
    */
-  getUserByUsername(username) {
-    return __awaiter(this, void 0, void 0, function* () {
-      return this.registrationStorage.get(username) || null;
-    });
+  async getUserByUsername(username) {
+    return this.registrationStorage.get(username) || null;
   }
   /**
    * Delete user registration (account deletion)
    */
-  deleteUser(username) {
-    return __awaiter(this, void 0, void 0, function* () {
-      this.registrationStorage.delete(username);
-    });
+  async deleteUser(username) {
+    this.registrationStorage.delete(username);
   }
   /**
    * Check rate limiting for IP/username

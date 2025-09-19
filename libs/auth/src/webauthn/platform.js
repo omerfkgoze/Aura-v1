@@ -1,4 +1,6 @@
 export class PlatformWebAuthnManager {
+  config;
+  platformOptions;
   constructor(config) {
     this.config = config;
     this.platformOptions = this.getDefaultPlatformOptions();
@@ -50,7 +52,8 @@ export class PlatformWebAuthnManager {
   }
   getIOSRegistrationOptions(baseOptions) {
     const iosOptions = this.platformOptions.ios;
-    return Object.assign(Object.assign({}, baseOptions), {
+    return {
+      ...baseOptions,
       authenticatorSelection: {
         authenticatorAttachment: iosOptions.requiresPlatformAttachment ? 'platform' : undefined,
         requireResidentKey: true,
@@ -61,11 +64,12 @@ export class PlatformWebAuthnManager {
         credProps: true,
         largeBlob: { support: 'preferred' },
       },
-    });
+    };
   }
   getAndroidRegistrationOptions(baseOptions) {
     const androidOptions = this.platformOptions.android;
-    return Object.assign(Object.assign({}, baseOptions), {
+    return {
+      ...baseOptions,
       authenticatorSelection: {
         authenticatorAttachment: androidOptions.requiresPlatformAttachment ? 'platform' : undefined,
         requireResidentKey: true,
@@ -76,11 +80,12 @@ export class PlatformWebAuthnManager {
         credProps: true,
         uvm: true,
       },
-    });
+    };
   }
   getWebRegistrationOptions(baseOptions) {
     const webOptions = this.platformOptions.web;
-    return Object.assign(Object.assign({}, baseOptions), {
+    return {
+      ...baseOptions,
       authenticatorSelection: {
         authenticatorAttachment: webOptions.preferredAuthenticatorTypes.includes('platform')
           ? 'platform'
@@ -94,31 +99,34 @@ export class PlatformWebAuthnManager {
         largeBlob: { support: 'preferred' },
         hmacCreateSecret: true,
       },
-    });
+    };
   }
   getIOSAuthenticationOptions(baseOptions) {
-    return Object.assign(Object.assign({}, baseOptions), {
+    return {
+      ...baseOptions,
       extensions: {
         largeBlob: { read: true },
       },
-    });
+    };
   }
   getAndroidAuthenticationOptions(baseOptions) {
-    return Object.assign(Object.assign({}, baseOptions), {
+    return {
+      ...baseOptions,
       extensions: {
         uvm: true,
       },
-    });
+    };
   }
   getWebAuthenticationOptions(baseOptions) {
     const webOptions = this.platformOptions.web;
-    return Object.assign(Object.assign({}, baseOptions), {
+    return {
+      ...baseOptions,
       extensions: {
         largeBlob: { read: true },
         hmacGetSecret: { salt1: new Uint8Array(32) },
       },
       mediation: webOptions.conditionalMediation ? 'conditional' : 'optional',
-    });
+    };
   }
   getDefaultPlatformOptions() {
     return {
@@ -155,14 +163,11 @@ export class PlatformWebAuthnManager {
     }
   }
   isWebAuthnSupported() {
-    var _a, _b;
     return (
       typeof window !== 'undefined' &&
       typeof window.PublicKeyCredential !== 'undefined' &&
-      typeof ((_a = navigator.credentials) === null || _a === void 0 ? void 0 : _a.create) ===
-        'function' &&
-      typeof ((_b = navigator.credentials) === null || _b === void 0 ? void 0 : _b.get) ===
-        'function'
+      typeof navigator.credentials?.create === 'function' &&
+      typeof navigator.credentials?.get === 'function'
     );
   }
   isPasskeysSupported(platform) {

@@ -1,4 +1,3 @@
-import { __awaiter } from 'tslib';
 import { IOSWebAuthnManager } from './ios';
 import { AndroidWebAuthnManager } from './android';
 import { WebWebAuthnManager } from './web';
@@ -10,6 +9,12 @@ import { OpaqueManager } from '../opaque/manager';
  * and graceful degradation to fallback methods
  */
 export class UnifiedAuthenticationManager {
+  detectionManager;
+  iosManager;
+  androidManager;
+  webManager;
+  opaqueManager;
+  currentPlatform;
   constructor(rpId, rpName) {
     // Initialize detection manager first
     this.detectionManager = new PlatformDetectionManager(rpId, rpName);
@@ -23,164 +28,154 @@ export class UnifiedAuthenticationManager {
   /**
    * Auto-detect platform and register with optimal authentication method
    */
-  register(userId, username, displayName, options) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        // Get platform capabilities
-        const capabilities = yield this.detectionManager.detectPlatformCapabilities();
-        // Try primary authentication methods first
-        if (capabilities.isSupported && capabilities.capabilities.webAuthn) {
-          try {
-            const credential = yield this.registerWithWebAuthn(
-              userId,
-              username,
-              displayName,
-              options
-            );
-            return {
-              success: true,
-              credential,
-              method: `webauthn-${capabilities.platform}`,
-              fallbackUsed: false,
-            };
-          } catch (error) {
-            console.warn('WebAuthn registration failed, trying fallback:', error);
-            // Continue to fallback methods
-          }
-        }
-        // Fallback to OPAQUE authentication
+  async register(userId, username, displayName, options) {
+    try {
+      // Get platform capabilities
+      const capabilities = await this.detectionManager.detectPlatformCapabilities();
+      // Try primary authentication methods first
+      if (capabilities.isSupported && capabilities.capabilities.webAuthn) {
         try {
-          yield this.opaqueManager.registerUser(username, '', userId); // Password will be collected separately
-          return {
-            success: true,
-            method: 'opaque-password',
-            fallbackUsed: true,
-          };
-        } catch (error) {
-          return {
-            success: false,
-            method: 'none',
-            fallbackUsed: true,
-            error: `All registration methods failed: ${error instanceof Error ? error.message : String(error)}`,
-          };
-        }
-      } catch (error) {
-        return {
-          success: false,
-          method: 'none',
-          fallbackUsed: true,
-          error: `Registration failed: ${error instanceof Error ? error.message : String(error)}`,
-        };
-      }
-    });
-  }
-  /**
-   * Auto-detect platform and authenticate with optimal method
-   */
-  authenticate(
-    identifier, // username or credentialId
-    options
-  ) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        // Get platform capabilities
-        const capabilities = yield this.detectionManager.detectPlatformCapabilities();
-        // Try primary authentication methods first
-        if (capabilities.isSupported && capabilities.capabilities.webAuthn) {
-          try {
-            const result = yield this.authenticateWithWebAuthn(identifier, options);
-            return {
-              success: true,
-              result,
-              method: `webauthn-${capabilities.platform}`,
-              fallbackUsed: false,
-            };
-          } catch (error) {
-            console.warn('WebAuthn authentication failed, trying fallback:', error);
-            // Continue to fallback methods
-          }
-        }
-        // Fallback to OPAQUE authentication
-        // Note: In real implementation, password would be collected from user
-        try {
-          const authResult = yield this.opaqueManager.authenticateUser(identifier, '');
-          return {
-            success: true,
-            result: authResult, // Cast for compatibility
-            method: 'opaque-password',
-            fallbackUsed: true,
-          };
-        } catch (error) {
-          return {
-            success: false,
-            method: 'none',
-            fallbackUsed: true,
-            error: `All authentication methods failed: ${error instanceof Error ? error.message : String(error)}`,
-          };
-        }
-      } catch (error) {
-        return {
-          success: false,
-          method: 'none',
-          fallbackUsed: true,
-          error: `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
-        };
-      }
-    });
-  }
-  /**
-   * Check platform compatibility and return optimal authentication methods
-   */
-  getPlatformSupport() {
-    return __awaiter(this, void 0, void 0, function* () {
-      const capabilities = yield this.detectionManager.detectPlatformCapabilities();
-      const optimalMethods = yield this.detectionManager.getOptimalAuthMethods();
-      return {
-        platform: this.currentPlatform,
-        isSupported: capabilities.isSupported,
-        optimalMethods,
-        capabilities,
-      };
-    });
-  }
-  /**
-   * Register credential with platform-specific WebAuthn manager
-   */
-  registerWithWebAuthn(userId, username, displayName, options) {
-    return __awaiter(this, void 0, void 0, function* () {
-      switch (this.currentPlatform) {
-        case 'ios':
-          return this.iosManager.registerWithIOSBiometrics(userId, username, displayName, options);
-        case 'android':
-          return this.androidManager.registerWithAndroidBiometrics(
+          const credential = await this.registerWithWebAuthn(
             userId,
             username,
             displayName,
             options
           );
-        case 'web':
-          return this.webManager.registerWithWebAuthn(userId, username, displayName, options);
-        default:
-          throw new Error(`Unsupported platform: ${this.currentPlatform}`);
+          return {
+            success: true,
+            credential,
+            method: `webauthn-${capabilities.platform}`,
+            fallbackUsed: false,
+          };
+        } catch (error) {
+          console.warn('WebAuthn registration failed, trying fallback:', error);
+          // Continue to fallback methods
+        }
       }
-    });
+      // Fallback to OPAQUE authentication
+      try {
+        await this.opaqueManager.registerUser(username, '', userId); // Password will be collected separately
+        return {
+          success: true,
+          method: 'opaque-password',
+          fallbackUsed: true,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          method: 'none',
+          fallbackUsed: true,
+          error: `All registration methods failed: ${error instanceof Error ? error.message : String(error)}`,
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        method: 'none',
+        fallbackUsed: true,
+        error: `Registration failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  }
+  /**
+   * Auto-detect platform and authenticate with optimal method
+   */
+  async authenticate(
+    identifier, // username or credentialId
+    options
+  ) {
+    try {
+      // Get platform capabilities
+      const capabilities = await this.detectionManager.detectPlatformCapabilities();
+      // Try primary authentication methods first
+      if (capabilities.isSupported && capabilities.capabilities.webAuthn) {
+        try {
+          const result = await this.authenticateWithWebAuthn(identifier, options);
+          return {
+            success: true,
+            result,
+            method: `webauthn-${capabilities.platform}`,
+            fallbackUsed: false,
+          };
+        } catch (error) {
+          console.warn('WebAuthn authentication failed, trying fallback:', error);
+          // Continue to fallback methods
+        }
+      }
+      // Fallback to OPAQUE authentication
+      // Note: In real implementation, password would be collected from user
+      try {
+        const authResult = await this.opaqueManager.authenticateUser(identifier, '');
+        return {
+          success: true,
+          result: authResult, // Cast for compatibility
+          method: 'opaque-password',
+          fallbackUsed: true,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          method: 'none',
+          fallbackUsed: true,
+          error: `All authentication methods failed: ${error instanceof Error ? error.message : String(error)}`,
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        method: 'none',
+        fallbackUsed: true,
+        error: `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  }
+  /**
+   * Check platform compatibility and return optimal authentication methods
+   */
+  async getPlatformSupport() {
+    const capabilities = await this.detectionManager.detectPlatformCapabilities();
+    const optimalMethods = await this.detectionManager.getOptimalAuthMethods();
+    return {
+      platform: this.currentPlatform,
+      isSupported: capabilities.isSupported,
+      optimalMethods,
+      capabilities,
+    };
+  }
+  /**
+   * Register credential with platform-specific WebAuthn manager
+   */
+  async registerWithWebAuthn(userId, username, displayName, options) {
+    switch (this.currentPlatform) {
+      case 'ios':
+        return this.iosManager.registerWithIOSBiometrics(userId, username, displayName, options);
+      case 'android':
+        return this.androidManager.registerWithAndroidBiometrics(
+          userId,
+          username,
+          displayName,
+          options
+        );
+      case 'web':
+        return this.webManager.registerWithWebAuthn(userId, username, displayName, options);
+      default:
+        throw new Error(`Unsupported platform: ${this.currentPlatform}`);
+    }
   }
   /**
    * Authenticate with platform-specific WebAuthn manager
    */
-  authenticateWithWebAuthn(credentialId, options) {
-    return __awaiter(this, void 0, void 0, function* () {
-      switch (this.currentPlatform) {
-        case 'ios':
-          return this.iosManager.authenticateWithIOSBiometrics([credentialId], options);
-        case 'android':
-          return this.androidManager.authenticateWithAndroidBiometrics([credentialId], options);
-        case 'web':
-          return this.webManager.authenticateWithWebAuthn([credentialId], options);
-        default:
-          throw new Error(`Unsupported platform: ${this.currentPlatform}`);
-      }
-    });
+  async authenticateWithWebAuthn(credentialId, options) {
+    switch (this.currentPlatform) {
+      case 'ios':
+        return this.iosManager.authenticateWithIOSBiometrics([credentialId], options);
+      case 'android':
+        return this.androidManager.authenticateWithAndroidBiometrics([credentialId], options);
+      case 'web':
+        return this.webManager.authenticateWithWebAuthn([credentialId], options);
+      default:
+        throw new Error(`Unsupported platform: ${this.currentPlatform}`);
+    }
   }
   /**
    * Get current platform information
@@ -246,80 +241,83 @@ export class CrossPlatformAuthFactory {
  * Provides business logic layer on top of unified authentication
  */
 export class AuthenticationService {
+  unifiedManager;
+  isInitialized = false;
   constructor(rpId, rpName) {
-    this.isInitialized = false;
     this.unifiedManager = new UnifiedAuthenticationManager(rpId, rpName);
   }
   /**
    * Initialize authentication service with platform detection
    */
-  initialize() {
-    return __awaiter(this, void 0, void 0, function* () {
-      if (this.isInitialized) return;
-      try {
-        // Warm up platform detection
-        yield this.unifiedManager.getPlatformSupport();
-        this.isInitialized = true;
-      } catch (error) {
-        console.warn('Authentication service initialization failed:', error);
-        // Continue with limited functionality
-        this.isInitialized = true;
-      }
-    });
+  async initialize() {
+    if (this.isInitialized) return;
+    try {
+      // Warm up platform detection
+      await this.unifiedManager.getPlatformSupport();
+      this.isInitialized = true;
+    } catch (error) {
+      console.warn('Authentication service initialization failed:', error);
+      // Continue with limited functionality
+      this.isInitialized = true;
+    }
   }
   /**
    * User-friendly registration with automatic method selection
    */
-  registerUser(userId, username, displayName, preferredMethod) {
-    return __awaiter(this, void 0, void 0, function* () {
-      yield this.initialize();
-      try {
-        const support = yield this.unifiedManager.getPlatformSupport();
-        // Determine optimal options based on platform and user preference
-        const options = this.getOptimalRegistrationOptions(support, preferredMethod);
-        const result = yield this.unifiedManager.register(userId, username, displayName, options);
-        if (result.success) {
-          return Object.assign(
-            { success: true, recommendedSetup: this.getRecommendedSetupSteps(support) },
-            result.credential && { credential: result.credential }
-          );
-        } else {
-          return Object.assign({ success: false }, result.error && { error: result.error });
-        }
-      } catch (error) {
+  async registerUser(userId, username, displayName, preferredMethod) {
+    await this.initialize();
+    try {
+      const support = await this.unifiedManager.getPlatformSupport();
+      // Determine optimal options based on platform and user preference
+      const options = this.getOptimalRegistrationOptions(support, preferredMethod);
+      const result = await this.unifiedManager.register(userId, username, displayName, options);
+      if (result.success) {
+        return {
+          success: true,
+          recommendedSetup: this.getRecommendedSetupSteps(support),
+          ...(result.credential && { credential: result.credential }),
+        };
+      } else {
         return {
           success: false,
-          error: `Registration failed: ${error instanceof Error ? error.message : String(error)}`,
+          ...(result.error && { error: result.error }),
         };
       }
-    });
+    } catch (error) {
+      return {
+        success: false,
+        error: `Registration failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
   }
   /**
    * User-friendly authentication with automatic method selection
    */
-  authenticateUser(identifier, preferredMethod) {
-    return __awaiter(this, void 0, void 0, function* () {
-      yield this.initialize();
-      try {
-        const support = yield this.unifiedManager.getPlatformSupport();
-        // Determine optimal options based on platform and user preference
-        const options = this.getOptimalAuthenticationOptions(support, preferredMethod);
-        const result = yield this.unifiedManager.authenticate(identifier, options);
-        if (result.success) {
-          return Object.assign(
-            { success: true, nextSteps: this.getRecommendedNextSteps(support, result.method) },
-            result.result && { result: result.result }
-          );
-        } else {
-          return Object.assign({ success: false }, result.error && { error: result.error });
-        }
-      } catch (error) {
+  async authenticateUser(identifier, preferredMethod) {
+    await this.initialize();
+    try {
+      const support = await this.unifiedManager.getPlatformSupport();
+      // Determine optimal options based on platform and user preference
+      const options = this.getOptimalAuthenticationOptions(support, preferredMethod);
+      const result = await this.unifiedManager.authenticate(identifier, options);
+      if (result.success) {
+        return {
+          success: true,
+          nextSteps: this.getRecommendedNextSteps(support, result.method),
+          ...(result.result && { result: result.result }),
+        };
+      } else {
         return {
           success: false,
-          error: `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
+          ...(result.error && { error: result.error }),
         };
       }
-    });
+    } catch (error) {
+      return {
+        success: false,
+        error: `Authentication failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
   }
   getOptimalRegistrationOptions(support, preferredMethod) {
     const baseOptions = {
@@ -329,13 +327,15 @@ export class AuthenticationService {
     // Platform-specific optimizations
     switch (support.platform) {
       case 'ios':
-        return Object.assign(Object.assign({}, baseOptions), {
+        return {
+          ...baseOptions,
           preferredBiometric:
             preferredMethod === 'face' ? 'faceId' : preferredMethod === 'touch' ? 'touchId' : 'any',
           requireSecureEnclave: true,
-        });
+        };
       case 'android':
-        return Object.assign(Object.assign({}, baseOptions), {
+        return {
+          ...baseOptions,
           preferredBiometric:
             preferredMethod === 'face'
               ? 'face'
@@ -344,13 +344,14 @@ export class AuthenticationService {
                 : 'any',
           requireStrongBox: true,
           confirmationRequired: true,
-        });
+        };
       case 'web':
-        return Object.assign(Object.assign({}, baseOptions), {
+        return {
+          ...baseOptions,
           preferPlatformAuthenticator: true,
           conditionalMediation: true,
-          requireUserVerification: false,
-        });
+          requireUserVerification: false, // More lenient for web
+        };
       default:
         return baseOptions;
     }

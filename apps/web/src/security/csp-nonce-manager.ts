@@ -15,7 +15,7 @@ class ServerSideNonceManager implements NonceManager {
   private validNonces = new Map<string, number>(); // nonce -> expiresAt timestamp
   private readonly maxAge = 5 * 60 * 1000; // 5 minutes
   private readonly cleanupInterval = 60 * 1000; // 1 minute
-  private cleanupTimer?: NodeJS.Timeout;
+  private cleanupTimer?: NodeJS.Timeout | number;
 
   constructor() {
     this.startCleanup();

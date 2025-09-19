@@ -1,7 +1,13 @@
-import { __awaiter } from 'tslib';
 export class ChallengeManager {
+  config;
+  challenges;
   constructor(config) {
-    this.config = Object.assign({ length: 32, expirationMinutes: 5, algorithm: 'crypto' }, config);
+    this.config = {
+      length: 32,
+      expirationMinutes: 5,
+      algorithm: 'crypto',
+      ...config,
+    };
     this.challenges = new Map();
   }
   generateChallenge(userId) {
@@ -17,9 +23,11 @@ export class ChallengeManager {
         challenge = this.generateCryptoChallenge();
     }
     // Store challenge with metadata
-    const challengeData = Object.assign(Object.assign({ challenge }, userId && { userId }), {
+    const challengeData = {
+      challenge,
+      ...(userId && { userId }),
       expiresAt: new Date(Date.now() + this.config.expirationMinutes * 60 * 1000),
-    });
+    };
     const key = this.getChallengeKey(challenge, userId);
     this.challenges.set(key, challengeData);
     // Clean up expired challenges periodically
@@ -138,65 +146,61 @@ export class ChallengeManager {
   }
 }
 export class ServerChallengeManager extends ChallengeManager {
+  // Server-side challenge management with database storage
+  databaseAdapter;
   constructor(config, databaseAdapter) {
     super(config);
     this.databaseAdapter = databaseAdapter;
   }
-  generateChallengeAsync(userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const challenge = this.generateChallenge(userId);
+  async generateChallengeAsync(userId) {
+    const challenge = this.generateChallenge(userId);
+    if (this.databaseAdapter) {
+      const challengeData = this.challenges.get(this.getChallengeKey(challenge, userId));
+      if (challengeData) {
+        await this.databaseAdapter.storeChallenge(challengeData);
+      }
+    }
+    return challenge;
+  }
+  async validateChallengeAsync(challenge, userId) {
+    // First check in-memory cache
+    let result = this.validateChallenge(challenge, userId);
+    // If not found in memory and database adapter available, check database
+    if (!result.isValid && this.databaseAdapter) {
+      const challengeData = await this.databaseAdapter.retrieveChallenge(challenge, userId);
+      if (challengeData) {
+        const now = new Date();
+        const isExpired = now > challengeData.expiresAt;
+        if (isExpired) {
+          await this.databaseAdapter.removeChallenge(challenge, userId);
+          result = {
+            isValid: false,
+            isExpired: true,
+            error: 'Challenge expired',
+          };
+        } else {
+          result = {
+            isValid: true,
+            isExpired: false,
+            challenge: challengeData,
+          };
+        }
+      }
+    }
+    return result;
+  }
+  async consumeChallengeAsync(challenge, userId) {
+    const result = await this.validateChallengeAsync(challenge, userId);
+    if (result.isValid) {
+      // Remove from memory
+      const key = this.getChallengeKey(challenge, userId);
+      this.challenges.delete(key);
+      // Remove from database
       if (this.databaseAdapter) {
-        const challengeData = this.challenges.get(this.getChallengeKey(challenge, userId));
-        if (challengeData) {
-          yield this.databaseAdapter.storeChallenge(challengeData);
-        }
+        await this.databaseAdapter.removeChallenge(challenge, userId);
       }
-      return challenge;
-    });
-  }
-  validateChallengeAsync(challenge, userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-      // First check in-memory cache
-      let result = this.validateChallenge(challenge, userId);
-      // If not found in memory and database adapter available, check database
-      if (!result.isValid && this.databaseAdapter) {
-        const challengeData = yield this.databaseAdapter.retrieveChallenge(challenge, userId);
-        if (challengeData) {
-          const now = new Date();
-          const isExpired = now > challengeData.expiresAt;
-          if (isExpired) {
-            yield this.databaseAdapter.removeChallenge(challenge, userId);
-            result = {
-              isValid: false,
-              isExpired: true,
-              error: 'Challenge expired',
-            };
-          } else {
-            result = {
-              isValid: true,
-              isExpired: false,
-              challenge: challengeData,
-            };
-          }
-        }
-      }
-      return result;
-    });
-  }
-  consumeChallengeAsync(challenge, userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const result = yield this.validateChallengeAsync(challenge, userId);
-      if (result.isValid) {
-        // Remove from memory
-        const key = this.getChallengeKey(challenge, userId);
-        this.challenges.delete(key);
-        // Remove from database
-        if (this.databaseAdapter) {
-          yield this.databaseAdapter.removeChallenge(challenge, userId);
-        }
-      }
-      return result;
-    });
+    }
+    return result;
   }
   getChallengeKey(challenge, userId) {
     return userId ? `${challenge}:${userId}` : challenge;
@@ -204,73 +208,63 @@ export class ServerChallengeManager extends ChallengeManager {
 }
 // Example implementation for Supabase
 export class SupabaseChallengeAdapter {
+  supabaseClient; // Supabase client type
   constructor(supabaseClient) {
     this.supabaseClient = supabaseClient;
   }
-  storeChallenge(challenge) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const { error } = yield this.supabaseClient.from('webauthn_challenges').insert({
-        challenge: challenge.challenge,
-        user_id: challenge.userId,
-        expires_at: challenge.expiresAt.toISOString(),
-        created_at: new Date().toISOString(),
-      });
-      if (error) {
-        throw new Error(`Failed to store challenge: ${error.message}`);
-      }
+  async storeChallenge(challenge) {
+    const { error } = await this.supabaseClient.from('webauthn_challenges').insert({
+      challenge: challenge.challenge,
+      user_id: challenge.userId,
+      expires_at: challenge.expiresAt.toISOString(),
+      created_at: new Date().toISOString(),
     });
+    if (error) {
+      throw new Error(`Failed to store challenge: ${error.message}`);
+    }
   }
-  retrieveChallenge(challenge, userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-      let query = this.supabaseClient
-        .from('webauthn_challenges')
-        .select('*')
-        .eq('challenge', challenge);
-      if (userId) {
-        query = query.eq('user_id', userId);
-      } else {
-        query = query.is('user_id', null);
-      }
-      const { data, error } = yield query.single();
-      if (error || !data) {
-        return null;
-      }
-      return {
-        challenge: data.challenge,
-        userId: data.user_id,
-        expiresAt: new Date(data.expires_at),
-      };
-    });
+  async retrieveChallenge(challenge, userId) {
+    let query = this.supabaseClient
+      .from('webauthn_challenges')
+      .select('*')
+      .eq('challenge', challenge);
+    if (userId) {
+      query = query.eq('user_id', userId);
+    } else {
+      query = query.is('user_id', null);
+    }
+    const { data, error } = await query.single();
+    if (error || !data) {
+      return null;
+    }
+    return {
+      challenge: data.challenge,
+      userId: data.user_id,
+      expiresAt: new Date(data.expires_at),
+    };
   }
-  removeChallenge(challenge, userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-      let query = this.supabaseClient
-        .from('webauthn_challenges')
-        .delete()
-        .eq('challenge', challenge);
-      if (userId) {
-        query = query.eq('user_id', userId);
-      } else {
-        query = query.is('user_id', null);
-      }
-      const { error } = yield query;
-      if (error) {
-        throw new Error(`Failed to remove challenge: ${error.message}`);
-      }
-    });
+  async removeChallenge(challenge, userId) {
+    let query = this.supabaseClient.from('webauthn_challenges').delete().eq('challenge', challenge);
+    if (userId) {
+      query = query.eq('user_id', userId);
+    } else {
+      query = query.is('user_id', null);
+    }
+    const { error } = await query;
+    if (error) {
+      throw new Error(`Failed to remove challenge: ${error.message}`);
+    }
   }
-  cleanupExpiredChallenges() {
-    return __awaiter(this, void 0, void 0, function* () {
-      const { data, error } = yield this.supabaseClient
-        .from('webauthn_challenges')
-        .delete()
-        .lt('expires_at', new Date().toISOString())
-        .select('challenge');
-      if (error) {
-        throw new Error(`Failed to cleanup expired challenges: ${error.message}`);
-      }
-      return (data === null || data === void 0 ? void 0 : data.length) || 0;
-    });
+  async cleanupExpiredChallenges() {
+    const { data, error } = await this.supabaseClient
+      .from('webauthn_challenges')
+      .delete()
+      .lt('expires_at', new Date().toISOString())
+      .select('challenge');
+    if (error) {
+      throw new Error(`Failed to cleanup expired challenges: ${error.message}`);
+    }
+    return data?.length || 0;
   }
 }
 //# sourceMappingURL=challenge.js.map

@@ -1,19 +1,18 @@
-import { __awaiter } from 'tslib';
 export class AuthPersistenceManager {
+  sessionManager;
+  config;
+  syncTimer = undefined;
+  eventHistory = [];
+  PERSISTENCE_KEY = 'aura_auth_persistence';
   constructor(sessionManager, config = {}) {
-    this.syncTimer = undefined;
-    this.eventHistory = [];
-    this.PERSISTENCE_KEY = 'aura_auth_persistence';
     this.sessionManager = sessionManager;
-    this.config = Object.assign(
-      {
-        enableAutoRestore: true,
-        enableEventLogging: true,
-        maxEventHistorySize: 100,
-        syncInterval: 30000,
-      },
-      config
-    );
+    this.config = {
+      enableAutoRestore: true,
+      enableEventLogging: true,
+      maxEventHistorySize: 100,
+      syncInterval: 30000, // 30 seconds
+      ...config,
+    };
     if (this.config.enableEventLogging) {
       this.setupEventLogging();
     }
@@ -21,70 +20,64 @@ export class AuthPersistenceManager {
       this.startPeriodicSync();
     }
   }
-  initializePersistence() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        // Load persisted data
-        const persistedData = yield this.loadPersistedData();
-        if (persistedData) {
-          this.eventHistory = persistedData.eventHistory || [];
-          // Update device info
-          yield this.updateDeviceInfo();
-        }
-        if (this.config.enableAutoRestore) {
-          // Restore session state
-          yield this.restoreAuthState();
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth persistence:', error);
-        // Continue without persistence rather than failing completely
+  async initializePersistence() {
+    try {
+      // Load persisted data
+      const persistedData = await this.loadPersistedData();
+      if (persistedData) {
+        this.eventHistory = persistedData.eventHistory || [];
+        // Update device info
+        await this.updateDeviceInfo();
       }
-    });
+      if (this.config.enableAutoRestore) {
+        // Restore session state
+        await this.restoreAuthState();
+      }
+    } catch (error) {
+      console.error('Failed to initialize auth persistence:', error);
+      // Continue without persistence rather than failing completely
+    }
   }
-  saveAuthState(state) {
-    return __awaiter(this, void 0, void 0, function* () {
-      if (!this.config.enableAutoRestore) {
-        return;
-      }
-      try {
-        const persistedData = (yield this.loadPersistedData()) || this.createEmptyPersistedData();
-        persistedData.lastAuthState = {
-          isAuthenticated: state.isAuthenticated,
-          authMethod: state.authMethod,
-          deviceRegistered: state.deviceRegistered,
-          lastSyncAt: new Date().toISOString(),
+  async saveAuthState(state) {
+    if (!this.config.enableAutoRestore) {
+      return;
+    }
+    try {
+      const persistedData = (await this.loadPersistedData()) || this.createEmptyPersistedData();
+      persistedData.lastAuthState = {
+        isAuthenticated: state.isAuthenticated,
+        authMethod: state.authMethod,
+        deviceRegistered: state.deviceRegistered,
+        lastSyncAt: new Date().toISOString(),
+      };
+      await this.savePersistedData(persistedData);
+    } catch (error) {
+      console.error('Failed to save auth state:', error);
+    }
+  }
+  async restoreAuthState() {
+    try {
+      const session = await this.sessionManager.restoreSession();
+      const persistedData = await this.loadPersistedData();
+      if (session && persistedData) {
+        const authState = {
+          user: session.user,
+          session,
+          isAuthenticated: true,
+          isLoading: false,
+          authMethod: persistedData.lastAuthState.authMethod,
+          deviceRegistered: persistedData.lastAuthState.deviceRegistered,
         };
-        yield this.savePersistedData(persistedData);
-      } catch (error) {
-        console.error('Failed to save auth state:', error);
-      }
-    });
-  }
-  restoreAuthState() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        const session = yield this.sessionManager.restoreSession();
-        const persistedData = yield this.loadPersistedData();
-        if (session && persistedData) {
-          const authState = {
-            user: session.user,
-            session,
-            isAuthenticated: true,
-            isLoading: false,
-            authMethod: persistedData.lastAuthState.authMethod,
-            deviceRegistered: persistedData.lastAuthState.deviceRegistered,
-          };
-          if (persistedData.lastAuthState.lastSyncAt) {
-            authState.lastSyncAt = new Date(persistedData.lastAuthState.lastSyncAt);
-          }
-          return authState;
+        if (persistedData.lastAuthState.lastSyncAt) {
+          authState.lastSyncAt = new Date(persistedData.lastAuthState.lastSyncAt);
         }
-        return null;
-      } catch (error) {
-        console.error('Failed to restore auth state:', error);
-        return null;
+        return authState;
       }
-    });
+      return null;
+    } catch (error) {
+      console.error('Failed to restore auth state:', error);
+      return null;
+    }
   }
   logAuthEvent(event) {
     if (!this.config.enableEventLogging) {
@@ -102,32 +95,22 @@ export class AuthPersistenceManager {
   getAuthEventHistory() {
     return [...this.eventHistory];
   }
-  clearPersistedData() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.removeItem(this.PERSISTENCE_KEY);
-        }
-        this.eventHistory = [];
-      } catch (error) {
-        console.error('Failed to clear persisted data:', error);
+  async clearPersistedData() {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(this.PERSISTENCE_KEY);
       }
-    });
+      this.eventHistory = [];
+    } catch (error) {
+      console.error('Failed to clear persisted data:', error);
+    }
   }
-  getSecurityAuditLog() {
-    return __awaiter(this, void 0, void 0, function* () {
-      const persistedData = yield this.loadPersistedData();
-      return (
-        (persistedData === null || persistedData === void 0
-          ? void 0
-          : persistedData.eventHistory) || []
-      );
-    });
+  async getSecurityAuditLog() {
+    const persistedData = await this.loadPersistedData();
+    return persistedData?.eventHistory || [];
   }
-  exportAuthData() {
-    return __awaiter(this, void 0, void 0, function* () {
-      return yield this.loadPersistedData();
-    });
+  async exportAuthData() {
+    return await this.loadPersistedData();
   }
   dispose() {
     if (this.syncTimer) {
@@ -141,57 +124,47 @@ export class AuthPersistenceManager {
     });
   }
   startPeriodicSync() {
-    this.syncTimer = setInterval(
-      () =>
-        __awaiter(this, void 0, void 0, function* () {
-          try {
-            yield this.persistEventHistory();
-          } catch (error) {
-            console.error('Periodic sync failed:', error);
-          }
-        }),
-      this.config.syncInterval
-    );
-  }
-  loadPersistedData() {
-    return __awaiter(this, void 0, void 0, function* () {
+    this.syncTimer = setInterval(async () => {
       try {
-        if (typeof localStorage === 'undefined') {
-          return null;
-        }
-        const stored = localStorage.getItem(this.PERSISTENCE_KEY);
-        if (!stored) {
-          return null;
-        }
-        const parsed = JSON.parse(stored);
-        // Validate and migrate data if needed
-        return this.validatePersistedData(parsed);
+        await this.persistEventHistory();
       } catch (error) {
-        console.error('Failed to load persisted data:', error);
+        console.error('Periodic sync failed:', error);
+      }
+    }, this.config.syncInterval);
+  }
+  async loadPersistedData() {
+    try {
+      if (typeof localStorage === 'undefined') {
         return null;
       }
-    });
-  }
-  savePersistedData(data) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        if (typeof localStorage === 'undefined') {
-          return;
-        }
-        const serialized = JSON.stringify(data);
-        localStorage.setItem(this.PERSISTENCE_KEY, serialized);
-      } catch (error) {
-        console.error('Failed to save persisted data:', error);
-        throw error;
+      const stored = localStorage.getItem(this.PERSISTENCE_KEY);
+      if (!stored) {
+        return null;
       }
-    });
+      const parsed = JSON.parse(stored);
+      // Validate and migrate data if needed
+      return this.validatePersistedData(parsed);
+    } catch (error) {
+      console.error('Failed to load persisted data:', error);
+      return null;
+    }
   }
-  persistEventHistory() {
-    return __awaiter(this, void 0, void 0, function* () {
-      const persistedData = (yield this.loadPersistedData()) || this.createEmptyPersistedData();
-      persistedData.eventHistory = this.eventHistory;
-      yield this.savePersistedData(persistedData);
-    });
+  async savePersistedData(data) {
+    try {
+      if (typeof localStorage === 'undefined') {
+        return;
+      }
+      const serialized = JSON.stringify(data);
+      localStorage.setItem(this.PERSISTENCE_KEY, serialized);
+    } catch (error) {
+      console.error('Failed to save persisted data:', error);
+      throw error;
+    }
+  }
+  async persistEventHistory() {
+    const persistedData = (await this.loadPersistedData()) || this.createEmptyPersistedData();
+    persistedData.eventHistory = this.eventHistory;
+    await this.savePersistedData(persistedData);
   }
   createEmptyPersistedData() {
     return {
@@ -240,19 +213,17 @@ export class AuthPersistenceManager {
       return null;
     }
   }
-  updateDeviceInfo() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        const deviceId = yield this.sessionManager['sessionStorage'].getDeviceId();
-        const persistedData = (yield this.loadPersistedData()) || this.createEmptyPersistedData();
-        persistedData.deviceInfo.deviceId = deviceId;
-        persistedData.deviceInfo.lastSeen = new Date().toISOString();
-        persistedData.deviceInfo.platform = this.detectPlatform();
-        yield this.savePersistedData(persistedData);
-      } catch (error) {
-        console.error('Failed to update device info:', error);
-      }
-    });
+  async updateDeviceInfo() {
+    try {
+      const deviceId = await this.sessionManager['sessionStorage'].getDeviceId();
+      const persistedData = (await this.loadPersistedData()) || this.createEmptyPersistedData();
+      persistedData.deviceInfo.deviceId = deviceId;
+      persistedData.deviceInfo.lastSeen = new Date().toISOString();
+      persistedData.deviceInfo.platform = this.detectPlatform();
+      await this.savePersistedData(persistedData);
+    } catch (error) {
+      console.error('Failed to update device info:', error);
+    }
   }
   detectPlatform() {
     if (typeof navigator !== 'undefined') {
@@ -265,53 +236,48 @@ export class AuthPersistenceManager {
 }
 // Cross-platform storage adapter for React Native
 export class ReactNativeAuthPersistence extends AuthPersistenceManager {
+  AsyncStorage;
   constructor(sessionManager, AsyncStorage, config) {
     super(sessionManager, config);
     this.AsyncStorage = AsyncStorage;
   }
-  loadPersistedData() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        if (!this.AsyncStorage) {
-          return null;
-        }
-        const stored = yield this.AsyncStorage.getItem(this['PERSISTENCE_KEY']);
-        if (!stored) {
-          return null;
-        }
-        const parsed = JSON.parse(stored);
-        return this['validatePersistedData'](parsed);
-      } catch (error) {
-        console.error('Failed to load persisted data from AsyncStorage:', error);
+  async loadPersistedData() {
+    try {
+      if (!this.AsyncStorage) {
         return null;
       }
-    });
-  }
-  savePersistedData(data) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        if (!this.AsyncStorage) {
-          return;
-        }
-        const serialized = JSON.stringify(data);
-        yield this.AsyncStorage.setItem(this['PERSISTENCE_KEY'], serialized);
-      } catch (error) {
-        console.error('Failed to save persisted data to AsyncStorage:', error);
-        throw error;
+      const stored = await this.AsyncStorage.getItem(this['PERSISTENCE_KEY']);
+      if (!stored) {
+        return null;
       }
-    });
+      const parsed = JSON.parse(stored);
+      return this['validatePersistedData'](parsed);
+    } catch (error) {
+      console.error('Failed to load persisted data from AsyncStorage:', error);
+      return null;
+    }
   }
-  clearPersistedData() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        if (this.AsyncStorage) {
-          yield this.AsyncStorage.removeItem(this['PERSISTENCE_KEY']);
-        }
-        this['eventHistory'] = [];
-      } catch (error) {
-        console.error('Failed to clear persisted data from AsyncStorage:', error);
+  async savePersistedData(data) {
+    try {
+      if (!this.AsyncStorage) {
+        return;
       }
-    });
+      const serialized = JSON.stringify(data);
+      await this.AsyncStorage.setItem(this['PERSISTENCE_KEY'], serialized);
+    } catch (error) {
+      console.error('Failed to save persisted data to AsyncStorage:', error);
+      throw error;
+    }
+  }
+  async clearPersistedData() {
+    try {
+      if (this.AsyncStorage) {
+        await this.AsyncStorage.removeItem(this['PERSISTENCE_KEY']);
+      }
+      this['eventHistory'] = [];
+    } catch (error) {
+      console.error('Failed to clear persisted data from AsyncStorage:', error);
+    }
   }
 }
 //# sourceMappingURL=persistence.js.map

@@ -1,4 +1,3 @@
-import { __awaiter as __awaiter_1 } from 'tslib';
 import { jsx as _jsx } from 'react/jsx-runtime';
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { SessionManager, AuthStateManager } from './manager';
@@ -22,23 +21,22 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
   // Initialize auth system
   useEffect(() => {
     let mounted = true;
-    const initialize = () =>
-      __awaiter_1(this, void 0, void 0, function* () {
-        try {
-          if (persistenceManager) {
-            yield persistenceManager.initializePersistence();
-          }
-          yield authStateManager.initialize();
-          if (mounted) {
-            setIsInitialized(true);
-          }
-        } catch (err) {
-          if (mounted) {
-            setError(err instanceof Error ? err.message : 'Failed to initialize auth');
-            setIsInitialized(true);
-          }
+    const initialize = async () => {
+      try {
+        if (persistenceManager) {
+          await persistenceManager.initializePersistence();
         }
-      });
+        await authStateManager.initialize();
+        if (mounted) {
+          setIsInitialized(true);
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(err instanceof Error ? err.message : 'Failed to initialize auth');
+          setIsInitialized(true);
+        }
+      }
+    };
     initialize();
     return () => {
       mounted = false;
@@ -63,123 +61,102 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
     return unsubscribe;
   }, [sessionManager]);
   // Auth action implementations
-  const authenticateWithPasskey = useCallback(
-    () =>
-      __awaiter_1(this, void 0, void 0, function* () {
-        try {
-          setError(null);
-          // This would integrate with WebAuthn manager
-          // For now, creating a mock implementation
-          const mockUser = {
-            id: 'user-' + Date.now(),
-            email: 'user@example.com',
-            username: 'user',
-            createdAt: new Date(),
-            emailVerified: true,
-          };
-          const session = yield sessionManager.createSession(mockUser, 'passkey');
-          yield authStateManager.syncState();
-          return session;
-        } catch (err) {
-          const error = err instanceof Error ? err.message : 'Passkey authentication failed';
-          setError(error);
-          throw new Error(error);
-        }
-      }),
-    [sessionManager, authStateManager]
-  );
+  const authenticateWithPasskey = useCallback(async () => {
+    try {
+      setError(null);
+      // This would integrate with WebAuthn manager
+      // For now, creating a mock implementation
+      const mockUser = {
+        id: 'user-' + Date.now(),
+        email: 'user@example.com',
+        username: 'user',
+        createdAt: new Date(),
+        emailVerified: true,
+      };
+      const session = await sessionManager.createSession(mockUser, 'passkey');
+      await authStateManager.syncState();
+      return session;
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Passkey authentication failed';
+      setError(error);
+      throw new Error(error);
+    }
+  }, [sessionManager, authStateManager]);
   const authenticateWithOpaque = useCallback(
-    (username, _password) =>
-      __awaiter_1(this, void 0, void 0, function* () {
-        try {
-          setError(null);
-          // This would integrate with OPAQUE manager
-          // For now, creating a mock implementation
-          const mockUser = {
-            id: 'user-' + Date.now(),
-            email: username,
-            username,
-            createdAt: new Date(),
-            emailVerified: true,
-          };
-          const session = yield sessionManager.createSession(mockUser, 'opaque');
-          yield authStateManager.syncState();
-          return session;
-        } catch (err) {
-          const error = err instanceof Error ? err.message : 'OPAQUE authentication failed';
-          setError(error);
-          throw new Error(error);
-        }
-      }),
+    async (username, _password) => {
+      try {
+        setError(null);
+        // This would integrate with OPAQUE manager
+        // For now, creating a mock implementation
+        const mockUser = {
+          id: 'user-' + Date.now(),
+          email: username,
+          username,
+          createdAt: new Date(),
+          emailVerified: true,
+        };
+        const session = await sessionManager.createSession(mockUser, 'opaque');
+        await authStateManager.syncState();
+        return session;
+      } catch (err) {
+        const error = err instanceof Error ? err.message : 'OPAQUE authentication failed';
+        setError(error);
+        throw new Error(error);
+      }
+    },
     [sessionManager, authStateManager]
   );
-  const registerDevice = useCallback(
-    () =>
-      __awaiter_1(this, void 0, void 0, function* () {
-        try {
-          setError(null);
-          // Mock device registration
-          // In real implementation, this would register WebAuthn credentials
-          yield new Promise(resolve => setTimeout(resolve, 1000));
-          yield authStateManager.syncState();
-        } catch (err) {
-          const error = err instanceof Error ? err.message : 'Device registration failed';
-          setError(error);
-          throw new Error(error);
-        }
-      }),
-    [authStateManager]
-  );
-  const refreshSession = useCallback(
-    () =>
-      __awaiter_1(this, void 0, void 0, function* () {
-        try {
-          setError(null);
-          const session = yield sessionManager.refreshSession();
-          yield authStateManager.syncState();
-          return session;
-        } catch (err) {
-          const error = err instanceof Error ? err.message : 'Session refresh failed';
-          setError(error);
-          throw new Error(error);
-        }
-      }),
-    [sessionManager, authStateManager]
-  );
-  const logout = useCallback(
-    () =>
-      __awaiter_1(this, void 0, void 0, function* () {
-        try {
-          setError(null);
-          yield sessionManager.logout();
-          yield authStateManager.syncState();
-        } catch (err) {
-          const error = err instanceof Error ? err.message : 'Logout failed';
-          setError(error);
-          throw new Error(error);
-        }
-      }),
-    [sessionManager, authStateManager]
-  );
-  const validateRecovery = useCallback(
-    phrase =>
-      __awaiter_1(this, void 0, void 0, function* () {
-        try {
-          setError(null);
-          // Mock recovery validation
-          // In real implementation, this would validate recovery phrase
-          if (phrase.split(' ').length >= 12) {
-            return true;
-          }
-          return false;
-        } catch (err) {
-          const error = err instanceof Error ? err.message : 'Recovery validation failed';
-          setError(error);
-          return false;
-        }
-      }),
-    []
-  );
+  const registerDevice = useCallback(async () => {
+    try {
+      setError(null);
+      // Mock device registration
+      // In real implementation, this would register WebAuthn credentials
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await authStateManager.syncState();
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Device registration failed';
+      setError(error);
+      throw new Error(error);
+    }
+  }, [authStateManager]);
+  const refreshSession = useCallback(async () => {
+    try {
+      setError(null);
+      const session = await sessionManager.refreshSession();
+      await authStateManager.syncState();
+      return session;
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Session refresh failed';
+      setError(error);
+      throw new Error(error);
+    }
+  }, [sessionManager, authStateManager]);
+  const logout = useCallback(async () => {
+    try {
+      setError(null);
+      await sessionManager.logout();
+      await authStateManager.syncState();
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Logout failed';
+      setError(error);
+      throw new Error(error);
+    }
+  }, [sessionManager, authStateManager]);
+  const validateRecovery = useCallback(async phrase => {
+    try {
+      setError(null);
+      // Mock recovery validation
+      // In real implementation, this would validate recovery phrase
+      if (phrase.split(' ').length >= 12) {
+        return true;
+      }
+      return false;
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Recovery validation failed';
+      setError(error);
+      return false;
+    }
+  }, []);
   const clearAuthData = useCallback(() => {
     sessionManager.clearSession().catch(console.error);
     persistenceManager === null || persistenceManager === void 0
@@ -196,17 +173,13 @@ export function AuthProvider({ children, storage, config, enablePersistence = tr
     setEventHistory([]);
     setError(null);
   }, [sessionManager, persistenceManager]);
-  const syncAuthState = useCallback(
-    () =>
-      __awaiter_1(this, void 0, void 0, function* () {
-        try {
-          yield authStateManager.syncState();
-        } catch (err) {
-          console.error('Failed to sync auth state:', err);
-        }
-      }),
-    [authStateManager]
-  );
+  const syncAuthState = useCallback(async () => {
+    try {
+      await authStateManager.syncState();
+    } catch (err) {
+      console.error('Failed to sync auth state:', err);
+    }
+  }, [authStateManager]);
   // Activity tracking
   useEffect(() => {
     const handleActivity = () => {
@@ -307,7 +280,7 @@ export function withAuthProtection(WrappedComponent, fallback) {
         ? React.createElement(fallback)
         : _jsx('div', { children: 'Please authenticate' });
     }
-    return _jsx(WrappedComponent, Object.assign({}, props));
+    return _jsx(WrappedComponent, { ...props });
   };
   AuthProtectedComponent.displayName = `withAuthProtection(${WrappedComponent.displayName || WrappedComponent.name})`;
   return AuthProtectedComponent;

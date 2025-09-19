@@ -1,4 +1,3 @@
-import { __awaiter } from 'tslib';
 import { PlatformWebAuthnManager } from './platform';
 import { WebAuthnRegistration } from './registration';
 import { WebAuthnAuthentication } from './authentication';
@@ -7,6 +6,9 @@ import { WebAuthnAuthentication } from './authentication';
  * Provides hardware-backed authentication using iOS Keychain and Secure Enclave
  */
 export class IOSWebAuthnManager {
+  platformManager;
+  registrationManager;
+  authenticationManager;
   constructor(rpId, rpName) {
     this.platformManager = new PlatformWebAuthnManager({
       rpId,
@@ -21,297 +23,242 @@ export class IOSWebAuthnManager {
   /**
    * Check if iOS biometric authentication is available
    */
-  isIOSBiometricAvailable() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        // Check for iOS-specific biometric APIs
-        const hasWebAuthn = this.platformManager.getPlatformCapabilities().supportsWebAuthn;
-        const hasSecureEnclave = yield this.isSecureEnclaveAvailable();
-        return hasWebAuthn && hasSecureEnclave;
-      } catch (error) {
-        console.warn('iOS biometric availability check failed:', error);
-        return false;
-      }
-    });
+  async isIOSBiometricAvailable() {
+    try {
+      // Check for iOS-specific biometric APIs
+      const hasWebAuthn = this.platformManager.getPlatformCapabilities().supportsWebAuthn;
+      const hasSecureEnclave = await this.isSecureEnclaveAvailable();
+      return hasWebAuthn && hasSecureEnclave;
+    } catch (error) {
+      console.warn('iOS biometric availability check failed:', error);
+      return false;
+    }
   }
   /**
    * Register a new WebAuthn credential with iOS biometric authentication
    */
-  registerWithIOSBiometrics(userId, username, displayName, options) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const biometricOptions = this.getIOSBiometricOptions(options);
-      const registrationOptions = this.platformManager.getRegistrationOptionsForPlatform('ios');
-      // Enhanced iOS-specific registration options
-      const iosRegistrationOptions = Object.assign(Object.assign({}, registrationOptions), {
-        user: {
-          id: new TextEncoder().encode(userId),
-          name: username,
-          displayName,
-        },
-        authenticatorSelection: Object.assign(
-          Object.assign({}, registrationOptions.authenticatorSelection),
-          {
-            authenticatorAttachment: 'platform',
-            requireResidentKey: true,
-            residentKey: 'required',
-            userVerification: 'required',
-          }
-        ),
-        extensions: Object.assign(Object.assign({}, registrationOptions.extensions), {
-          // iOS-specific extensions
-          credProps: true,
-          largeBlob: { support: 'preferred' },
-          // Request Face ID/Touch ID specific attestation
-          attestationFormats: ['apple'],
-        }),
-        // iOS-specific public key parameters
-        pubKeyCredParams: [
-          { type: 'public-key', alg: -7 }, // ES256 (preferred for iOS)
-          { type: 'public-key', alg: -257 }, // RS256 (fallback)
-        ],
-      });
-      try {
-        // Attempt WebAuthn registration with iOS-specific options
-        const registrationResponse =
-          yield this.registrationManager.startRegistration(iosRegistrationOptions);
-        // Convert response to credential format
-        const credential = {
-          id: registrationResponse.id,
-          userId: userId,
-          credentialId: registrationResponse.id,
-          publicKeyData: this.parsePublicKeyData(registrationResponse.response.publicKey),
-          counter: 0,
-          platform: 'ios',
-          createdAt: new Date(),
-        };
-        // Validate iOS-specific attestation data
-        const validatedCredential = yield this.validateIOSAttestation(credential);
-        // Store credential metadata for iOS-specific features
-        yield this.storeIOSCredentialMetadata(validatedCredential, biometricOptions);
-        return validatedCredential;
-      } catch (error) {
-        throw new Error(
-          `iOS WebAuthn registration failed: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    });
+  async registerWithIOSBiometrics(userId, username, displayName, options) {
+    const biometricOptions = this.getIOSBiometricOptions(options);
+    const registrationOptions = this.platformManager.getRegistrationOptionsForPlatform('ios');
+    // Enhanced iOS-specific registration options
+    const iosRegistrationOptions = {
+      ...registrationOptions,
+      user: {
+        id: new TextEncoder().encode(userId),
+        name: username,
+        displayName,
+      },
+      authenticatorSelection: {
+        ...registrationOptions.authenticatorSelection,
+        authenticatorAttachment: 'platform', // Ensure platform authenticator
+        requireResidentKey: true,
+        residentKey: 'required',
+        userVerification: 'required',
+      },
+      extensions: {
+        ...registrationOptions.extensions,
+        // iOS-specific extensions
+        credProps: true,
+        largeBlob: { support: 'preferred' },
+        // Request Face ID/Touch ID specific attestation
+        attestationFormats: ['apple'],
+      },
+      // iOS-specific public key parameters
+      pubKeyCredParams: [
+        { type: 'public-key', alg: -7 }, // ES256 (preferred for iOS)
+        { type: 'public-key', alg: -257 }, // RS256 (fallback)
+      ],
+    };
+    try {
+      // Attempt WebAuthn registration with iOS-specific options
+      const registrationResponse =
+        await this.registrationManager.startRegistration(iosRegistrationOptions);
+      // Convert response to credential format
+      const credential = {
+        id: registrationResponse.id,
+        userId: userId,
+        credentialId: registrationResponse.id,
+        publicKeyData: this.parsePublicKeyData(registrationResponse.response.publicKey),
+        counter: 0,
+        platform: 'ios',
+        createdAt: new Date(),
+      };
+      // Validate iOS-specific attestation data
+      const validatedCredential = await this.validateIOSAttestation(credential);
+      // Store credential metadata for iOS-specific features
+      await this.storeIOSCredentialMetadata(validatedCredential, biometricOptions);
+      return validatedCredential;
+    } catch (error) {
+      throw new Error(
+        `iOS WebAuthn registration failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
   /**
    * Authenticate using iOS biometric authentication
    */
-  authenticateWithIOSBiometrics(credentialIds, options) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const biometricOptions = this.getIOSBiometricOptions(options);
-      const authenticationOptions = this.platformManager.getAuthenticationOptionsForPlatform('ios');
-      // Enhanced iOS-specific authentication options
-      const iosAuthenticationOptions = Object.assign(Object.assign({}, authenticationOptions), {
-        allowCredentials:
-          credentialIds === null || credentialIds === void 0
-            ? void 0
-            : credentialIds.map(id => ({
-                type: 'public-key',
-                id: this.base64UrlToArrayBuffer(id),
-                transports: ['internal'], // iOS internal authenticator
-              })),
-        extensions: Object.assign(Object.assign({}, authenticationOptions.extensions), {
-          // iOS-specific extensions for biometric data
-          largeBlob: { read: true },
-          userVerificationMethod: true,
-        }),
-        userVerification: biometricOptions.requireUserVerification ? 'required' : 'preferred',
-      });
-      try {
-        const assertion =
-          yield this.authenticationManager.startAuthentication(iosAuthenticationOptions);
-        // Extract iOS-specific biometric information
-        const biometricResult = yield this.extractIOSBiometricData(assertion);
-        // Update credential usage counter and metadata
-        yield this.updateIOSCredentialMetadata(assertion.id);
-        return {
-          assertion,
-          biometricType: biometricResult.biometricType,
-          secureEnclaveUsed: biometricResult.secureEnclaveUsed,
-          touchIdUsed: biometricResult.touchIdUsed,
-          faceIdUsed: biometricResult.faceIdUsed,
-          timestamp: new Date(),
-        };
-      } catch (error) {
-        throw new Error(
-          `iOS WebAuthn authentication failed: ${error instanceof Error ? error.message : String(error)}`
-        );
-      }
-    });
+  async authenticateWithIOSBiometrics(credentialIds, options) {
+    const biometricOptions = this.getIOSBiometricOptions(options);
+    const authenticationOptions = this.platformManager.getAuthenticationOptionsForPlatform('ios');
+    // Enhanced iOS-specific authentication options
+    const iosAuthenticationOptions = {
+      ...authenticationOptions,
+      allowCredentials: credentialIds?.map(id => ({
+        type: 'public-key',
+        id: this.base64UrlToArrayBuffer(id),
+        transports: ['internal'], // iOS internal authenticator
+      })),
+      extensions: {
+        ...authenticationOptions.extensions,
+        // iOS-specific extensions for biometric data
+        largeBlob: { read: true },
+        userVerificationMethod: true,
+      },
+      userVerification: biometricOptions.requireUserVerification ? 'required' : 'preferred',
+    };
+    try {
+      const assertion =
+        await this.authenticationManager.startAuthentication(iosAuthenticationOptions);
+      // Extract iOS-specific biometric information
+      const biometricResult = await this.extractIOSBiometricData(assertion);
+      // Update credential usage counter and metadata
+      await this.updateIOSCredentialMetadata(assertion.id);
+      return {
+        assertion,
+        biometricType: biometricResult.biometricType,
+        secureEnclaveUsed: biometricResult.secureEnclaveUsed,
+        touchIdUsed: biometricResult.touchIdUsed,
+        faceIdUsed: biometricResult.faceIdUsed,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      throw new Error(
+        `iOS WebAuthn authentication failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
   /**
    * Check if Secure Enclave is available on the device
    */
-  isSecureEnclaveAvailable() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        // Check for iOS-specific APIs that indicate Secure Enclave support
-        if (typeof window === 'undefined') return false;
-        // iOS 11.3+ supports Secure Enclave for WebAuthn
-        const isIOSSupported = this.platformManager['isIOSVersionSupported'](11.3);
-        // Check for WebAuthn platform authenticator support
-        const hasWebAuthnPlatform =
-          typeof PublicKeyCredential !== 'undefined' &&
-          typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function';
-        if (!hasWebAuthnPlatform || !isIOSSupported) return false;
-        return yield PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      } catch (error) {
-        console.warn('Secure Enclave availability check failed:', error);
-        return false;
-      }
-    });
+  async isSecureEnclaveAvailable() {
+    try {
+      // Check for iOS-specific APIs that indicate Secure Enclave support
+      if (typeof window === 'undefined') return false;
+      // iOS 11.3+ supports Secure Enclave for WebAuthn
+      const isIOSSupported = this.platformManager['isIOSVersionSupported'](11.3);
+      // Check for WebAuthn platform authenticator support
+      const hasWebAuthnPlatform =
+        typeof PublicKeyCredential !== 'undefined' &&
+        typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function';
+      if (!hasWebAuthnPlatform || !isIOSSupported) return false;
+      return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    } catch (error) {
+      console.warn('Secure Enclave availability check failed:', error);
+      return false;
+    }
   }
   /**
    * Get Face ID availability status
    */
-  isFaceIdAvailable() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        const isSecureEnclaveAvailable = yield this.isSecureEnclaveAvailable();
-        if (!isSecureEnclaveAvailable) return false;
-        // Check iOS version (Face ID available on iOS 11+)
-        const isIOSSupported = this.platformManager['isIOSVersionSupported'](11);
-        // Check device type (Face ID is available on specific devices)
-        const isFaceIdDevice = this.isFaceIdCapableDevice();
-        return isIOSSupported && isFaceIdDevice;
-      } catch (error) {
-        console.warn('Face ID availability check failed:', error);
-        return false;
-      }
-    });
+  async isFaceIdAvailable() {
+    try {
+      const isSecureEnclaveAvailable = await this.isSecureEnclaveAvailable();
+      if (!isSecureEnclaveAvailable) return false;
+      // Check iOS version (Face ID available on iOS 11+)
+      const isIOSSupported = this.platformManager['isIOSVersionSupported'](11);
+      // Check device type (Face ID is available on specific devices)
+      const isFaceIdDevice = this.isFaceIdCapableDevice();
+      return isIOSSupported && isFaceIdDevice;
+    } catch (error) {
+      console.warn('Face ID availability check failed:', error);
+      return false;
+    }
   }
   /**
    * Get Touch ID availability status
    */
-  isTouchIdAvailable() {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        const isSecureEnclaveAvailable = yield this.isSecureEnclaveAvailable();
-        if (!isSecureEnclaveAvailable) return false;
-        // Check iOS version (Touch ID available on iOS 8+)
-        const isIOSSupported = this.platformManager['isIOSVersionSupported'](8);
-        // Check device type (Touch ID is available on specific devices)
-        const isTouchIdDevice = this.isTouchIdCapableDevice();
-        return isIOSSupported && isTouchIdDevice;
-      } catch (error) {
-        console.warn('Touch ID availability check failed:', error);
-        return false;
-      }
-    });
+  async isTouchIdAvailable() {
+    try {
+      const isSecureEnclaveAvailable = await this.isSecureEnclaveAvailable();
+      if (!isSecureEnclaveAvailable) return false;
+      // Check iOS version (Touch ID available on iOS 8+)
+      const isIOSSupported = this.platformManager['isIOSVersionSupported'](8);
+      // Check device type (Touch ID is available on specific devices)
+      const isTouchIdDevice = this.isTouchIdCapableDevice();
+      return isIOSSupported && isTouchIdDevice;
+    } catch (error) {
+      console.warn('Touch ID availability check failed:', error);
+      return false;
+    }
   }
   /**
    * Get optimal biometric authentication method for the device
    */
-  getOptimalBiometricMethod() {
-    return __awaiter(this, void 0, void 0, function* () {
-      const faceIdAvailable = yield this.isFaceIdAvailable();
-      const touchIdAvailable = yield this.isTouchIdAvailable();
-      if (faceIdAvailable) return 'faceId';
-      if (touchIdAvailable) return 'touchId';
-      return 'none';
-    });
+  async getOptimalBiometricMethod() {
+    const faceIdAvailable = await this.isFaceIdAvailable();
+    const touchIdAvailable = await this.isTouchIdAvailable();
+    if (faceIdAvailable) return 'faceId';
+    if (touchIdAvailable) return 'touchId';
+    return 'none';
   }
   getIOSBiometricOptions(options) {
-    var _a, _b;
-    return Object.assign(
-      {
-        preferredBiometric:
-          (options === null || options === void 0 ? void 0 : options.preferredBiometric) || 'any',
-        requireSecureEnclave:
-          (_a = options === null || options === void 0 ? void 0 : options.requireSecureEnclave) !==
-            null && _a !== void 0
-            ? _a
-            : true,
-        allowFallback:
-          (_b = options === null || options === void 0 ? void 0 : options.allowFallback) !== null &&
-          _b !== void 0
-            ? _b
-            : true,
-        localizedFallbackTitle:
-          (options === null || options === void 0 ? void 0 : options.localizedFallbackTitle) ||
-          'Use Passcode',
-        localizedPrompt:
-          (options === null || options === void 0 ? void 0 : options.localizedPrompt) ||
-          'Authenticate with biometrics',
-      },
-      options
-    );
+    return {
+      preferredBiometric: options?.preferredBiometric || 'any',
+      requireSecureEnclave: options?.requireSecureEnclave ?? true,
+      allowFallback: options?.allowFallback ?? true,
+      localizedFallbackTitle: options?.localizedFallbackTitle || 'Use Passcode',
+      localizedPrompt: options?.localizedPrompt || 'Authenticate with biometrics',
+      ...options,
+    };
   }
-  validateIOSAttestation(credential) {
-    return __awaiter(this, void 0, void 0, function* () {
-      // Validate Apple-specific attestation format
-      // Note: attestationObject would come from raw response, skip validation for now
-      // const attestationObject = credential.response.attestationObject;
-      try {
-        // TODO: Implement proper attestation validation
-        // For now, just return the credential without validation
-        return credential;
-      } catch (error) {
-        console.warn(
-          'iOS attestation validation failed:',
-          error instanceof Error ? error.message : String(error)
-        );
-        // Continue with credential even if attestation validation fails
-        return credential;
+  async validateIOSAttestation(credential) {
+    // Validate Apple-specific attestation format
+    // Note: attestationObject would come from raw response, skip validation for now
+    // const attestationObject = credential.response.attestationObject;
+    try {
+      // TODO: Implement proper attestation validation
+      // For now, just return the credential without validation
+      return credential;
+    } catch (error) {
+      console.warn(
+        'iOS attestation validation failed:',
+        error instanceof Error ? error.message : String(error)
+      );
+      // Continue with credential even if attestation validation fails
+      return credential;
+    }
+  }
+  async storeIOSCredentialMetadata(credential, options) {
+    const metadata = {
+      credentialId: credential.id,
+      biometricType: await this.getOptimalBiometricMethod(),
+      secureEnclaveUsed: options.requireSecureEnclave,
+      createdAt: new Date(),
+      platform: 'ios',
+    };
+    // Store in secure iOS storage (implementation depends on storage layer)
+    await this.storeSecureMetadata('ios_webauthn_metadata', metadata);
+  }
+  async updateIOSCredentialMetadata(credentialId) {
+    try {
+      const metadata = await this.getSecureMetadata('ios_webauthn_metadata');
+      if (metadata && metadata.credentialId === credentialId) {
+        metadata.lastUsed = new Date();
+        metadata.useCount = (metadata.useCount || 0) + 1;
+        await this.storeSecureMetadata('ios_webauthn_metadata', metadata);
       }
-    });
+    } catch (error) {
+      console.warn('Failed to update iOS credential metadata:', error);
+    }
   }
-  storeIOSCredentialMetadata(credential, options) {
-    return __awaiter(this, void 0, void 0, function* () {
-      const metadata = {
-        credentialId: credential.id,
-        biometricType: yield this.getOptimalBiometricMethod(),
-        secureEnclaveUsed: options.requireSecureEnclave,
-        createdAt: new Date(),
-        platform: 'ios',
-      };
-      // Store in secure iOS storage (implementation depends on storage layer)
-      yield this.storeSecureMetadata('ios_webauthn_metadata', metadata);
-    });
-  }
-  updateIOSCredentialMetadata(credentialId) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        const metadata = yield this.getSecureMetadata('ios_webauthn_metadata');
-        if (metadata && metadata.credentialId === credentialId) {
-          metadata.lastUsed = new Date();
-          metadata.useCount = (metadata.useCount || 0) + 1;
-          yield this.storeSecureMetadata('ios_webauthn_metadata', metadata);
-        }
-      } catch (error) {
-        console.warn('Failed to update iOS credential metadata:', error);
-      }
-    });
-  }
-  extractIOSBiometricData(assertion) {
-    return __awaiter(this, void 0, void 0, function* () {
-      try {
-        // Extract biometric information from authenticator data
-        const authenticatorData = new Uint8Array(assertion.response.authenticatorData);
-        // Parse the UV (User Verified) flag and other indicators
-        const flags = authenticatorData[32];
-        const userVerified = (flags & 0x04) !== 0;
-        if (!userVerified) {
-          return {
-            biometricType: 'unknown',
-            secureEnclaveUsed: false,
-            touchIdUsed: false,
-            faceIdUsed: false,
-          };
-        }
-        // Determine biometric type based on device capabilities
-        const optimalMethod = yield this.getOptimalBiometricMethod();
-        return {
-          biometricType: optimalMethod === 'none' ? 'unknown' : optimalMethod,
-          secureEnclaveUsed: true, // iOS WebAuthn uses Secure Enclave by default
-          touchIdUsed: optimalMethod === 'touchId',
-          faceIdUsed: optimalMethod === 'faceId',
-        };
-      } catch (error) {
-        console.warn('Failed to extract iOS biometric data:', error);
+  async extractIOSBiometricData(assertion) {
+    try {
+      // Extract biometric information from authenticator data
+      const authenticatorData = new Uint8Array(assertion.response.authenticatorData);
+      // Parse the UV (User Verified) flag and other indicators
+      const flags = authenticatorData[32];
+      const userVerified = (flags & 0x04) !== 0;
+      if (!userVerified) {
         return {
           biometricType: 'unknown',
           secureEnclaveUsed: false,
@@ -319,7 +266,23 @@ export class IOSWebAuthnManager {
           faceIdUsed: false,
         };
       }
-    });
+      // Determine biometric type based on device capabilities
+      const optimalMethod = await this.getOptimalBiometricMethod();
+      return {
+        biometricType: optimalMethod === 'none' ? 'unknown' : optimalMethod,
+        secureEnclaveUsed: true, // iOS WebAuthn uses Secure Enclave by default
+        touchIdUsed: optimalMethod === 'touchId',
+        faceIdUsed: optimalMethod === 'faceId',
+      };
+    } catch (error) {
+      console.warn('Failed to extract iOS biometric data:', error);
+      return {
+        biometricType: 'unknown',
+        secureEnclaveUsed: false,
+        touchIdUsed: false,
+        faceIdUsed: false,
+      };
+    }
   }
   isFaceIdCapableDevice() {
     if (typeof navigator === 'undefined') return false;
@@ -379,37 +342,33 @@ export class IOSWebAuthnManager {
     }
     return buffer;
   }
-  storeSecureMetadata(key, data) {
-    return __awaiter(this, void 0, void 0, function* () {
-      // iOS-specific secure storage implementation
-      // Use iOS Keychain or secure storage library
-      try {
-        const serializedData = JSON.stringify(data);
-        // Store in iOS Keychain or secure storage
-        if (typeof window !== 'undefined' && 'localStorage' in window) {
-          // Fallback to localStorage (in production, use secure storage)
-          window.localStorage.setItem(`secure_${key}`, serializedData);
-        }
-      } catch (error) {
-        console.warn(`Failed to store secure metadata for ${key}:`, error);
+  async storeSecureMetadata(key, data) {
+    // iOS-specific secure storage implementation
+    // Use iOS Keychain or secure storage library
+    try {
+      const serializedData = JSON.stringify(data);
+      // Store in iOS Keychain or secure storage
+      if (typeof window !== 'undefined' && 'localStorage' in window) {
+        // Fallback to localStorage (in production, use secure storage)
+        window.localStorage.setItem(`secure_${key}`, serializedData);
       }
-    });
+    } catch (error) {
+      console.warn(`Failed to store secure metadata for ${key}:`, error);
+    }
   }
-  getSecureMetadata(key) {
-    return __awaiter(this, void 0, void 0, function* () {
-      // iOS-specific secure storage retrieval
-      try {
-        if (typeof window !== 'undefined' && 'localStorage' in window) {
-          // Fallback to localStorage (in production, use secure storage)
-          const data = window.localStorage.getItem(`secure_${key}`);
-          return data ? JSON.parse(data) : null;
-        }
-        return null;
-      } catch (error) {
-        console.warn(`Failed to get secure metadata for ${key}:`, error);
-        return null;
+  async getSecureMetadata(key) {
+    // iOS-specific secure storage retrieval
+    try {
+      if (typeof window !== 'undefined' && 'localStorage' in window) {
+        // Fallback to localStorage (in production, use secure storage)
+        const data = window.localStorage.getItem(`secure_${key}`);
+        return data ? JSON.parse(data) : null;
       }
-    });
+      return null;
+    } catch (error) {
+      console.warn(`Failed to get secure metadata for ${key}:`, error);
+      return null;
+    }
   }
   parsePublicKeyData(publicKey) {
     // Parse ArrayBuffer or string to PublicKeyData format

@@ -1,18 +1,17 @@
 export class AuthAuditLogger {
+  config;
+  eventHistory = [];
+  MAX_HISTORY_SIZE = 1000;
   constructor(config = {}) {
-    this.eventHistory = [];
-    this.MAX_HISTORY_SIZE = 1000;
-    this.config = Object.assign(
-      {
-        enableEventLogging: true,
-        enableSecurityAudit: true,
-        maxEventHistory: 500,
-        logLevel: 'standard',
-        sensitiveDataMasking: true,
-        exportFormat: 'json',
-      },
-      config
-    );
+    this.config = {
+      enableEventLogging: true,
+      enableSecurityAudit: true,
+      maxEventHistory: 500,
+      logLevel: 'standard',
+      sensitiveDataMasking: true,
+      exportFormat: 'json',
+      ...config,
+    };
   }
   logAuthEvent(event, additionalData) {
     if (!this.config.enableEventLogging) {
@@ -81,17 +80,16 @@ export class AuthAuditLogger {
     this.eventHistory = [];
   }
   setConfig(newConfig) {
-    this.config = Object.assign(Object.assign({}, this.config), newConfig);
+    this.config = { ...this.config, ...newConfig };
   }
   enrichEvent(event, additionalData) {
-    const baseEvent = Object.assign(
-      Object.assign(Object.assign({}, event), {
-        severity: this.calculateSeverity(event),
-        category: this.categorizeEvent(event),
-        riskScore: this.calculateRiskScore(event),
-      }),
-      additionalData
-    );
+    const baseEvent = {
+      ...event,
+      severity: this.calculateSeverity(event),
+      category: this.categorizeEvent(event),
+      riskScore: this.calculateRiskScore(event),
+      ...additionalData,
+    };
     // Add device info if available
     if (typeof navigator !== 'undefined') {
       baseEvent.userAgent = this.config.sensitiveDataMasking
@@ -225,8 +223,7 @@ export class AuthAuditLogger {
     console.warn(`Security Alert [${severity.toUpperCase()}]: ${message}`);
   }
   maskSensitiveData(event) {
-    var _a;
-    const masked = Object.assign({}, event);
+    const masked = { ...event };
     // Mask IP addresses
     if (masked.remoteIp) {
       const parts = masked.remoteIp.split('.');
@@ -235,7 +232,7 @@ export class AuthAuditLogger {
       }
     }
     // Mask detailed geolocation
-    if ((_a = masked.geolocation) === null || _a === void 0 ? void 0 : _a.coordinates) {
+    if (masked.geolocation?.coordinates) {
       delete masked.geolocation.coordinates;
     }
     // Mask detailed user agent
