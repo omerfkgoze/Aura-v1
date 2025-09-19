@@ -10,28 +10,37 @@ export default function Home() {
   const { isMobile, isTablet, navigationMode } = useResponsiveNavigation();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <YStack minHeight="100vh" backgroundColor="$gray2">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <H1 fontSize="$8" fontWeight="bold" color="#2E5266">
-                  Aura
-                </H1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-slate-600">Privacy Mode: Active</span>
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <XStack
+        backgroundColor="$background"
+        borderBottomWidth={1}
+        borderBottomColor="$borderColor"
+        paddingHorizontal="$4"
+        paddingVertical="$4"
+        justifyContent="space-between"
+        alignItems="center"
+        height={64}
+      >
+        <H1 fontSize="$8" fontWeight="bold" color="#2E5266">
+          Aura
+        </H1>
+        <XStack alignItems="center" space="$3">
+          <Text fontSize="$3" color="$gray10">
+            Privacy Mode: Active
+          </Text>
+          <YStack width={8} height={8} backgroundColor="$green9" borderRadius="$round" />
+        </XStack>
+      </XStack>
 
       {/* Main Dashboard */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <YStack
+        maxWidth={1280}
+        marginHorizontal="auto"
+        paddingHorizontal="$4"
+        paddingVertical="$8"
+        flex={1}
+      >
         {/* Welcome Section */}
         <YStack marginBottom="$8">
           <H2 fontSize="$10" fontWeight="bold" color="$gray12" marginBottom="$2">
@@ -43,10 +52,16 @@ export default function Home() {
         </YStack>
 
         {/* Dashboard Cards */}
-        <div
-          className={`grid gap-6 mb-8 ${
-            isMobile ? 'grid-cols-1' : isTablet ? 'grid-cols-2' : 'grid-cols-3'
-          }`}
+        <YStack
+          marginBottom="$8"
+          space="$6"
+          {...(isMobile
+            ? {}
+            : {
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: 'space-between',
+              })}
         >
           {/* Privacy Status Card */}
           <Card
@@ -54,33 +69,59 @@ export default function Home() {
             borderColor="$borderColor"
             padding={isMobile ? '$4' : '$6'}
             borderRadius="$4"
+            flex={isMobile ? undefined : 1}
+            minWidth={isMobile ? undefined : 280}
           >
             <XStack alignItems="center" marginBottom="$4">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#2E5266' }}
+              <YStack
+                width={32}
+                height={32}
+                borderRadius="$round"
+                backgroundColor="#2E5266"
+                alignItems="center"
+                justifyContent="center"
               >
-                <span className="text-white text-sm">🔒</span>
-              </div>
+                <Text color="white" fontSize="$3">
+                  🔒
+                </Text>
+              </YStack>
               <H3 marginLeft="$3" fontSize="$6" fontWeight="600" color="$gray12">
                 Privacy Status
               </H3>
             </XStack>
             <YStack space="$2">
               <XStack alignItems="center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <YStack
+                  width={8}
+                  height={8}
+                  backgroundColor="$green9"
+                  borderRadius="$round"
+                  marginRight="$2"
+                />
                 <Text fontSize="$3" color="$green10">
                   Zero-knowledge encryption active
                 </Text>
               </XStack>
               <XStack alignItems="center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <YStack
+                  width={8}
+                  height={8}
+                  backgroundColor="$green9"
+                  borderRadius="$round"
+                  marginRight="$2"
+                />
                 <Text fontSize="$3" color="$green10">
                   Local data storage secure
                 </Text>
               </XStack>
               <XStack alignItems="center">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <YStack
+                  width={8}
+                  height={8}
+                  backgroundColor="$green9"
+                  borderRadius="$round"
+                  marginRight="$2"
+                />
                 <Text fontSize="$3" color="$green10">
                   Cultural stealth mode ready
                 </Text>
@@ -94,14 +135,22 @@ export default function Home() {
             borderColor="$borderColor"
             padding={isMobile ? '$4' : '$6'}
             borderRadius="$4"
+            flex={isMobile ? undefined : 1}
+            minWidth={isMobile ? undefined : 280}
           >
             <XStack alignItems="center" marginBottom="$4">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#4A7C7E' }}
+              <YStack
+                width={32}
+                height={32}
+                borderRadius="$round"
+                backgroundColor="#4A7C7E"
+                alignItems="center"
+                justifyContent="center"
               >
-                <span className="text-white text-sm">📊</span>
-              </div>
+                <Text color="white" fontSize="$3">
+                  📊
+                </Text>
+              </YStack>
               <H3 marginLeft="$3" fontSize="$6" fontWeight="600" color="$gray12">
                 Cycle Overview
               </H3>
@@ -133,14 +182,22 @@ export default function Home() {
             borderColor="$borderColor"
             padding={isMobile ? '$4' : '$6'}
             borderRadius="$4"
+            flex={isMobile ? undefined : 1}
+            minWidth={isMobile ? undefined : 280}
           >
             <XStack alignItems="center" marginBottom="$4">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#E8B04B' }}
+              <YStack
+                width={32}
+                height={32}
+                borderRadius="$round"
+                backgroundColor="#E8B04B"
+                alignItems="center"
+                justifyContent="center"
               >
-                <span className="text-white text-sm">⚡</span>
-              </div>
+                <Text color="white" fontSize="$3">
+                  ⚡
+                </Text>
+              </YStack>
               <H3 marginLeft="$3" fontSize="$6" fontWeight="600" color="$gray12">
                 Quick Actions
               </H3>
@@ -190,23 +247,35 @@ export default function Home() {
               </Button>
             </YStack>
           </Card>
-        </div>
+        </YStack>
 
         {/* Development Status */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center mr-3">
-              <span className="text-white text-xs">ℹ️</span>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-blue-900">Development Mode</h4>
-              <p className="text-sm text-blue-700 mt-1">
+        <Card backgroundColor="$blue2" borderColor="$blue6" padding="$4" borderRadius="$4">
+          <XStack alignItems="center">
+            <YStack
+              width={24}
+              height={24}
+              borderRadius="$round"
+              backgroundColor="$blue9"
+              alignItems="center"
+              justifyContent="center"
+              marginRight="$3"
+            >
+              <Text color="white" fontSize="$2">
+                ℹ️
+              </Text>
+            </YStack>
+            <YStack>
+              <Text fontSize="$3" fontWeight="500" color="$blue11">
+                Development Mode
+              </Text>
+              <Text fontSize="$3" color="$blue10" marginTop="$1">
                 Web platform foundation implemented. Core tracking features coming soon.
-              </p>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+              </Text>
+            </YStack>
+          </XStack>
+        </Card>
+      </YStack>
+    </YStack>
   );
 }
