@@ -15,6 +15,15 @@ export interface UserPreferences {
   stealthMode: boolean;
 }
 
+export interface EncryptedUserPrefs {
+  encryptedData: string;
+  version: number;
+  deviceId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Flow intensity levels
 export type FlowIntensity = 'none' | 'spotting' | 'light' | 'medium' | 'heavy';
 

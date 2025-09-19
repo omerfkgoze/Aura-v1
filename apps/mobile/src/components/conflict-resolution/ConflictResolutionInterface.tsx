@@ -1,19 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, Alert } from 'react-native';
-import {
-  Text,
-  Button,
-  Card,
-  XStack,
-  YStack,
-  Separator,
-  RadioGroup,
-  Checkbox,
-  Sheet,
-  H3,
-  H4,
-  Paragraph,
-} from '@tamagui/core';
+import { View, ScrollView, Alert, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import {
   DataConflict,
   ConflictResolution,
@@ -21,7 +7,51 @@ import {
   FieldChange,
   ConflictableData,
 } from './types';
-import { AlertTriangle, Check, X, Merge, Clock } from '@tamagui/lucide-icons';
+
+// Simple placeholder components
+const Card = ({ children, ...props }: any) => (
+  <View style={styles.card} {...props}>
+    {children}
+  </View>
+);
+const XStack = ({ children, ...props }: any) => (
+  <View style={styles.row} {...props}>
+    {children}
+  </View>
+);
+const YStack = ({ children, ...props }: any) => (
+  <View style={styles.column} {...props}>
+    {children}
+  </View>
+);
+const Separator = () => <View style={styles.separator} />;
+const H3 = ({ children, ...props }: any) => (
+  <Text style={styles.h3} {...props}>
+    {children}
+  </Text>
+);
+const H4 = ({ children, ...props }: any) => (
+  <Text style={styles.h4} {...props}>
+    {children}
+  </Text>
+);
+const Paragraph = ({ children, ...props }: any) => (
+  <Text style={styles.paragraph} {...props}>
+    {children}
+  </Text>
+);
+const Button = ({ children, onPress, ...props }: any) => (
+  <TouchableOpacity style={styles.button} onPress={onPress} {...props}>
+    <Text style={styles.buttonText}>{children}</Text>
+  </TouchableOpacity>
+);
+
+// Simple icon placeholders
+const AlertTriangle = () => <Text style={styles.icon}>⚠️</Text>;
+const Check = () => <Text style={styles.icon}>✓</Text>;
+const X = () => <Text style={styles.icon}>✗</Text>;
+const Merge = () => <Text style={styles.icon}>🔄</Text>;
+const Clock = () => <Text style={styles.icon}>🕒</Text>;
 
 interface ConflictResolutionInterfaceProps {
   conflicts: DataConflict[];
@@ -194,17 +224,21 @@ export const ConflictResolutionInterface: React.FC<ConflictResolutionInterfacePr
   }
 
   return (
-    <Sheet modal open={isVisible} onOpenChange={onCancel} snapPoints={[90]}>
-      <Sheet.Frame>
-        <Sheet.Handle />
-        <ScrollView style={{ flex: 1 }}>
-          <YStack padding="$4" space="$4">
+    <Modal
+      visible={isVisible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onCancel}
+    >
+      <View style={styles.modalContainer}>
+        <ScrollView style={styles.scrollView}>
+          <YStack style={styles.content}>
             {/* Header */}
-            <XStack alignItems="center" space="$3">
-              <AlertTriangle color="$orange10" size="$1.5" />
-              <YStack flex={1}>
+            <XStack>
+              <AlertTriangle />
+              <YStack style={{ flex: 1 }}>
                 <H3>Data Conflict Detected</H3>
-                <Text color="$gray11" fontSize="$3">
+                <Text style={{ color: '#6c757d', fontSize: 12 }}>
                   Conflict {currentConflictIndex + 1} of {conflicts.length}
                 </Text>
               </YStack>
@@ -393,8 +427,8 @@ export const ConflictResolutionInterface: React.FC<ConflictResolutionInterfacePr
             </XStack>
           </YStack>
         </ScrollView>
-      </Sheet.Frame>
-    </Sheet>
+      </View>
+    </Modal>
   );
 };
 
@@ -474,3 +508,72 @@ function formatFieldValue(data: ConflictableData, field: string): string {
 function formatTimestamp(timestamp: number): string {
   return new Date(timestamp).toLocaleString();
 }
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+    gap: 16,
+  },
+  card: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  column: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#e9ecef',
+    marginVertical: 8,
+  },
+  h3: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#212529',
+  },
+  h4: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#495057',
+  },
+  paragraph: {
+    fontSize: 14,
+    color: '#6c757d',
+    lineHeight: 20,
+  },
+  button: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  icon: {
+    fontSize: 16,
+  },
+});

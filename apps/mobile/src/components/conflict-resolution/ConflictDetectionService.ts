@@ -300,9 +300,17 @@ export class ConflictDetectionService {
           timestamp: Date.now(),
           autoResolvable: true,
           suggestedResolution: {
-            strategy: 'take-local', // Prefer local data for concurrent creation
-            reason: 'Local device preference for concurrent creation',
-            confidence: similarity,
+            strategy: 'take-local',
+            resolvedData: localItem,
+            appliedChanges: [],
+            metadata: {
+              resolvedAt: Date.now(),
+              resolvedBy: 'system',
+              deviceId: localItem.deviceId,
+              resolutionVersion: 1,
+              conflictHash: '',
+              reason: 'Local device preference for concurrent creation',
+            },
           },
         };
       }

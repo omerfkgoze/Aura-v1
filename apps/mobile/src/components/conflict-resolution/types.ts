@@ -59,6 +59,7 @@ export interface ResolutionMetadata {
   deviceId: string;
   resolutionVersion: number;
   conflictHash: string;
+  reason?: string;
 }
 
 export interface ConflictDetectionConfig {
