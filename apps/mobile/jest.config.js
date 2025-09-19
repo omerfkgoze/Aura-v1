@@ -1,5 +1,5 @@
 module.exports = {
-  preset: 'jest-expo',
+  preset: 'react-native',
   setupFilesAfterEnv: [],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   testMatch: ['**/__tests__/**/*.(test|spec).(ts|tsx|js)'],
