@@ -8,8 +8,21 @@ const nextConfig = {
   // MONOREPO CONFIGURATION - FIXED FOR DEVELOPMENT
   // =============================================================================
 
-  // ✅ FIXED: Correct package names for transpilation
-  transpilePackages: ['@aura/shared-types', '@aura/utils', '@aura/crypto-core', '@aura/ui'],
+  // ✅ FIXED: Correct package names for transpilation + Tamagui
+  transpilePackages: [
+    '@aura/shared-types',
+    '@aura/utils',
+    '@aura/crypto-core',
+    '@aura/ui',
+    '@tamagui/core',
+    '@tamagui/config',
+    '@tamagui/button',
+    '@tamagui/text',
+    '@tamagui/card',
+    '@tamagui/separator',
+    '@tamagui/progress',
+    '@tamagui/animations-react-native',
+  ],
 
   // Images configuration
   images: {
