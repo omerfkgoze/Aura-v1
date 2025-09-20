@@ -1,8 +1,8 @@
-# Epic 3: Stealth Mode & Adaptive UI
+# Epic 5: Stealth Mode & Adaptive UI
 
 **Epic Goal:** Create privacy-adaptive interface with stealth mode capabilities, duress protection, and uncertainty visualization that enables discrete menstrual tracking while providing accessible and internationalized user experience with clear prediction explanations.
 
-## Story 3.1: Stealth Mode Interface Implementation
+## Story 5.1: Stealth Mode Interface Implementation
 
 As a user requiring discrete menstrual tracking,
 I want the app to disguise itself as a calculator or notes application with secure mode switching,
@@ -18,7 +18,7 @@ so that I can track my cycle without revealing the app's true purpose to observe
 6. Quick-exit functionality immediately switching to disguise when interrupted
 7. Stealth mode testing validating complete UI transformation without revealing traces
 
-## Story 3.2: Duress Protection and Security Features
+## Story 5.2: Duress Protection and Security Features
 
 As a user in a potentially compromising situation,
 I want duress PIN functionality and neutral notifications that protect my privacy,
@@ -34,7 +34,7 @@ so that my menstrual tracking remains hidden even under coercion or surveillance
 6. Session timeout with automatic stealth mode activation during extended idle periods
 7. Duress protection testing ensuring complete data protection under simulated coercion
 
-## Story 3.3: Uncertainty Visualization Framework
+## Story 5.3: Uncertainty Visualization Framework
 
 As a user interpreting cycle predictions,
 I want visual uncertainty bands with clear explanations of prediction confidence,
@@ -50,7 +50,7 @@ so that I understand the reliability of predictions and can make informed decisi
 6. Visual calibration metrics helping users understand their personal prediction patterns
 7. Uncertainty communication testing ensuring users correctly interpret probability information
 
-## Story 3.4: On-Device Prediction Explanation System
+## Story 5.4: On-Device Prediction Explanation System
 
 As a user wanting to understand my cycle patterns,
 I want detailed explanations of why predictions have specific confidence levels,
@@ -66,7 +66,7 @@ so that I can understand the factors affecting my cycle and improve tracking acc
 6. Sensitivity analysis showing which data points most influence prediction accuracy
 7. Educational content helping users understand menstrual cycle variability and factors
 
-## Story 3.5: Accessibility and Internationalization Foundation
+## Story 5.5: Accessibility and Internationalization Foundation
 
 As a diverse user requiring accessible and localized experience,
 I want WCAG AA compliance and RTL language support with screen reader compatibility,
