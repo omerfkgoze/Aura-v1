@@ -77,8 +77,11 @@
     "overrides": {
       "axios": ">=1.7.0",
       "esbuild": ">=0.25.0",
-      "react": "^19.1.1",
-      "react-dom": "^19.1.1",
+      "react": "19.1.0",
+      "react-dom": "19.1.0",
+      "react-native-renderer": "19.1.0",
+      "@types/react": "19.1.10",
+      "react-test-renderer": "19.1.0",
       "vite@<=5.4.19": ">=5.4.20",
       "axios@<1.12.0": ">=1.12.0",
       "@tamagui/button": "^1.132.24",
