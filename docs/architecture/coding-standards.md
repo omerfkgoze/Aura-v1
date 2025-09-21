@@ -2,12 +2,12 @@
 
 ## Critical Fullstack Rules
 
-- **Type Sharing:** Always define types in packages/shared-types and import from there
+- **Type Sharing:** Always define types in libs/shared-types and import from there
 - **API Calls:** Never make direct HTTP calls - use the service layer
 - **Environment Variables:** Access only through config objects, never process.env directly
 - **Error Handling:** All API routes must use the standard error handler
 - **State Updates:** Never mutate state directly - use proper state management patterns
-- **Crypto Operations:** All encryption/decryption must go through packages/crypto-core
+- **Crypto Operations:** All encryption/decryption must go through libs/crypto-core
 - **Database Access:** Never direct SQL - always use RLS-enforced repository patterns
 - **PII Handling:** Zero plaintext personal information in logs or server-side code
 - **Device Identification:** Always use salted hashes, never raw device IDs

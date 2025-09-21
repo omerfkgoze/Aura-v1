@@ -29,7 +29,7 @@ aura-app/
 │   │   │   └── middleware/     # Auth and security middleware
 │   │   └── package.json
 │   └── api/                    # Standalone API service (if needed)
-├── packages/                   # Shared packages
+├── libs/                   # Shared packages
 │   ├── crypto-core/            # Rust/WASM crypto implementation
 │   │   ├── src/
 │   │   │   ├── lib.rs          # Main Rust crypto library
